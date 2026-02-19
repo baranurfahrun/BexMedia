@@ -22,49 +22,101 @@
 
     /* Premium Gradients */
     --grad-premium: linear-gradient(135deg, var(--ice-2) 0%, var(--ice-3) 50%, var(--ice-4) 100%);
+    --grad-ice-5: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 25%, #BAE6FD 50%, #7DD3FC 75%, #38BDF8 100%);
     --grad-surface: linear-gradient(180deg, rgba(255, 255, 255, 1) 0%, rgba(240, 249, 255, 1) 100%);
     --card-shadow: 0 10px 30px rgba(0, 97, 255, 0.08);
 
     --font-main: 'Inter', sans-serif;
     --sidebar-width: 260px;
+    --header-height: 72px;
 }
 
 body {
-    background-color: #F0F7FF;
-    background-image:
-        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.05) 0px, transparent 50%),
-        radial-gradient(at 100% 0%, rgba(96, 165, 250, 0.05) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(219, 234, 254, 0.1) 0px, transparent 50%);
+    background: var(--grad-ice-5);
+    background-attachment: fixed;
     color: var(--text-main);
     font-family: var(--font-main);
     display: flex;
-    min-height: 100vh;
+    flex-direction: column;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+    padding: 16px 16px 85px 16px;
+    /* Increased bottom padding for marquee clearance */
+    gap: 12px;
+    box-sizing: border-box;
 }
 
 /* Sidebar Styling */
+.app-container {
+    display: flex;
+    flex: 1;
+    gap: 24px;
+    min-height: 0;
+    /* Critical for flex child scrolling */
+}
+
 aside {
     width: var(--sidebar-width);
-    background-color: var(--side-bg);
-    border-right: 1px solid var(--border-color);
-    padding: 24px;
+    background-color: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 30px 24px;
     display: flex;
     flex-direction: column;
-    position: fixed;
-    height: 100vh;
+    height: 100%;
+    flex-shrink: 0;
+    border-radius: 24px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
 }
 
 .logo-section {
     font-weight: 800;
-    font-size: 1.25rem;
+    font-size: 1.5rem;
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 40px;
-    color: var(--accent-blue);
+    gap: 12px;
+    margin-bottom: 48px;
+    background: var(--grad-premium);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.02em;
+}
+
+.brand-logo {
+    height: 34px;
+    width: auto;
+    object-fit: contain;
+    margin-right: 8px;
+    /* Transformation to Deep Royal Blue with high definition */
+    filter: brightness(0.6) contrast(2) sepia(100%) hue-rotate(190deg) saturate(1000%) drop-shadow(0 4px 6px rgba(0, 30, 120, 0.25));
+}
+
+.logo-section i {
+    -webkit-text-fill-color: var(--ice-3);
 }
 
 .nav-menu {
     flex: 1;
+    overflow-y: auto;
+    padding-right: 4px;
+    /* Small gap for scrollbar */
+}
+
+/* Custom scrollbar for sidebar */
+.nav-menu::-webkit-scrollbar {
+    width: 4px;
+}
+
+.nav-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.nav-menu::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
 }
 
 .nav-item {
@@ -100,9 +152,10 @@ aside {
 /* Main Content Styling */
 main {
     flex: 1;
-    margin-left: var(--sidebar-width);
     display: flex;
     flex-direction: column;
+    min-width: 0;
+    height: 100%;
 }
 
 header {
@@ -111,26 +164,59 @@ header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid var(--border-color);
-    background-color: white;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    background-color: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 24px 24px 0 0;
+    z-index: 100;
 }
 
 .search-bar {
     display: flex;
     align-items: center;
-    background-color: #F3F4F6;
-    padding: 8px 16px;
-    border-radius: 8px;
-    width: 300px;
+    background-color: #F1F5F9;
+    padding: 10px 20px;
+    border-radius: 12px;
+    width: 380px;
+    border: 1px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.search-bar:focus-within {
+    background-color: white;
+    border-color: var(--ice-3);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
 .search-bar input {
     background: transparent;
     border: none;
     outline: none;
-    padding-left: 10px;
-    font-size: 0.9rem;
+    padding-left: 12px;
+    font-size: 0.95rem;
     width: 100%;
+    color: var(--text-main);
+}
+
+.btn-secondary {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background-color: #F1F5F9;
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+    background-color: #E2E8F0;
+    border-color: #CBD5E1;
 }
 
 .header-actions {
@@ -172,9 +258,13 @@ header {
 
 /* Dashboard Area */
 .dashboard-content {
-    padding: 40px;
-    background-color: #FBFBFB;
+    padding: 40px 60px;
+    background-color: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     flex: 1;
+    overflow-y: auto;
+    border-radius: 0 0 24px 24px;
 }
 
 .dashboard-header {
@@ -182,10 +272,13 @@ header {
 }
 
 .dashboard-header h1 {
-    font-size: 2rem;
+    font-size: 2.25rem;
     font-weight: 800;
     letter-spacing: -0.04em;
-    margin-bottom: 4px;
+    padding-top: 20px;
+    margin-bottom: 8px;
+    color: var(--ice-1);
+    line-height: 1.2;
 }
 
 .dashboard-header p {
@@ -227,25 +320,45 @@ header {
 .stats-bars {
     display: flex;
     align-items: flex-end;
+    justify-content: space-between;
     gap: 15px;
-    height: 150px;
+    height: 180px;
+    /* Increased height */
     margin-top: 20px;
+    margin-bottom: 40px;
+    /* Space for labels */
+    padding: 0 10px;
 }
 
 .bar {
-    flex: 1;
-    background-color: #E2E8F0;
-    border-radius: 4px;
+    width: 32px;
+    background-color: #F1F5F9;
+    border-radius: 6px;
     position: relative;
+    height: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
 }
 
 .bar-fill {
-    position: absolute;
-    bottom: 0;
     width: 100%;
-    background: linear-gradient(to top, var(--ice-2), var(--ice-4));
+    background: var(--grad-premium);
     border-radius: 4px;
     transition: height 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    /* Removed absolute positioning to work with flex container */
+}
+
+.bar-label {
+    position: absolute;
+    bottom: -30px;
+    /* Adjusted position */
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    white-space: nowrap;
 }
 
 .media-assets {
@@ -304,8 +417,74 @@ header {
 }
 
 .line-chart-placeholder {
-    height: 150px;
-    border-bottom: 2px solid var(--accent-blue);
-    background: linear-gradient(transparent, rgba(0, 97, 255, 0.05));
-    border-radius: 4px;
+    height: 120px;
+    position: relative;
+    background: #F8FAFC;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.chart-line-avg {
+    position: absolute;
+    top: 40%;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    border-top: 2px dashed var(--ice-3);
+    opacity: 0.2;
+}
+
+.chart-fill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60%;
+    background: linear-gradient(180deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%);
+}
+
+/* Running Text Styles */
+.running-text-container {
+    position: fixed;
+    bottom: 12px;
+    left: 16px;
+    right: 16px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+    padding: 12px 0;
+    overflow: hidden;
+    white-space: nowrap;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    z-index: 9999;
+}
+
+.running-text {
+    display: inline-block;
+    padding-left: 100%;
+    animation: scroll-text 35s linear infinite;
+    /* Slightly faster */
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--ice-1);
+    letter-spacing: 0.02em;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.running-text span {
+    display: inline-block;
+    padding-right: 60px;
+}
+
+@keyframes scroll-text {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-100%);
+    }
 }
