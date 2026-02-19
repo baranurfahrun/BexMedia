@@ -43,12 +43,13 @@ $logo_path = base64_decode($sig_logo);
     <div class="app-container">
         <!-- Sidebar (Left) -->
         <aside>
-            <div class="logo-section">
-                <img src="<?php echo $logo_path; ?>" alt="Logo" class="brand-logo"> <?php echo $brand_name; ?>
+            <div class="logo-section" style="-webkit-text-fill-color: initial; background: initial; background-clip: initial; color: var(--ice-2);">
+                <img src="<?php echo $logo_path; ?>" alt="Logo" class="brand-logo" style="filter: none; height: 40px;"> 
+                <span style="background: var(--grad-premium); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-family: 'Outfit', sans-serif; font-weight: 900;"><?php echo h(get_setting('app_name', 'BexMedia')); ?></span>
             </div>
 
             <nav class="nav-menu">
-                <a href="#" class="nav-item active"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+                <a href="index.php" class="nav-item active"><i data-lucide="layout-dashboard"></i> Dashboard</a>
                 <a href="#" class="nav-item"><i data-lucide="layers"></i> Overview</a>
                 <a href="#" class="nav-item"><i data-lucide="megaphone"></i> Campaign</a>
                 <a href="#" class="nav-item"><i data-lucide="bar-chart-3"></i> Analytics</a>
@@ -59,7 +60,7 @@ $logo_path = base64_decode($sig_logo);
             </nav>
 
             <div class="sidebar-bottom">
-                <a href="#" class="nav-item"><i data-lucide="settings"></i> Settings</a>
+                <a href="settings.php" class="nav-item"><i data-lucide="settings"></i> Settings</a>
                 <a href="logout.php" class="nav-item"><i data-lucide="log-out"></i> Logout</a>
             </div>
         </aside>

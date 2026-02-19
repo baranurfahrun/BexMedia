@@ -77,7 +77,7 @@ aside {
     font-size: 1.6rem;
     display: flex;
     align-items: center;
-    gap: 0;
+    gap: 10px;
     margin-bottom: 48px;
     background: var(--grad-premium);
     background-clip: text;
@@ -90,8 +90,7 @@ aside {
     height: 34px;
     width: auto;
     object-fit: contain;
-    margin-right: -4px;
-    /* Tarik teks ke kiri agar makin rapat */
+    margin-right: 0;
     /* Transformation to Deep Royal Blue with high definition */
     filter: brightness(0.6) contrast(2) sepia(100%) hue-rotate(190deg) saturate(1000%) drop-shadow(0 4px 6px rgba(0, 30, 120, 0.25));
 }

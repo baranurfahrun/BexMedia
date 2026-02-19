@@ -2,11 +2,10 @@
 // === KODE VERIFIKASI KEAMANAN PROJEK ===
 $private_key = "KODE_RAHASIA_BARA";
 
-// Verifikasi Nama Brand
+// Verifikasi Nama Brand (Key for Security Check)
 $sig_brand  = "QmV4TWVkaWE=";
 $hash_brand = "1d45b0cc7a28442c082bd43bd312ac88";
 if (md5($sig_brand . $private_key) !== $hash_brand) die("Security Breach!");
-$brand_name = base64_decode($sig_brand);
 
 // Verifikasi Path Logo
 $sig_logo  = "aW1hZ2VzL2JtLnBuZw==";
@@ -15,37 +14,93 @@ if (md5($sig_logo . $private_key) !== $hash_logo) die("Security Breach!");
 $logo_path = base64_decode($sig_logo);
 
 require_once "conf/config.php";
+$brand_name = h(get_setting('app_name', 'BexMedia'));
 
 $error = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // 0. Validasi CSRF (Penting!)
+    // 0. Validasi CSRF
     csrf_verify();
 
-    // 1. Validasi CAPTCHA
-    if (!isset($_SESSION['captcha']) || empty($_POST['captcha'])) {
-        $error = "Kode CAPTCHA harus diisi!";
-    } elseif (strtoupper($_POST['captcha']) !== $_SESSION['captcha']) {
-        $error = "Kode CAPTCHA salah!";
-        unset($_SESSION['captcha']); // Reset captcha
-    } else {
-        unset($_SESSION['captcha']);
-        $username = trim(cleanInput($_POST['username']));
-        $password = trim($_POST['password']);
+    // 1. Rate Limiting Check
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
+    $check_rate = safe_query("SELECT attempts, last_attempt FROM login_attempts WHERE ip = ?", [$ip]);
+    $rate_data = mysqli_fetch_assoc($check_rate);
+    
+    if ($rate_data) {
+        $last_time = strtotime($rate_data['last_attempt']);
+        if ($rate_data['attempts'] >= 2 && (time() - $last_time < 300)) {
+            $error = "Terlalu banyak percobaan login! Silakan tunggu 5 menit.";
+            write_log("LOGIN_LOCKOUT", "IP $ip terkunci karena terlalu banyak percobaan.");
+        }
+    }
 
-        // Cek user di database menggunakan AES_ENCRYPT (ala Web_dokter/Khanza)
-        $query  = "SELECT id, AES_DECRYPT(username, 'bex') as user_real FROM users 
-                   WHERE username = AES_ENCRYPT('$username', 'bex') 
-                   AND password = AES_ENCRYPT('$password', 'bara')";
-        $result = mysqli_query($conn, $query);
-
-        if ($user_data = mysqli_fetch_assoc($result)) {
-            $_SESSION['loggedin'] = true;
-            $_SESSION['username'] = $user_data['user_real'];
-            header("Location: index.php");
-            exit;
+    if (!$error) {
+        // 2. Validasi CAPTCHA
+        if (!isset($_SESSION['captcha']) || empty($_POST['captcha'])) {
+            $error = "Kode CAPTCHA harus diisi!";
+        } elseif (strtoupper($_POST['captcha']) !== $_SESSION['captcha']) {
+            $error = "Kode CAPTCHA salah!";
+            unset($_SESSION['captcha']);
+            write_log("LOGIN_FAILED", "Captcha salah dari IP $ip");
         } else {
-            $error = "ID User atau Password salah!";
+            unset($_SESSION['captcha']);
+            $username = trim(cleanInput($_POST['username']));
+            $password = trim($_POST['password']);
+            $login_success = false;
+            $user_real = "";
+            $source = "";
+
+            // --- TAHAP 1: CEK DI DATABASE BEXMEDIA (INTERNAL) ---
+            $sql_bex = "SELECT id, AES_DECRYPT(username, 'bex') as user_real FROM users 
+                        WHERE username = AES_ENCRYPT(?, 'bex') 
+                        AND password = AES_ENCRYPT(?, 'bara')";
+            $res_bex = safe_query($sql_bex, [$username, $password], $conn);
+
+            if ($user_data = mysqli_fetch_assoc($res_bex)) {
+                $login_success = true;
+                $user_real     = $user_data['user_real'];
+                $source        = "BEXMEDIA";
+            } 
+            
+            // --- TAHAP 2: CEK DI DATABASE KHANZA (REMOTE) JIKA TAHAP 1 GAGAL ---
+            if (!$login_success && isset($conn_sik)) {
+                // Key default Khanza: 'nur' dan 'windi'
+                $sql_sik = "SELECT id_user, AES_DECRYPT(id_user, 'nur') as user_real FROM user 
+                            WHERE id_user = AES_ENCRYPT(?, 'nur') 
+                            AND password = AES_ENCRYPT(?, 'windi')";
+                $res_sik = safe_query($sql_sik, [$username, $password], $conn_sik);
+
+                if ($user_data = mysqli_fetch_assoc($res_sik)) {
+                    $login_success = true;
+                    $user_real     = $user_data['user_real'];
+                    $source        = "KHANZA";
+                }
+            }
+
+            if ($login_success) {
+                // RESET RATE LIMIT
+                safe_query("DELETE FROM login_attempts WHERE ip = ?", [$ip]);
+                
+                $_SESSION['loggedin'] = true;
+                $_SESSION['username'] = $user_real;
+                $_SESSION['login_source'] = $source;
+                
+                write_log("LOGIN_SUCCESS", "User $user_real berhasil login via $source.");
+                
+                header("Location: index.php");
+                exit;
+            } else {
+                // UPDATE RATE LIMIT
+                if ($rate_data) {
+                    safe_query("UPDATE login_attempts SET attempts = attempts + 1, last_attempt = CURRENT_TIMESTAMP WHERE ip = ?", [$ip]);
+                } else {
+                    safe_query("INSERT INTO login_attempts (ip, attempts) VALUES (?, 1)", [$ip]);
+                }
+                
+                $error = "ID User atau Password salah!";
+                write_log("LOGIN_FAILED", "Percobaan login gagal untuk username: $username dari IP $ip");
+            }
         }
     }
 }
