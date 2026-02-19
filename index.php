@@ -1,3 +1,32 @@
+<?php
+require_once "conf/config.php";
+
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+    header("Location: login.php");
+    exit;
+}
+
+// === KODE VERIFIKASI KEAMANAN PROJEK ===
+$private_key = "KODE_RAHASIA_BARA";
+
+// 1. Verifikasi Hak Cipta
+$sig_copyright  = "QDIwMjYgYmFyYS5uLmZhaHJ1bi0wODUxMTc0NzYwMDE=";
+$hash_copyright = "3e07d2217d54524233697deb8b497061";
+if (md5($sig_copyright . $private_key) !== $hash_copyright) die("Security Breach: Copyright modified!");
+$copyright_text = base64_decode($sig_copyright);
+
+// 2. Verifikasi Nama Brand
+$sig_brand  = "QmV4TWVkaWE=";
+$hash_brand = "1d45b0cc7a28442c082bd43bd312ac88";
+if (md5($sig_brand . $private_key) !== $hash_brand) die("Security Breach: Brand name modified!");
+$brand_name = base64_decode($sig_brand);
+
+// 3. Verifikasi Path Logo
+$sig_logo  = "aW1hZ2VzL2JtLnBuZw==";
+$hash_logo = "1f8e704c676608ef337e1e85b7ca93cd";
+if (md5($sig_logo . $private_key) !== $hash_logo) die("Security Breach: Logo path modified!");
+$logo_path = base64_decode($sig_logo);
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -15,7 +44,7 @@
         <!-- Sidebar (Left) -->
         <aside>
             <div class="logo-section">
-                <img src="bm.png" alt="BexMedia Logo" class="brand-logo"> BexMedia
+                <img src="<?php echo $logo_path; ?>" alt="Logo" class="brand-logo"> <?php echo $brand_name; ?>
             </div>
 
             <nav class="nav-menu">
@@ -31,7 +60,7 @@
 
             <div class="sidebar-bottom">
                 <a href="#" class="nav-item"><i data-lucide="settings"></i> Settings</a>
-                <a href="#" class="nav-item"><i data-lucide="log-out"></i> Logout</a>
+                <a href="logout.php" class="nav-item"><i data-lucide="log-out"></i> Logout</a>
             </div>
         </aside>
 
@@ -51,9 +80,9 @@
                             style="position: absolute; top: 0; right: 0; width: 8px; height: 8px; background: red; border-radius: 50%; border: 2px solid white"></span>
                     </div>
                     <div class="user-profile">
-                        <span style="font-size: 0.85rem; font-weight: 600">BerMedia</span>
+                        <span style="font-size: 0.85rem; font-weight: 600"><?php echo h($_SESSION['username']); ?></span>
                         <div class="avatar"
-                            style="background-image: url('https://i.pravatar.cc/100'); background-size: cover;"></div>
+                             style="background-image: url('https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['username']); ?>&background=3B82F6&color=fff'); background-size: cover;"></div>
                     </div>
                 </div>
             </header>
@@ -193,13 +222,14 @@
 
 
     <div class="running-text-container">
-        <div class="running-text">
-            <span>BexMedia News: Campaign and Analytics are performing at peak efficiency this month! • Welcome to the
-                premium studio monitor dashboard • New Media Assets have been uploaded for the client review • Stay
-                tuned for more updates! • </span>
-            <span>BexMedia News: Campaign and Analytics are performing at peak efficiency this month! • Welcome to the
-                premium studio monitor dashboard • New Media Assets have been uploaded for the client review • Stay
-                tuned for more updates! • </span>
+        <div class="marquee-content">
+            <div class="running-text">
+                <span>BexMedia News: Campaign and Analytics are performing at peak efficiency this month! • Welcome to the premium studio monitor dashboard • New Media Assets have been uploaded for the client review • Stay tuned for more updates! • </span>
+                <span>BexMedia News: Campaign and Analytics are performing at peak efficiency this month! • Welcome to the premium studio monitor dashboard • New Media Assets have been uploaded for the client review • Stay tuned for more updates! • </span>
+            </div>
+        </div>
+        <div class="fixed-copyright">
+            <?php echo $copyright_text; ?>
         </div>
     </div>
 

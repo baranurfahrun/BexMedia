@@ -1,0 +1,18 @@
+========================================
+GENERATOR KUNCI KEAMANAN PROJEK RAHASIA
+========================================
+
+[copyright] -> @2026 bara.n.fahrun-085117476001
+$sig_copyright  = "QDIwMjYgYmFyYS5uLmZhaHJ1bi0wODUxMTc0NzYwMDE=";
+$hash_copyright = "3e07d2217d54524233697deb8b497061";
+
+[brand] -> BexMedia
+$sig_brand  = "QmV4TWVkaWE=";
+$hash_brand = "1d45b0cc7a28442c082bd43bd312ac88";
+
+[logo] -> images/bm.png
+$sig_logo  = "aW1hZ2VzL2JtLnBuZw==";
+$hash_logo = "1f8e704c676608ef337e1e85b7ca93cd";
+
+PRIVATE_KEY: KODE_RAHASIA_BARA
+========================================
