@@ -7,3 +7,64 @@
 [19-Feb-2026 16:42:19 Asia/Makassar] PHP Warning:  mysqli_query() expects parameter 1 to be mysqli, null given in C:\xampp\htdocs\BexMedia\conf\config.php on line 53
 [19-Feb-2026 16:42:19 Asia/Makassar] PHP Warning:  mysqli_query() expects parameter 1 to be mysqli, null given in C:\xampp\htdocs\BexMedia\conf\config.php on line 53
 [19-Feb-2026 16:42:19 Asia/Makassar] PHP Warning:  mysqli_close() expects parameter 1 to be mysqli, null given in C:\xampp\htdocs\BexMedia\conf\config.php on line 74
+[19-Feb-2026 16:53:42 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 16:53:42 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 75
+[19-Feb-2026 16:56:17 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 16:56:17 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 84
+[19-Feb-2026 16:56:34 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 16:56:34 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 84
+[19-Feb-2026 16:56:49 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 16:56:49 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 84
+[19-Feb-2026 16:57:11 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 16:57:11 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 84
+[19-Feb-2026 16:57:16 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 16:57:16 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 84
+[19-Feb-2026 16:57:23 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 16:57:23 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 44
+[19-Feb-2026 16:57:23 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: UPDATE users SET nama_lengkap = ?, photo = ? WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 16:57:23 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 16:57:23 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 84
+[19-Feb-2026 16:58:19 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 16:58:19 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 44
+[19-Feb-2026 16:58:19 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: UPDATE users SET nama_lengkap = ?, photo = ? WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 16:58:19 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 16:58:19 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 84
+[19-Feb-2026 16:58:25 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 16:58:25 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 44
+[19-Feb-2026 16:58:25 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: UPDATE users SET nama_lengkap = ?, photo = ? WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 16:58:25 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 16:58:25 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 84
+[19-Feb-2026 16:58:35 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 16:58:35 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 84
+[19-Feb-2026 16:58:39 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 16:58:39 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 84
+[19-Feb-2026 17:02:19 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 17:02:19 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 91
+[19-Feb-2026 17:02:50 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 17:02:50 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 86
+[19-Feb-2026 17:03:26 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 17:03:26 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 86
+[19-Feb-2026 17:04:03 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 17:04:03 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 86
+[19-Feb-2026 17:05:26 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 17:05:26 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 86
+[19-Feb-2026 17:07:04 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 17:07:04 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 86
+[19-Feb-2026 17:07:09 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 17:07:09 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 86
+[19-Feb-2026 17:07:14 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 17:07:14 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 86
+[19-Feb-2026 17:07:37 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 17:07:37 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 86
+[19-Feb-2026 17:07:56 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 17:07:56 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 86
+[19-Feb-2026 17:09:59 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 17:09:59 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 86
+[19-Feb-2026 17:11:51 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 17:11:51 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 86
+[19-Feb-2026 17:12:07 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 17:12:07 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 86
+[19-Feb-2026 17:13:54 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 17:13:54 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 86
+[19-Feb-2026 17:16:13 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
+[19-Feb-2026 17:16:13 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 86

@@ -1,0 +1,8 @@
+<svg width="200" height="50" viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- BM Monogram Styling -->
+  <path d="M15 35C15 35 18 15 25 15C32 15 30 35 38 35C46 35 45 15 52 15C59 15 62 35 62 35M25 15L18 35M52 15L45 35" stroke="#3B82F6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M12 25C12 25 15 20 20 20C25 20 28 30 35 30C42 30 45 20 50 20C55 20 65 25 65 25" stroke="#3B82F6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+  
+  <!-- BexMedia Text Styling (Simulated High Bold) -->
+  <text x="58" y="36" fill="#3B82F6" style="font-family: 'Outfit', Arial, sans-serif; font-weight: 900; font-size: 28px; letter-spacing: -1.5px;">BexMedia</text>
+</svg>

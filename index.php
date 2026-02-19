@@ -21,11 +21,17 @@ $hash_brand = "1d45b0cc7a28442c082bd43bd312ac88";
 if (md5($sig_brand . $private_key) !== $hash_brand) die("Security Breach: Brand name modified!");
 $brand_name = base64_decode($sig_brand);
 
-// 3. Verifikasi Path Logo
-$sig_logo  = "aW1hZ2VzL2JtLnBuZw==";
-$hash_logo = "1f8e704c676608ef337e1e85b7ca93cd";
-if (md5($sig_logo . $private_key) !== $hash_logo) die("Security Breach: Logo path modified!");
+// 3. Verifikasi Path & Konten Logo (Double Layer Security)
+$sig_logo      = "aW1hZ2VzL2xvZ29fZmluYWwucG5n";
+$hash_path     = "55dc42da93bc5f52de4c1b967b5f35fe";
+$hash_content  = "0201dd7a6e3b787967c12fa9e61d9b6a"; // Hash fisik file
+
+if (md5($sig_logo . $private_key) !== $hash_path) die("Security Breach: Logo path modified!");
 $logo_path = base64_decode($sig_logo);
+
+if (!file_exists($logo_path) || md5_file($logo_path) !== $hash_content) {
+    die("Security Breach: Logo file content compromised or missing! Hubungi hak cipta: bara.n.fahrun (085117476001)");
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -43,9 +49,10 @@ $logo_path = base64_decode($sig_logo);
     <div class="app-container">
         <!-- Sidebar (Left) -->
         <aside>
-            <div class="logo-section" style="-webkit-text-fill-color: initial; background: initial; background-clip: initial; color: var(--ice-2);">
-                <img src="<?php echo $logo_path; ?>" alt="Logo" class="brand-logo" style="filter: none; height: 40px;"> 
-                <span style="background: var(--grad-premium); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-family: 'Outfit', sans-serif; font-weight: 900;"><?php echo h(get_setting('app_name', 'BexMedia')); ?></span>
+            <div class="logo-section">
+                <a href="index.php" style="display: block; text-decoration: none;">
+                    <img src="<?php echo $logo_path; ?>" alt="BexMedia Logo" style="height: 52px; width: auto; display: block; filter: none;">
+                </a>
             </div>
 
             <nav class="nav-menu">
@@ -82,8 +89,14 @@ $logo_path = base64_decode($sig_logo);
                     </div>
                     <div class="user-profile">
                         <span style="font-size: 0.85rem; font-weight: 600"><?php echo h($_SESSION['username']); ?></span>
+                        <?php 
+                            $avatar_url = "https://ui-avatars.com/api/?name=" . urlencode($_SESSION['username']) . "&background=3B82F6&color=fff";
+                            if (isset($_SESSION['user_photo']) && !empty($_SESSION['user_photo'])) {
+                                $avatar_url = "images/" . $_SESSION['user_photo'];
+                            }
+                        ?>
                         <div class="avatar"
-                             style="background-image: url('https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['username']); ?>&background=3B82F6&color=fff'); background-size: cover;"></div>
+                             style="background-image: url('<?php echo $avatar_url; ?>'); background-size: cover; background-position: center;"></div>
                     </div>
                 </div>
             </header>

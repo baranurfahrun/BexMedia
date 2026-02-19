@@ -72,27 +72,19 @@ aside {
 }
 
 .logo-section {
-    font-family: 'Outfit', sans-serif;
-    font-weight: 900;
-    font-size: 1.6rem;
     display: flex;
     align-items: center;
-    gap: 10px;
     margin-bottom: 48px;
-    background: var(--grad-premium);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    letter-spacing: -0.02em;
+    padding-left: 5px;
 }
 
-.brand-logo {
-    height: 34px;
-    width: auto;
-    object-fit: contain;
-    margin-right: 0;
-    /* Transformation to Deep Royal Blue with high definition */
-    filter: brightness(0.6) contrast(2) sepia(100%) hue-rotate(190deg) saturate(1000%) drop-shadow(0 4px 6px rgba(0, 30, 120, 0.25));
+.logo-section a {
+    display: block;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.logo-section a:hover {
+    transform: scale(1.03);
 }
 
 .logo-section i {

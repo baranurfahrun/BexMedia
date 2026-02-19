@@ -14,7 +14,7 @@ function send_security_headers() {
     header("X-Content-Type-Options: nosniff");
     header("X-Frame-Options: SAMEORIGIN");
     header("Referrer-Policy: strict-origin-when-cross-origin");
-    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' unpkg.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com unpkg.com; img-src 'self' data: ui-avatars.com picsum.photos *.picsum.photos; font-src 'self' fonts.gstatic.com; frame-ancestors 'none';");
+    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' unpkg.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com unpkg.com; img-src 'self' data: ui-avatars.com picsum.photos *.picsum.photos; font-src 'self' fonts.gstatic.com; connect-src 'self' unpkg.com; frame-ancestors 'none';");
     
     if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
         header("Strict-Transport-Security: max-age=31536000; includeSubDomains");
@@ -104,6 +104,7 @@ mysqli_query($conn, "CREATE TABLE IF NOT EXISTS users (
     username VARBINARY(255) NOT NULL UNIQUE,
     password VARBINARY(255) NOT NULL,
     nama_lengkap VARCHAR(100),
+    photo VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )");
 

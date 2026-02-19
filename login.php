@@ -7,11 +7,17 @@ $sig_brand  = "QmV4TWVkaWE=";
 $hash_brand = "1d45b0cc7a28442c082bd43bd312ac88";
 if (md5($sig_brand . $private_key) !== $hash_brand) die("Security Breach!");
 
-// Verifikasi Path Logo
-$sig_logo  = "aW1hZ2VzL2JtLnBuZw==";
-$hash_logo = "1f8e704c676608ef337e1e85b7ca93cd";
-if (md5($sig_logo . $private_key) !== $hash_logo) die("Security Breach!");
+// Verifikasi Path & Konten Logo (Double Layer Security)
+$sig_logo      = "aW1hZ2VzL2xvZ29fZmluYWwucG5n";
+$hash_path     = "55dc42da93bc5f52de4c1b967b5f35fe";
+$hash_content  = "0201dd7a6e3b787967c12fa9e61d9b6a"; // Hash fisik file
+
+if (md5($sig_logo . $private_key) !== $hash_path) die("Security Breach: Logo path modified! Hubungi hak cipta: bara.n.fahrun (085117476001)");
 $logo_path = base64_decode($sig_logo);
+
+if (!file_exists($logo_path) || md5_file($logo_path) !== $hash_content) {
+    die("Security Breach: Logo file content compromised or missing! Hubungi hak cipta: bara.n.fahrun (085117476001)");
+}
 
 require_once "conf/config.php";
 $brand_name = h(get_setting('app_name', 'BexMedia'));
@@ -52,7 +58,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $source = "";
 
             // --- TAHAP 1: CEK DI DATABASE BEXMEDIA (INTERNAL) ---
-            $sql_bex = "SELECT id, AES_DECRYPT(username, 'bex') as user_real FROM users 
+            $sql_bex = "SELECT id, AES_DECRYPT(username, 'bex') as user_real, photo FROM users 
                         WHERE username = AES_ENCRYPT(?, 'bex') 
                         AND password = AES_ENCRYPT(?, 'bara')";
             $res_bex = safe_query($sql_bex, [$username, $password], $conn);
@@ -61,6 +67,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $login_success = true;
                 $user_real     = $user_data['user_real'];
                 $source        = "BEXMEDIA";
+                $user_photo    = $user_data['photo'];
+                $_SESSION['user_photo'] = $user_photo;
             } 
             
             // --- TAHAP 2: CEK DI DATABASE KHANZA (REMOTE) JIKA TAHAP 1 GAGAL ---
@@ -75,6 +83,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $login_success = true;
                     $user_real     = $user_data['user_real'];
                     $source        = "KHANZA";
+                    $_SESSION['user_photo'] = ""; // Khanza doesn't support photo here yet
                 }
             }
 
@@ -161,10 +170,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         .brand-logo {
-            height: 60px;
+            height: 65px;
             width: auto;
             object-fit: contain;
-            filter: brightness(0.6) contrast(2) sepia(100%) hue-rotate(190deg) saturate(1000%) drop-shadow(0 4px 6px rgba(0, 30, 120, 0.25));
+            filter: none;
+            margin-bottom: 5px;
         }
 
         .login-card i {
@@ -316,9 +326,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 <body>
     <div class="login-card">
-        <div class="logo-section">
-            <img src="<?php echo $logo_path; ?>" alt="Logo" class="brand-logo">
-            <h2><?php echo $brand_name; ?></h2>
+        <div class="logo-section" style="margin-bottom: 30px;">
+            <img src="<?php echo $logo_path; ?>" alt="BexMedia Logo" class="brand-logo" style="margin: 0 auto;">
         </div>
 
         <?php if ($error): ?>
