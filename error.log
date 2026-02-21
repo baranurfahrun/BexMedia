@@ -68,3 +68,149 @@
 [19-Feb-2026 17:13:54 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 86
 [19-Feb-2026 17:16:13 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')
 [19-Feb-2026 17:16:13 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\settings.php on line 86
+[20-Feb-2026 09:10:01 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT id, AES_DECRYPT(username, 'bex') as user_real, photo FROM users 
+                        WHERE username = AES_ENCRYPT(?, 'bex') 
+                        AND password = AES_ENCRYPT(?, 'bara')
+[20-Feb-2026 09:10:01 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\login.php on line 66
+[20-Feb-2026 09:10:39 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT id, AES_DECRYPT(username, 'bex') as user_real, photo FROM users 
+                        WHERE username = AES_ENCRYPT(?, 'bex') 
+                        AND password = AES_ENCRYPT(?, 'bara')
+[20-Feb-2026 09:10:39 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\login.php on line 66
+[20-Feb-2026 09:12:01 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\debug_users.php on line 14
+[20-Feb-2026 09:12:01 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\debug_users.php on line 15
+[20-Feb-2026 09:13:44 Asia/Makassar] Prepare failed: Unknown column 'photo' in 'field list' SQL: SELECT id, AES_DECRYPT(username, 'bex') as user_real, photo FROM users 
+            WHERE username = AES_ENCRYPT(?, 'bex') 
+            AND password = AES_ENCRYPT(?, 'bara')
+[20-Feb-2026 09:13:44 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\test_login_logic.php on line 13
+[20-Feb-2026 09:56:25 Asia/Makassar] PHP Notice:  Undefined variable: app_version in C:\xampp\htdocs\BexMedia\login.php on line 257
+[20-Feb-2026 10:06:22 Asia/Makassar] Prepare failed: Unknown column 'status' in 'where clause' SQL: SELECT id, AES_DECRYPT(username, 'bex') as name FROM users WHERE status = 'active' ORDER BY name
+[20-Feb-2026 10:06:22 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\login.php on line 392
+[20-Feb-2026 10:29:42 Asia/Makassar] Prepare failed: Unknown column 'email' in 'where clause' SQL: SELECT id FROM users WHERE email = ? OR username = AES_ENCRYPT(?, 'bex')
+[20-Feb-2026 10:29:42 Asia/Makassar] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\proses_register.php on line 41
+[20-Feb-2026 10:29:42 Asia/Makassar] Prepare failed: Unknown column 'nik' in 'where clause' SQL: SELECT id FROM users WHERE nik = ?
+[20-Feb-2026 10:29:42 Asia/Makassar] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\proses_register.php on line 47
+[20-Feb-2026 10:29:42 Asia/Makassar] Prepare failed: Unknown column 'nik' in 'field list' SQL: INSERT INTO users (username, password, nik, nama_lengkap, jabatan, unit_kerja, email, atasan_id, status) 
+            VALUES (AES_ENCRYPT(?, 'bex'), AES_ENCRYPT(?, 'bara'), ?, ?, ?, ?, ?, ?, 'active')
+[20-Feb-2026 10:29:42 Asia/Makassar] Prepare failed: Unknown column 'status' in 'where clause' SQL: SELECT id, AES_DECRYPT(username, 'bex') as name FROM users WHERE status = 'active' ORDER BY name
+[20-Feb-2026 10:29:42 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\login.php on line 392
+[20-Feb-2026 10:40:04 Asia/Makassar] DEBUG: proses_register.php started
+[20-Feb-2026 10:40:04 Asia/Makassar] DEBUG: Processing register for NIK: 0101010410111, Email: bara@gmail.com
+[20-Feb-2026 10:40:04 Asia/Makassar] DEBUG: Duplicate found - Email: bara@gmail.com
+[20-Feb-2026 11:13:46 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 542
+[20-Feb-2026 11:18:25 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 542
+[20-Feb-2026 11:26:50 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:26:50 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:26:50 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:26:50 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: DELETE FROM web_menus WHERE file_name NOT IN (?,?,?)
+[20-Feb-2026 11:26:50 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 635
+[20-Feb-2026 11:26:50 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 848
+[20-Feb-2026 11:26:55 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:26:55 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:26:55 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:26:55 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: DELETE FROM web_menus WHERE file_name NOT IN (?,?,?)
+[20-Feb-2026 11:26:55 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 635
+[20-Feb-2026 11:26:55 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 848
+[20-Feb-2026 11:26:55 Asia/Makassar] Prepare failed: Table 'bexmedia.web_access' doesn't exist SQL: SELECT menu_id FROM web_access WHERE username = ?
+[20-Feb-2026 11:26:55 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 888
+[20-Feb-2026 11:26:55 Asia/Makassar] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\BexMedia\dist\settings.php:135) in C:\xampp\htdocs\BexMedia\dist\settings.php on line 889
+[20-Feb-2026 11:26:57 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:26:57 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:26:57 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:26:57 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: DELETE FROM web_menus WHERE file_name NOT IN (?,?,?)
+[20-Feb-2026 11:26:57 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 635
+[20-Feb-2026 11:26:57 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 848
+[20-Feb-2026 11:26:57 Asia/Makassar] Prepare failed: Table 'bexmedia.web_access' doesn't exist SQL: SELECT menu_id FROM web_access WHERE username = ?
+[20-Feb-2026 11:26:57 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 888
+[20-Feb-2026 11:26:57 Asia/Makassar] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\BexMedia\dist\settings.php:135) in C:\xampp\htdocs\BexMedia\dist\settings.php on line 889
+[20-Feb-2026 11:26:58 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:26:58 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:26:58 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:26:58 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: DELETE FROM web_menus WHERE file_name NOT IN (?,?,?)
+[20-Feb-2026 11:26:58 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 635
+[20-Feb-2026 11:26:58 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 848
+[20-Feb-2026 11:26:58 Asia/Makassar] Prepare failed: Table 'bexmedia.web_access' doesn't exist SQL: SELECT menu_id FROM web_access WHERE username = ?
+[20-Feb-2026 11:26:58 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 888
+[20-Feb-2026 11:26:58 Asia/Makassar] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\BexMedia\dist\settings.php:135) in C:\xampp\htdocs\BexMedia\dist\settings.php on line 889
+[20-Feb-2026 11:26:59 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:26:59 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:26:59 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:26:59 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: DELETE FROM web_menus WHERE file_name NOT IN (?,?,?)
+[20-Feb-2026 11:26:59 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 635
+[20-Feb-2026 11:26:59 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 848
+[20-Feb-2026 11:26:59 Asia/Makassar] Prepare failed: Table 'bexmedia.web_access' doesn't exist SQL: SELECT menu_id FROM web_access WHERE username = ?
+[20-Feb-2026 11:26:59 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 888
+[20-Feb-2026 11:26:59 Asia/Makassar] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\BexMedia\dist\settings.php:135) in C:\xampp\htdocs\BexMedia\dist\settings.php on line 889
+[20-Feb-2026 11:27:05 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:27:05 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:27:05 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:27:05 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: DELETE FROM web_menus WHERE file_name NOT IN (?,?,?)
+[20-Feb-2026 11:27:05 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 635
+[20-Feb-2026 11:27:05 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 848
+[20-Feb-2026 11:27:05 Asia/Makassar] Prepare failed: Table 'bexmedia.web_access' doesn't exist SQL: SELECT menu_id FROM web_access WHERE username = ?
+[20-Feb-2026 11:27:05 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 888
+[20-Feb-2026 11:27:05 Asia/Makassar] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\BexMedia\dist\settings.php:135) in C:\xampp\htdocs\BexMedia\dist\settings.php on line 889
+[20-Feb-2026 11:27:13 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:27:13 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:27:13 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:27:13 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: DELETE FROM web_menus WHERE file_name NOT IN (?,?,?)
+[20-Feb-2026 11:27:13 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 635
+[20-Feb-2026 11:27:13 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 848
+[20-Feb-2026 11:27:13 Asia/Makassar] Prepare failed: Table 'bexmedia.web_access' doesn't exist SQL: SELECT menu_id FROM web_access WHERE username = ?
+[20-Feb-2026 11:27:13 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 888
+[20-Feb-2026 11:27:13 Asia/Makassar] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\BexMedia\dist\settings.php:135) in C:\xampp\htdocs\BexMedia\dist\settings.php on line 889
+[20-Feb-2026 11:29:05 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:29:05 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:29:05 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:29:05 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: DELETE FROM web_menus WHERE file_name NOT IN (?,?,?)
+[20-Feb-2026 11:29:05 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 646
+[20-Feb-2026 11:29:05 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 859
+[20-Feb-2026 11:29:10 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:29:10 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:29:10 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:29:10 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: DELETE FROM web_menus WHERE file_name NOT IN (?,?,?)
+[20-Feb-2026 11:29:10 Asia/Makassar] Prepare failed: Table 'bexmedia.web_access' doesn't exist SQL: SELECT menu_id FROM web_access WHERE username = ?
+[20-Feb-2026 11:29:10 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 12
+[20-Feb-2026 11:57:25 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:57:25 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:57:25 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:57:25 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: DELETE FROM web_menus WHERE file_name NOT IN (?,?,?)
+[20-Feb-2026 11:57:25 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\tools\debug_sync.php on line 7
+[20-Feb-2026 11:58:37 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                    ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:58:37 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                    ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:58:37 Asia/Makassar] Prepare failed: Table 'bexmedia.web_menus' doesn't exist SQL: INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                    ON DUPLICATE KEY UPDATE display_name = ?
+[20-Feb-2026 11:58:37 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\tools\debug_sync.php on line 38
+[20-Feb-2026 12:06:03 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 646
+[20-Feb-2026 13:00:32 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 647

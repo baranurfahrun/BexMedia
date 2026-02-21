@@ -142,6 +142,100 @@ aside {
     padding-top: 20px;
 }
 
+/* Dropdown Styles - BexMedia Swiss Edition */
+.nav-dropdown {
+    margin-bottom: 4px;
+    border-radius: 12px;
+    transition: background 0.3s ease;
+}
+
+.nav-dropdown.open {
+    background: rgba(59, 130, 246, 0.03);
+}
+
+.nav-dropdown-trigger {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    border: none;
+    background: transparent;
+    outline: none;
+    margin-bottom: 0 !important;
+}
+
+.nav-dropdown-trigger i:last-child {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    font-size: 0.75rem !important;
+    opacity: 0.4;
+}
+
+.nav-dropdown.open .nav-dropdown-trigger i:last-child {
+    transform: rotate(180deg);
+}
+
+.dropdown-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    padding-left: 14px;
+    /* Align with parent icon */
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    border-left: 2px solid transparent;
+    margin-left: 24px;
+    /* Icon width + gap */
+}
+
+.nav-dropdown.open .dropdown-content {
+    max-height: 500px;
+    margin-top: 2px;
+    margin-bottom: 12px;
+    border-left: 2px solid var(--ice-5);
+}
+
+.dropdown-item {
+    padding: 10px 16px;
+    font-size: 0.85rem;
+    color: var(--text-muted) !important;
+    text-decoration: none !important;
+    border-radius: 8px;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    position: relative;
+    font-weight: 500;
+}
+
+.dropdown-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--ice-3);
+    border-radius: 0 4px 4px 0;
+    transition: width 0.3s ease;
+}
+
+.dropdown-item:hover {
+    color: var(--ice-3) !important;
+    background-color: rgba(59, 130, 246, 0.05);
+    padding-left: 22px;
+}
+
+.dropdown-item:hover::before {
+    width: 4px;
+}
+
+.dropdown-item.active {
+    color: var(--ice-3) !important;
+    font-weight: 700;
+    background: rgba(59, 130, 246, 0.08);
+}
+
 /* Main Content Styling */
 main {
     flex: 1;

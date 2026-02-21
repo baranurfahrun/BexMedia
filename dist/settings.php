@@ -1,0 +1,879 @@
+<?php
+require_once "../conf/config.php";
+checkLogin();
+syncMenus(); 
+// MenuName: Pengaturan Sistem
+
+// Handle AJAX Request for Access Data (MUST BE AT TOP)
+if (isset($_GET['get_access'])) {
+    $target = $_GET['get_access'];
+    $data = [];
+    $res = safe_query("SELECT menu_id FROM web_access WHERE username = ?", [$target]);
+    while($r = mysqli_fetch_assoc($res)) $data[] = (int)$r['menu_id'];
+    header('Content-Type: application/json');
+    echo json_encode($data);
+    exit;
+}
+
+$brand_name = get_setting('app_name', 'BexMedia');
+
+// === KODE VERIFIKASI KEAMANAN PROJEK ===
+$private_key = "KODE_RAHASIA_BARA";
+$sig_logo      = "aW1hZ2VzL2xvZ29fZmluYWwucG5n";
+$hash_path     = "55dc42da93bc5f52de4c1b967b5f35fe";
+$hash_content  = "0201dd7a6e3b787967c12fa9e61d9b6a"; // Hash fisik file
+
+if (md5($sig_logo . $private_key) !== $hash_path) die("Security Breach: Logo path modified!");
+$logo_path = "../" . base64_decode($sig_logo);
+
+if (!file_exists($logo_path) || md5_file($logo_path) !== $hash_content) {
+    die("Security Breach: Logo file content compromised or missing! Hubungi hak cipta: bara.n.fahrun (085117476001)");
+}
+
+$status_msg = "";
+
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_settings'])) {
+    csrf_verify();
+    
+    // --- PART 1: UPDATE GENERAL & DATABASE SETTINGS ---
+    $settings_fields = ['app_name', 'host_khanza', 'name_khanza', 'user_khanza', 'pass_khanza', 'host_bex', 'name_bex', 'user_bex', 'pass_bex'];
+    foreach ($_POST as $key => $value) {
+        if (in_array($key, $settings_fields)) {
+            $safe_val = mysqli_real_escape_string($conn, $value);
+            mysqli_query($conn, "UPDATE web_settings SET setting_value = '$safe_val' WHERE setting_key = '$key'");
+        }
+    }
+    write_log("UPDATE_SETTINGS", "User " . $_SESSION['username'] . " memperbarui pengaturan sistem.");
+
+    // --- PART 2: UPDATE USER PROFILE (IF FIELDS PRESENT) ---
+    if (isset($_POST['nama_lengkap'])) {
+        $new_nama = cleanInput($_POST['nama_lengkap']);
+        $new_pass = $_POST['new_password'] ?? '';
+        $source   = $_SESSION['login_source'] ?? 'BEXMEDIA';
+
+        if ($source === 'BEXMEDIA') {
+            $photo_query = "";
+            $params = [$new_nama];
+
+            // Handle Photo Upload
+            if (isset($_FILES['photo']) && $_FILES['photo']['error'] == 0) {
+                $allowed = ['jpg', 'jpeg', 'png', 'gif'];
+                $ext = strtolower(pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION));
+                
+                if (in_array($ext, $allowed)) {
+                    $target_dir = dirname(__DIR__) . DIRECTORY_SEPARATOR . "images" . DIRECTORY_SEPARATOR;
+                    if (!is_dir($target_dir)) mkdir($target_dir, 0755, true);
+                    
+                    $user_clean = preg_replace("/[^a-zA-Z0-9]/", "_", $_SESSION['username']);
+                    $existing_files = glob($target_dir . $user_clean . ".*");
+                    if ($existing_files) {
+                        foreach ($existing_files as $efile) { if (is_file($efile)) unlink($efile); }
+                    }
+
+                    $new_filename = $user_clean . "." . $ext;
+                    if (move_uploaded_file($_FILES['photo']['tmp_name'], $target_dir . $new_filename)) {
+                        $photo_query = ", photo = ?";
+                        $params[] = $new_filename;
+                        $_SESSION['user_photo'] = $new_filename; 
+                    }
+                }
+            }
+
+            if (!empty($new_pass)) {
+                $sql = "UPDATE users SET nama_lengkap = ?" . $photo_query . ", password = AES_ENCRYPT(?, 'bara') WHERE username = AES_ENCRYPT(?, 'bex')";
+                $params[] = $new_pass;
+                $params[] = $_SESSION['username'];
+                safe_query($sql, $params);
+            } else {
+                $sql = "UPDATE users SET nama_lengkap = ?" . $photo_query . " WHERE username = AES_ENCRYPT(?, 'bex')";
+                $params[] = $_SESSION['username'];
+                safe_query($sql, $params);
+            }
+            write_log("UPDATE_PROFILE", "User " . $_SESSION['username'] . " memperbarui profil.");
+        }
+    }
+    
+    $status_msg = "Seluruh perubahan berhasil disimpan!";
+}
+
+// --- PART 3: ACTIVATE PENDING USER ---
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['activate_user'])) {
+    csrf_verify();
+    $uid = (int)$_POST['user_id'];
+    $res = safe_query("UPDATE users SET status = 'active' WHERE id = ? AND status = 'pending'", [$uid]);
+    if ($res) {
+        write_log("ACTIVATE_USER", "Administrator mengaktifkan User ID: $uid");
+        $status_msg = "Akun berhasil diaktifkan!";
+    }
+}
+
+// --- PART 4: UPDATE ACCESS RIGHTS ---
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_access'])) {
+    csrf_verify();
+    $target_user = $_POST['target_username'];
+    $menus = $_POST['menus'] ?? [];
+    
+    // Reset access
+    safe_query("DELETE FROM web_access WHERE username = ?", [$target_user]);
+    
+    // Insert new access
+    foreach ($menus as $mid) {
+        safe_query("INSERT INTO web_access (username, menu_id) VALUES (?, ?)", [$target_user, (int)$mid]);
+    }
+    write_log("UPDATE_ACCESS", "Administrator memperbarui hak akses untuk user: $target_user");
+    $status_msg = "Hak akses berhasil diperbarui!";
+}
+
+// Ambil Data Profil
+$current_user = $_SESSION['username'];
+$user_full_name = "User " . $current_user;
+$user_photo = "";
+
+if (($_SESSION['login_source'] ?? 'BEXMEDIA') === 'BEXMEDIA') {
+    $res_u = safe_query("SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')", [$current_user]);
+    if ($row_u = mysqli_fetch_assoc($res_u)) {
+        $user_full_name = $row_u['nama_lengkap'];
+        $user_photo = $row_u['photo'];
+        $_SESSION['user_photo'] = $user_photo;
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings | <?php echo h($brand_name); ?></title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="../css/index.css">
+    <style>
+        :root {
+            --primary: #3B82F6;
+            --primary-hover: #2563EB;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .settings-nav {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            height: fit-content;
+        }
+
+        .settings-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            cursor: pointer;
+            margin-bottom: 5px;
+        }
+
+        .settings-nav-item:hover, .settings-nav-item.active {
+            background: #F0F7FF;
+            color: var(--primary);
+        }
+
+        .settings-content {
+            background: white;
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            position: relative;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .form-section h3 {
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            color: var(--text-dark);
+            border-bottom: 1px solid #EEE;
+            padding-bottom: 10px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #64748B;
+            margin-bottom: 8px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #E2E8F0;
+            border-radius: 12px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn-save {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-save:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .status-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10B981;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            animation: slideIn 0.5s ease;
+            z-index: 1000;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        .log-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .log-table th, .log-table td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #F1F5F9;
+        }
+
+        .log-table th {
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-success { background: #DCFCE7; color: #166534; }
+        .badge-info { background: #E0F2FE; color: #075985; }
+        .badge-warn { background: #FEF3C7; color: #92400E; }
+        .badge-offline { background: #F1F5F9; color: #64748B; }
+
+        /* Dropdown Styles */
+        .nav-sub {
+            display: none;
+            padding-left: 24px;
+            margin-top: 4px;
+            border-left: 2px solid #F1F5F9;
+            margin-left: 24px;
+        }
+        .nav-sub.active { display: block; animation: slideDown 0.3s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        .dropdown-trigger.active .chevron { transform: rotate(180deg); }
+
+        /* Access Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            background: white;
+            width: 700px;
+            max-width: 90%;
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #EEE;
+        }
+        .menu-check-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .menu-check-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: #F8FAFC;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .menu-check-item:hover { background: #F1F5F9; }
+        .menu-check-item input { width: 18px; height: 18px; cursor: pointer; }
+    </style>
+</head>
+<body>
+        <div class="app-container">
+            <!-- Sidebar -->
+            <?php include "sidebar.php"; ?>
+
+            <main>
+            <header>
+                <div class="breadcrumb" style="color: var(--text-muted); font-size: 0.9rem">
+                    Pages / <strong>Settings</strong>
+                </div>
+                <div class="user-profile">
+                    <span><?php echo h($_SESSION['username']); ?></span>
+                    <?php 
+                        $avatar_url = "https://ui-avatars.com/api/?name=" . urlencode($_SESSION['username']) . "&background=3B82F6&color=fff";
+                        if (!empty($user_photo)) {
+                            $avatar_url = "../images/" . $user_photo;
+                        }
+                    ?>
+                    <div class="avatar" style="background-image: url('<?php echo $avatar_url; ?>'); background-size: cover; background-position: center;"></div>
+                </div>
+            </header>
+
+            <div class="dashboard-content">
+                <div class="dashboard-header">
+                    <h1>System Settings</h1>
+                    <p>Configure your hybrid server and application parameters.</p>
+                </div>
+
+                <?php if ($status_msg): ?>
+                    <div class="status-toast" id="statusToast">
+                        <i data-lucide="check-circle" size="18" style="vertical-align: middle; margin-right: 8px"></i>
+                        <?php echo $status_msg; ?>
+                    </div>
+                <?php endif; ?>
+
+                <div class="settings-grid">
+                    <div class="settings-nav">
+                        <div class="settings-nav-item active" onclick="showTab('profile')">
+                            <i data-lucide="user"></i> My Profile
+                        </div>
+                        <div class="settings-nav-item" onclick="showTab('general')">
+                            <i data-lucide="box"></i> General
+                        </div>
+                        <div class="settings-nav-item" onclick="showTab('connection')">
+                            <i data-lucide="database"></i> Database
+                        </div>
+                        
+                        <!-- Account Management Dropdown -->
+                        <div class="settings-nav-item dropdown-trigger" onclick="toggleSub('acc-mgmt')">
+                            <i data-lucide="users"></i> Management Akun
+                            <i data-lucide="chevron-down" class="chevron" size="16"></i>
+                        </div>
+                        <div id="acc-mgmt" class="nav-sub">
+                            <div class="settings-nav-item" onclick="showTab('access')" style="font-size: 0.9rem;">
+                                <i data-lucide="shield-check" size="18"></i> Hak Akses
+                            </div>
+                            <div class="settings-nav-item" onclick="showTab('userlist')" style="font-size: 0.9rem;">
+                                <i data-lucide="list" size="18"></i> Daftar Akun
+                            </div>
+                            <div class="settings-nav-item" onclick="showTab('confirm')" style="font-size: 0.9rem;">
+                                <i data-lucide="user-plus" size="18"></i> Konfirmasi Akun
+                            </div>
+                        </div>
+
+                        <div class="settings-nav-item" onclick="showTab('logs')">
+                            <i data-lucide="activity"></i> Audit Logs
+                        </div>
+                    </div>
+
+                    <form method="POST" class="settings-content" enctype="multipart/form-data">
+                        <?php echo csrf_field(); ?>
+                        
+                        <!-- TAB: PROFILE -->
+                        <div id="profile" class="tab-content active">
+                            <div class="form-section">
+                                <h3>Account Profile</h3>
+                                
+                                <div class="form-group" style="display: flex; align-items: center; gap: 20px; margin-bottom: 30px;">
+                                    <?php 
+                                        $p_url = "https://ui-avatars.com/api/?name=" . urlencode($_SESSION['username']) . "&background=F1F5F9&color=333&size=128";
+                                        if (!empty($user_photo)) {
+                                            $p_url = "../images/" . $user_photo;
+                                        }
+                                    ?>
+                                    <div id="photoPreview" style="width: 100px; height: 100px; border-radius: 20px; background-image: url('<?php echo $p_url; ?>'); background-size: cover; background-position: center; border: 4px solid #F1F5F9; box-shadow: 0 4px 10px rgba(0,0,0,0.05);"></div>
+                                    <div>
+                                        <label style="cursor: pointer; display: inline-block; padding: 10px 20px; background: #F1F5F9; border-radius: 10px; font-size: 0.85rem; font-weight: 600; color: var(--ice-1); transition: all 0.3s; <?php echo ($_SESSION['login_source'] ?? 'BEXMEDIA') !== 'BEXMEDIA' ? 'opacity: 0.5; pointer-events: none;' : ''; ?>">
+                                            <i data-lucide="camera" size="16" style="vertical-align: middle; margin-right: 8px"></i> Change Photo
+                                            <input type="file" name="photo" id="photoInput" style="display: none" accept="image/*" onchange="previewImage(this)">
+                                        </label>
+                                        <p style="margin-top: 8px; font-size: 0.75rem; color: #94A3B8">PNG, JPG or GIF. Max 2MB.</p>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Username (Read-only)</label>
+                                    <input type="text" value="<?php echo h($current_user); ?>" readonly style="background: #F8FAFC">
+                                </div>
+                                <div class="form-group">
+                                    <label>Full Name</label>
+                                    <input type="text" name="nama_lengkap" value="<?php echo h($user_full_name); ?>" <?php echo ($_SESSION['login_source'] ?? 'BEXMEDIA') !== 'BEXMEDIA' ? 'readonly' : ''; ?>>
+                                </div>
+                                <div class="form-group">
+                                    <label>New Password (Leave blank to keep current)</label>
+                                    <input type="password" name="new_password" placeholder="••••••••" <?php echo ($_SESSION['login_source'] ?? 'BEXMEDIA') !== 'BEXMEDIA' ? 'readonly' : ''; ?>>
+                                </div>
+                                
+                                <?php if (($_SESSION['login_source'] ?? 'BEXMEDIA') !== 'BEXMEDIA'): ?>
+                                <p style="font-size: 0.8rem; color: #EF4444; font-style: italic">
+                                    <i data-lucide="alert-circle" size="14" style="vertical-align: middle"></i> 
+                                    Akun Anda berasal dari database KHANZA. Profil hanya bisa diubah di sistem SIMRS utama.
+                                </p>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <!-- TAB: GENERAL -->
+                        <div id="general" class="tab-content">
+                            <div class="form-section">
+                                <h3>Application Info</h3>
+                                <div class="form-group">
+                                    <label>Application Name (Brand)</label>
+                                    <input type="text" name="app_name" value="<?php echo h(get_setting('app_name', 'BexMedia')); ?>">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB: CONNECTION -->
+                        <div id="connection" class="tab-content">
+                            <div class="form-section">
+                                <h3>Database Khanza (Remote Server)</h3>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Hostname / IP</label>
+                                        <input type="text" name="host_khanza" value="<?php echo h(get_setting('host_khanza')); ?>">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Database Name</label>
+                                        <input type="text" name="name_khanza" value="<?php echo h(get_setting('name_khanza')); ?>">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Username</label>
+                                        <input type="text" name="user_khanza" value="<?php echo h(get_setting('user_khanza')); ?>">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Password</label>
+                                        <input type="password" name="pass_khanza" value="<?php echo h(get_setting('pass_khanza')); ?>">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <h3>Database BexMedia (Local Server)</h3>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Hostname</label>
+                                        <input type="text" name="host_bex" value="<?php echo h(get_setting('host_bex')); ?>">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Database Name</label>
+                                        <input type="text" name="name_bex" value="<?php echo h(get_setting('name_bex')); ?>">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Username</label>
+                                        <input type="text" name="user_bex" value="<?php echo h(get_setting('user_bex')); ?>">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Password</label>
+                                        <input type="password" name="pass_bex" value="<?php echo h(get_setting('pass_bex')); ?>">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB: ACCESS RIGHTS -->
+                        <div id="access" class="tab-content">
+                            <div class="form-section">
+                                <h3>User Access Control</h3>
+                                <p style="color: #64748B; font-size: 0.9rem; margin-bottom: 20px;">
+                                    Klik tombol <strong>Akses</strong> untuk mengatur izin menu bagi setiap pengguna.
+                                </p>
+                                
+                                <div style="overflow-x: auto;">
+                                    <table class="log-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Nama Lengkap</th>
+                                                <th>Username</th>
+                                                <th>Jabatan</th>
+                                                <th>Unit Kerja</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php
+                                            $user_list = mysqli_query($conn, "SELECT id, nama_lengkap, AES_DECRYPT(username, 'bex') as uname, nik, jabatan, unit_kerja FROM users WHERE status = 'active'");
+                                            while ($ul = mysqli_fetch_assoc($user_list)):
+                                            ?>
+                                            <tr>
+                                                <td><strong><?php echo h($ul['nama_lengkap']); ?></strong></td>
+                                                <td><code><?php echo h($ul['uname']); ?></code></td>
+                                                <td><?php echo h($ul['jabatan']); ?></td>
+                                                <td><?php echo h($ul['unit_kerja']); ?></td>
+                                                <td>
+                                                    <button type="button" class="btn-save" style="padding: 6px 12px; font-size: 0.75rem; display: flex; align-items: center; gap: 5px;" onclick="openAccessModal('<?php echo h($ul['uname']); ?>', '<?php echo addslashes($ul['nama_lengkap']); ?>')">
+                                                        <i data-lucide="shield" size="14"></i> Akses
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <?php endwhile; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB: USER LIST -->
+                        <div id="userlist" class="tab-content">
+                            <div class="form-section">
+                                <h3>User Account List</h3>
+                                <p style="color: #64748B; font-size: 0.9rem; margin-bottom: 20px;">
+                                    Daftar seluruh akun yang terdaftar di sistem beserta status aktif saat ini.
+                                </p>
+                                
+                                <div style="overflow-x: auto;">
+                                    <table class="log-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Nama Lengkap</th>
+                                                <th>Username</th>
+                                                <th>Jabatan</th>
+                                                <th>Status Akun</th>
+                                                <th>Status Login</th>
+                                                <th>Last Activity</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php
+                                            $all_users = mysqli_query($conn, "SELECT id, nama_lengkap, AES_DECRYPT(username, 'bex') as uname, jabatan, last_activity, status FROM users ORDER BY last_activity DESC");
+                                            while ($au = mysqli_fetch_assoc($all_users)):
+                                                // Status Online: Aktif dalam 5 menit terakhir
+                                                $is_online = (!empty($au['last_activity']) && strtotime($au['last_activity']) > (time() - 300));
+                                                $status_label = $is_online ? "Online" : "Offline";
+                                                $status_badge = $is_online ? "badge-success" : "badge-offline";
+                                                
+                                                // Status Akun
+                                                $acc_status = ucfirst($au['status']);
+                                                $acc_badge = ($au['status'] == 'active') ? "badge-success" : "badge-warn";
+                                            ?>
+                                            <tr>
+                                                <td><strong><?php echo h($au['nama_lengkap']); ?></strong></td>
+                                                <td><code style="background: #F8FAFC; padding: 2px 6px; border-radius: 4px;"><?php echo h($au['uname']); ?></code></td>
+                                                <td><?php echo h($au['jabatan']); ?></td>
+                                                <td><span class="badge <?php echo $acc_badge; ?>"><?php echo $acc_status; ?></span></td>
+                                                <td><span class="badge <?php echo $status_badge; ?>"><?php echo $status_label; ?></span></td>
+                                                <td style="font-size: 0.75rem; color: #94A3B8;"><?php echo $au['last_activity'] ? $au['last_activity'] : 'Never'; ?></td>
+                                            </tr>
+                                            <?php endwhile; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB: CONFIRM ACCOUNT -->
+                        <div id="confirm" class="tab-content">
+                            <div class="form-section">
+                                <h3>Account Confirmation (Pending)</h3>
+                                <p style="color: #64748B; font-size: 0.9rem; margin-bottom: 20px;">
+                                    Daftar pengguna baru yang menunggu aktivasi akun untuk dapat mengakses sistem.
+                                </p>
+                                
+                                <div style="overflow-x: auto;">
+                                    <table class="log-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Nama Lengkap</th>
+                                                <th>NIK</th>
+                                                <th>Unit Kerja</th>
+                                                <th>Email</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php
+                                            $pending_users = mysqli_query($conn, "SELECT id, nama_lengkap, nik, unit_kerja, email FROM users WHERE status = 'pending' ORDER BY created_at DESC");
+                                            if (mysqli_num_rows($pending_users) == 0):
+                                            ?>
+                                                <tr><td colspan="5" style="text-align:center; padding: 40px; color: #94A3B8;">Tidak ada akun yang menunggu konfirmasi.</td></tr>
+                                            <?php else: ?>
+                                                <?php while ($pu = mysqli_fetch_assoc($pending_users)): ?>
+                                                <tr>
+                                                    <td><strong><?php echo h($pu['nama_lengkap']); ?></strong></td>
+                                                    <td><?php echo h($pu['nik']); ?></td>
+                                                    <td><?php echo h($pu['unit_kerja']); ?></td>
+                                                    <td><?php echo h($pu['email']); ?></td>
+                                                    <td>
+                                                        <button type="button" class="btn-save" style="padding: 6px 12px; font-size: 0.75rem; background: #10B981;" onclick="activateUser(<?php echo $pu['id']; ?>, '<?php echo addslashes($pu['nama_lengkap']); ?>')">Aktifkan</button>
+                                                    </td>
+                                                </tr>
+                                                <?php endwhile; ?>
+                                            <?php endif; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB: LOGS -->
+                        <div id="logs" class="tab-content">
+                            <div class="form-section">
+                                <h3>Recent Audit Logs</h3>
+                                <table class="log-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Timestamp</th>
+                                            <th>User</th>
+                                            <th>Action</th>
+                                            <th>Description</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php
+                                        $logs = mysqli_query($conn, "SELECT * FROM web_dokter_audit_log ORDER BY created_at DESC LIMIT 10");
+                                        while ($log = mysqli_fetch_assoc($logs)):
+                                            $badge_class = "badge-info";
+                                            if (strpos($log['action'], 'FAILED') !== false || strpos($log['action'], 'FAILURE') !== false) $badge_class = "badge-warn";
+                                            if (strpos($log['action'], 'SUCCESS') !== false) $badge_class = "badge-success";
+                                        ?>
+                                        <tr>
+                                            <td style="color: var(--text-muted)"><?php echo $log['created_at']; ?></td>
+                                            <td><strong><?php echo h($log['user_id']); ?></strong></td>
+                                            <td><span class="badge <?php echo $badge_class; ?>"><?php echo h($log['action']); ?></span></td>
+                                            <td><?php echo h($log['description']); ?></td>
+                                        </tr>
+                                        <?php endwhile; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div id="saveContainer" style="margin-top: 20px;">
+                            <button type="submit" name="save_settings" class="btn-save">
+                                <i data-lucide="save" size="18" style="vertical-align: middle; margin-right: 8px"></i>
+                                Save All Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Hidden Form for Activation (Moved outside to fix nesting issue) -->
+                <form id="activateForm" method="POST" style="display:none;">
+                    <?php echo csrf_field(); ?>
+                    <input type="hidden" name="user_id" id="activateUserId">
+                    <input type="hidden" name="activate_user" value="1">
+                </form>
+
+                <!-- Access Modal -->
+                <div id="accessModal" class="modal-overlay">
+                    <div class="modal-box">
+                        <div class="modal-header">
+                            <h2 id="modalTitle" style="font-family:'Outfit',sans-serif; margin:0;">Hak Akses Menu</h2>
+                            <i data-lucide="x" style="cursor:pointer" onclick="closeAccessModal()"></i>
+                        </div>
+                        <form method="POST">
+                            <input type="hidden" name="csrf_token" value="<?php echo csrf_token(); ?>">
+                            <input type="hidden" name="target_username" id="targetUsername">
+                            <input type="hidden" name="update_access" value="1">
+                            
+                            <p style="color:#64748B; font-size:0.9rem">Beri tanda centang pada menu yang boleh diakses oleh user ini.</p>
+                            
+                            <div class="menu-check-grid" id="menuGrid">
+                                <!-- Loaded via JS -->
+                            </div>
+
+                            <div style="margin-top:30px; display:flex; justify-content:flex-end; gap:10px;">
+                                <button type="button" class="btn-save" style="background:#64748B" onclick="closeAccessModal()">Batal</button>
+                                <button type="submit" class="btn-save">Simpan Perubahan</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        function showTab(tabId) {
+            // Update nav
+            document.querySelectorAll('.settings-nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+
+            // Show content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabId).classList.add('active');
+
+            // Save button visibility
+            const saveBtn = document.getElementById('saveContainer');
+            if (tabId === 'logs' || tabId === 'confirm' || tabId === 'access' || tabId === 'userlist') {
+                saveBtn.style.display = 'none';
+            } else {
+                saveBtn.style.display = 'block';
+            }
+        }
+
+        function toggleSub(id) {
+            const sub = document.getElementById(id);
+            const trigger = event.currentTarget;
+            sub.classList.toggle('active');
+            trigger.classList.toggle('active');
+        }
+
+        function activateUser(id, name) {
+            Swal.fire({
+                title: 'Aktivasi Akun?',
+                text: "Apakah Anda yakin ingin mengaktifkan akun " + name + "?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#10B981',
+                cancelButtonColor: '#64748B',
+                confirmButtonText: 'Ya, Aktifkan!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('activateUserId').value = id;
+                    document.getElementById('activateForm').submit();
+                }
+            })
+        }
+
+        // Preview Image
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('photoPreview').style.backgroundImage = 'url(' + e.target.result + ')';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Auto hide toast
+        setTimeout(() => {
+            const toast = document.getElementById('statusToast');
+            if (toast) toast.style.display = 'none';
+        }, 3000);
+
+        // ACCESS MODAL LOGIC
+        const allMenus = <?php 
+            $menus = [];
+            $res_m = mysqli_query($conn, "SELECT id, display_name FROM web_menus ORDER BY display_name");
+            while($m = mysqli_fetch_assoc($res_m)) $menus[] = $m;
+            echo json_encode($menus);
+        ?>;
+
+        function openAccessModal(username, fullName) {
+            document.getElementById('targetUsername').value = username;
+            document.getElementById('modalTitle').innerText = "Hak Akses: " + fullName;
+            
+            // Get current access (AJAX)
+            fetch('?get_access=' + encodeURIComponent(username))
+                .then(res => res.json())
+                .then(data => {
+                    const grid = document.getElementById('menuGrid');
+                    grid.innerHTML = '';
+                    
+                    allMenus.forEach(menu => {
+                        const isChecked = data.includes(parseInt(menu.id)) ? 'checked' : '';
+                        grid.innerHTML += `
+                            <label class="menu-check-item">
+                                <input type="checkbox" name="menus[]" value="${menu.id}" ${isChecked}>
+                                <span style="font-size:0.9rem; font-weight:500;">${menu.display_name}</span>
+                            </label>
+                        `;
+                    });
+                    
+                    document.getElementById('accessModal').classList.add('active');
+                });
+        }
+
+        function closeAccessModal() {
+            document.getElementById('accessModal').classList.remove('active');
+        }
+    </script>
+</body>
+</html>

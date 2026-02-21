@@ -8,13 +8,19 @@ if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
 session_start();
 date_default_timezone_set("Asia/Makassar");
 
-// --- SECURITY HEADERS ---
+// --- SESSION HYGIENE & PROTECTION ---
+if (!isset($_SESSION['initiated'])) {
+    session_regenerate_id(true);
+    $_SESSION['initiated'] = true;
+}
+
+// --- SECURITY HEADERS (PRO-LEAD ARCHITECTURE) ---
 function send_security_headers() {
     header("X-XSS-Protection: 1; mode=block");
     header("X-Content-Type-Options: nosniff");
     header("X-Frame-Options: SAMEORIGIN");
     header("Referrer-Policy: strict-origin-when-cross-origin");
-    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' unpkg.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com unpkg.com; img-src 'self' data: ui-avatars.com picsum.photos *.picsum.photos; font-src 'self' fonts.gstatic.com; connect-src 'self' unpkg.com; frame-ancestors 'none';");
+    header("Content-Security-Policy: default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' data: https:; connect-src 'self' https:; frame-ancestors 'none';");
     
     if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
         header("Strict-Transport-Security: max-age=31536000; includeSubDomains");
@@ -31,15 +37,22 @@ if (!isset($_SESSION['CREATED'])) {
     $_SESSION['CREATED'] = time();
 }
 
-// Auto Logout (30 Menit)
+// Auto Logout (30 Menit) - DISABLED FOR DEVELOPMENT
+/*
 $timeout_duration = 1800;
 if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > $timeout_duration)) {
     session_unset();
     session_destroy();
-    header("Location: login.php?timeout=true");
+    
+    // Deteksi apakah file yang memanggil config ini berada di folder 'dist'
+    $is_in_dist = (strpos(str_replace('\\', '/', $_SERVER['SCRIPT_FILENAME']), '/dist/') !== false);
+    $login_path = $is_in_dist ? "../login.php" : "login.php";
+    
+    header("Location: " . $login_path . "?timeout=true");
     exit;
 }
 $_SESSION['LAST_ACTIVITY'] = time();
+*/
 
 // --- ERROR HANDLING (PRODUCTION MODE) ---
 error_reporting(E_ALL);
@@ -89,6 +102,11 @@ if ($host_bex != $tmp_host || $user_bex != $tmp_user || $pass_bex != $tmp_pass |
     $conn = mysqli_connect($host_bex, $user_bex, $pass_bex, $name_bex);
 }
 
+// --- USER ACTIVITY TRACKING (MUST BE AFTER DB CONNECTION) ---
+if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true && isset($conn)) {
+    mysqli_query($conn, "UPDATE users SET last_activity = NOW() WHERE username = AES_ENCRYPT('" . $_SESSION['username'] . "', 'bex')");
+}
+
 if (!$conn) die("Gagal koneksi ke DB INTERNAL BEXMEDIA!");
 mysqli_query($conn, "SET NAMES 'latin1'");
 
@@ -103,10 +121,41 @@ mysqli_query($conn, "CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARBINARY(255) NOT NULL UNIQUE,
     password VARBINARY(255) NOT NULL,
+    nik VARCHAR(30) UNIQUE,
     nama_lengkap VARCHAR(100),
+    jabatan VARCHAR(100),
+    unit_kerja VARCHAR(100),
+    email VARCHAR(255) UNIQUE,
     photo VARCHAR(255),
+    atasan_id INT,
+    status ENUM('active', 'pending', 'blocked') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )");
+
+mysqli_query($conn, "CREATE TABLE IF NOT EXISTS jabatan (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nama_jabatan VARCHAR(100) UNIQUE
+)");
+
+mysqli_query($conn, "CREATE TABLE IF NOT EXISTS unit_kerja (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nama_unit VARCHAR(100) UNIQUE
+)");
+
+// Seed Jabatan & Unit if empty
+$check_jabatan = mysqli_query($conn, "SELECT id FROM jabatan LIMIT 1");
+if (mysqli_num_rows($check_jabatan) == 0) {
+    mysqli_query($conn, "INSERT INTO jabatan (nama_jabatan) VALUES 
+        ('Dokter Spesialis'), ('Dokter Umum'), ('Perawat'), ('Bidan'), 
+        ('Apoteker'), ('Analis Kesehatan'), ('Staf Administrasi'), ('IT Support')");
+}
+
+$check_unit = mysqli_query($conn, "SELECT id FROM unit_kerja LIMIT 1");
+if (mysqli_num_rows($check_unit) == 0) {
+    mysqli_query($conn, "INSERT INTO unit_kerja (nama_unit) VALUES 
+        ('Rawat Jalan'), ('Rawat Inap'), ('IGD'), ('Farmasi'), 
+        ('Laboratorium'), ('Radiologi'), ('Administrasi'), ('IT')");
+}
 
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS web_dokter_audit_log (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -142,7 +191,11 @@ if (mysqli_num_rows($check_settings) == 0) {
         ('host_bex', 'localhost'),
         ('user_bex', 'root'),
         ('pass_bex', ''),
-        ('name_bex', 'bexmedia')");
+        ('name_bex', 'bexmedia'),
+        ('app_version', 'V. 1. - .20.02.2026'),
+        ('telegram_bot_token', ''),
+        ('telegram_chat_id', ''),
+        ('wa_gateway_url', '')");
 }
 
 // --- HELPER KEAMANAN ---
@@ -152,8 +205,78 @@ function h($string) {
 
 function checkLogin() {
     if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
-        header("Location: login.php");
+        $is_in_dist = (strpos(str_replace('\\', '/', $_SERVER['SCRIPT_FILENAME']), '/dist/') !== false);
+        $login_path = $is_in_dist ? "../login.php" : "login.php";
+        header("Location: " . $login_path);
         exit;
+    }
+    // Auto-check access for every page load (except when in root)
+    if (strpos($_SERVER['PHP_SELF'], '/dist/') !== false) {
+        checkAccess();
+    }
+}
+
+function syncMenus() {
+    global $conn;
+    $dist_path = dirname(__DIR__) . DIRECTORY_SEPARATOR . "dist";
+    if (!is_dir($dist_path)) return;
+
+    $files = scandir($dist_path);
+    $active_files = [];
+
+    foreach ($files as $file) {
+        if (pathinfo($file, PATHINFO_EXTENSION) === 'php' && $file !== 'logout.php') {
+            $full_path = $dist_path . DIRECTORY_SEPARATOR . $file;
+            $content = file_get_contents($full_path);
+            
+            // Mencari "// MenuName: Nama Menu"
+            $display_name = $file;
+            if (preg_match('/\/\/ MenuName:\s*(.*)/', $content, $matches)) {
+                $display_name = trim($matches[1]);
+            }
+            
+            $active_files[] = $file;
+            
+            // Insert or update
+            safe_query("INSERT INTO web_menus (file_name, display_name) VALUES (?, ?) 
+                        ON DUPLICATE KEY UPDATE display_name = ?", [$file, $display_name, $display_name]);
+        }
+    }
+    
+    // Optional: Bersihkan menu yang filenya sudah dihapus
+    if (!empty($active_files)) {
+        $placeholders = implode(',', array_fill(0, count($active_files), '?'));
+        safe_query("DELETE FROM web_menus WHERE file_name NOT IN ($placeholders)", $active_files);
+    }
+}
+
+function checkAccess() {
+    global $conn;
+    $current_file = basename($_SERVER['PHP_SELF']);
+    $username = $_SESSION['username'] ?? '';
+    
+    // 1. Bypass untuk Super Admin (Bara N.Fahrun / Sesuai Database)
+    if ($username === 'admin' || $username === 'bara') return true; 
+
+    // 2. Cek apakah menu terdaftar
+    $res_menu = safe_query("SELECT id FROM web_menus WHERE file_name = ?", [$current_file]);
+    if ($row_menu = mysqli_fetch_assoc($res_menu)) {
+        $menu_id = $row_menu['id'];
+        
+        // 3. Cek izin akses
+        $res_access = safe_query("SELECT id FROM web_access WHERE username = ? AND menu_id = ?", [$username, $menu_id]);
+        if (mysqli_num_rows($res_access) == 0) {
+            // Log penolakan akses
+            write_log("ACCESS_DENIED", "User $username mencoba akses menu $current_file tanpa izin.");
+            
+            // Tampilan Access Denied
+            die('
+            <div style="font-family:sans-serif; text-align:center; padding:100px;">
+                <h1 style="color:#ef4444;">Akses Ditolak!</h1>
+                <p>Maaf, Anda tidak memiliki izin untuk mengakses halaman ini.</p>
+                <a href="index.php" style="color:#3b82f6; text-decoration:none; font-weight:bold;">Kembali ke Dashboard</a>
+            </div>');
+        }
     }
 }
 
@@ -204,10 +327,18 @@ function safe_query($sql, $params = [], $target_conn = null) {
 
     if (!mysqli_stmt_execute($stmt)) {
         error_log("Execute failed: " . mysqli_stmt_error($stmt));
+        mysqli_stmt_close($stmt);
         return false;
     }
 
     $result = mysqli_stmt_get_result($stmt);
+    
+    // Jika tidak ada result set (misal: INSERT/UPDATE/DELETE), kembalikan true
+    if ($result === false && mysqli_stmt_errno($stmt) === 0) {
+        mysqli_stmt_close($stmt);
+        return true;
+    }
+
     mysqli_stmt_close($stmt);
     return $result;
 }
