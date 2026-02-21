@@ -37,6 +37,24 @@ FixPoint adalah sistem ERP (Enterprise Resource Planning) terintegrasi yang dira
 *   **Modularization**: Memisahkan logika database ke `conf/config.php` seperti pola BexMedia untuk memudahkan maintenance multi-server (Hybrid).
 *   **UI/UX Modernization**: Mengadopsi Glassmorphism dari BexMedia ke dalam FixPoint untuk tampilan yang lebih premium.
 
+## 7. Penemuan Terbaru (Versi 2025/2026)
+Berdasarkan analisis terbaru pada folder `projek ggrub koding/wira`, terdapat beberapa peningkatan signifikan yang membedakan versi ini dengan iterasi sebelumnya:
+
+1.  **Absensi Digital (Face & GPS)**:
+    *   **Selfie-based Attendance**: Integrasi kamera untuk pengambilan foto saat absensi.
+    *   **Geofencing (GPS Check)**: Validasi koordinat lokasi secara real-time. Sistem menolak absen jika berada di luar radius kantor (misal >200m).
+2.  **Modul KOMKEP (Komite Keperawatan)**:
+    *   Modul khusus tenaga medis untuk **Kredensial Clinical Privilege** (Ujian Praktek, Wawancara, Tertulis).
+    *   Pelacakan masa berlaku Surat Izin Kerja (STR/SIP).
+3.  **Advanced TTE & E-Stamp**:
+    *   **E-Stamp (Stempel Digital)**: Fitur pembubuhan stempel resmi instansi secara digital pada dokumen legal.
+    *   **License-Locked TTE**: Sistem tanda tangan yang dikunci berdasarkan status lisensi per faskes.
+4.  **Audit & Keamanan Hardening**:
+    *   **Universal Activity Log**: Pencarian dan perekaman detail setiap aksi user via tabel `activity_log` (Audit Trail).
+    *   **Exit Clearance System**: Alur birokrasi otomatis saat karyawan keluar/resign untuk pengembalian inventaris.
+5.  **Otomatisasi Dokumen**:
+    *   Template otomatis untuk Notulen Rapat Bulanan, Surat Edaran, dan Pemberitahuan yang langsung bisa dicetak ke PDF dengan QR Code terverifikasi.
+
 ---
 *Dianalisis oleh: Antigravity AI*
-*Tanggal: 20 Februari 2026*
+*Update Terakhir: 21 Februari 2026*

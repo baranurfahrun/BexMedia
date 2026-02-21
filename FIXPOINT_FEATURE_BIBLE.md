@@ -210,3 +210,52 @@ Berikut adalah daftar urut seluruh menu yang ada di Sidebar FixPoint untuk refer
 -   `mail_setting.php`, `tele_setting.php`, `wa_setting.php`: Notif Configuration
 -   `unit_kerja.php`, `jabatan.php`, `master_poliklinik.php`: Organizational Master
 -   `profile.php`, `profile2.php`: User Account Settings
+
+---
+
+## 🏛️ BexMedia Implementation: Structured Sidebar Navigation
+Strategi pengelompokan menu yang diterapkan di **BexMedia** untuk menjaga estetika *Swiss Minimalist* dan efisiensi navigasi.
+
+### 1. 📊 INSIGHT & ANALYTICS (Dropdown)
+Ini adalah "Otak" aplikasi yang berisi semua laporan data.
+- **Dashboard Utama** (`index.php`)
+- **Monitoring Antrian** (Online & Offline)
+- **Statistik E-RM** (Rekam Medis)
+- **Satu Sehat Tracker**
+- **Slide Laporan Direksi**
+
+### 2. 🛠️ TECHNICAL SUPPORT (Dropdown)
+Berisi urusan perbaikan dan pemeliharaan.
+- **IT Support** (Software & Hardware)
+- **Sarpras Support** (Fisik & Alat Kesehatan)
+- **Maintenance Rutin** (Cek berkala)
+- **Handling Time Analysis** (Performa Teknisi)
+- **Berita Acara** (Dokumen Kerusakan)
+
+### 3. 👥 EMPLOYEE HUB (Dropdown)
+Berisi semua fitur yang berhubungan dengan karyawan.
+- **Data Karyawan** (Database SDM)
+- **Absensi & Jadwal Dinas** (Hadir & Shift)
+- **Cuti & Izin Keluar** (Administrasi Mandiri)
+- **Payroll & Slip Gaji** (Keuangan Karyawan)
+- **Evaluasi KPI** (Kinerja)
+
+### 4. 📑 DIGITAL ARCHIVE (Dropdown)
+Pusat dokumen dan surat-menyurat elektronik.
+- **Tanda Tangan Elektronik (TTE)** (Fitur Unggulan)
+- **Surat Masuk & Keluar** (Korespondensi)
+- **Arsip Digital & Agenda** (Penyimpanan File)
+- **Dokumen Akreditasi** (Khusus Persiapan Audit)
+
+### 5. 🛡️ QUALITY ASSURANCE (Dropdown)
+Fokus pada standar mutu dan kredensial tenaga medis.
+- **Indikator Mutu** (IMN, RS, Unit)
+- **Komite Keperawatan** (Kredensial & Wawancara)
+- **SPO Digital** (Standard Prosedur)
+
+### 6. ⚙️ SYSTEM CENTER (Dropdown)
+Semua konfigurasi sistem yang hanya bisa diakses Super Admin.
+- **Pengaturan Perusahaan**
+- **User & Hak Akses** (RBAC)
+- **Integrasi Notifikasi** (WA, Telegram, Mail)
+- **Log System** (Audit Log & Login History)

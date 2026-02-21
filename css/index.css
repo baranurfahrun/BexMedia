@@ -586,7 +586,7 @@ header {
     white-space: nowrap;
     /* Crucial: Prevents text from wrapping to next line */
     padding-left: 100%;
-    animation: scroll-text 35s linear infinite;
+    animation: scroll-text 90s linear infinite;
     font-size: 0.9rem;
     font-weight: 700;
     color: var(--ice-1);

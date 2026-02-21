@@ -214,3 +214,429 @@
 [20-Feb-2026 11:58:37 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\tools\debug_sync.php on line 38
 [20-Feb-2026 12:06:03 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 646
 [20-Feb-2026 13:00:32 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\settings.php on line 647
+[21-Feb-2026 10:26:29 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 10:26:31 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 10:26:32 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 10:26:33 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 10:26:34 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 10:26:34 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 10:26:41 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 10:51:51 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 10:51:56 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 10:51:59 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 10:52:00 Asia/Makassar] Prepare failed: Unknown column 'created_at' in 'order clause' SQL: SELECT * FROM data_erm ORDER BY created_at DESC LIMIT 50
+[21-Feb-2026 10:52:00 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 10:52:00 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\erm.php on line 125
+[21-Feb-2026 10:52:00 Asia/Makassar] Prepare failed: Unknown column 'created_at' in 'order clause' SQL: SELECT * FROM satu_sehat ORDER BY created_at DESC LIMIT 50
+[21-Feb-2026 10:52:00 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 10:52:00 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\satu_sehat.php on line 146
+[21-Feb-2026 10:52:01 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 10:52:02 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 10:52:16 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 10:53:09 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 10:53:28 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 10:53:29 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 10:53:30 Asia/Makassar] Prepare failed: Unknown column 'created_at' in 'order clause' SQL: SELECT * FROM data_erm ORDER BY created_at DESC LIMIT 50
+[21-Feb-2026 10:53:30 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 10:53:30 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\erm.php on line 125
+[21-Feb-2026 10:53:31 Asia/Makassar] Prepare failed: Unknown column 'created_at' in 'order clause' SQL: SELECT * FROM satu_sehat ORDER BY created_at DESC LIMIT 50
+[21-Feb-2026 10:53:31 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 10:53:31 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\satu_sehat.php on line 146
+[21-Feb-2026 10:53:34 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 10:53:34 Asia/Makassar] PHP Notice:  Trying to access array offset on value of type null in C:\xampp\htdocs\BexMedia\dist\order_tiket_it_software.php on line 120
+[21-Feb-2026 10:53:34 Asia/Makassar] PHP Notice:  Trying to access array offset on value of type null in C:\xampp\htdocs\BexMedia\dist\order_tiket_it_software.php on line 121
+[21-Feb-2026 10:53:34 Asia/Makassar] PHP Notice:  Trying to access array offset on value of type null in C:\xampp\htdocs\BexMedia\dist\order_tiket_it_software.php on line 121
+[21-Feb-2026 11:00:36 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_it_hardware' doesn't exist SQL: SELECT COUNT(*) as total FROM (SELECT id FROM tiket_it_software UNION ALL SELECT id FROM tiket_it_hardware) AS t
+[21-Feb-2026 11:00:36 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 8
+[21-Feb-2026 11:00:36 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_sarpras' doesn't exist SQL: SELECT COUNT(*) as total FROM tiket_sarpras
+[21-Feb-2026 11:00:36 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 9
+[21-Feb-2026 11:00:36 Asia/Makassar] Prepare failed: Unknown column 'created_at' in 'order clause' SQL: SELECT * FROM progres_kerja ORDER BY created_at DESC LIMIT 6
+[21-Feb-2026 11:00:36 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:00:36 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 114
+[21-Feb-2026 11:00:38 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:00:38 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:00:39 Asia/Makassar] Prepare failed: Unknown column 'created_at' in 'order clause' SQL: SELECT * FROM data_erm ORDER BY created_at DESC LIMIT 50
+[21-Feb-2026 11:00:39 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:00:39 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\erm.php on line 125
+[21-Feb-2026 11:00:40 Asia/Makassar] Prepare failed: Unknown column 'created_at' in 'order clause' SQL: SELECT * FROM satu_sehat ORDER BY created_at DESC LIMIT 50
+[21-Feb-2026 11:00:40 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:00:40 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\satu_sehat.php on line 146
+[21-Feb-2026 11:00:41 Asia/Makassar] Prepare failed: Unknown column 'created_at' in 'order clause' SQL: SELECT * FROM progres_kerja ORDER BY tahun DESC, bulan DESC, created_at DESC LIMIT 20
+[21-Feb-2026 11:00:41 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:00:41 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\progres_kerja.php on line 130
+[21-Feb-2026 11:00:41 Asia/Makassar] Prepare failed: Table 'bexmedia.poli_antrian' doesn't exist SQL: SELECT pa.*, p.nama_poli FROM poli_antrian pa JOIN poliklinik p ON pa.id_poli = p.id ORDER BY pa.tahun DESC, pa.bulan DESC LIMIT 5
+[21-Feb-2026 11:00:41 Asia/Makassar] Prepare failed: Unknown column 'created_at' in 'order clause' SQL: SELECT * FROM data_erm ORDER BY created_at DESC LIMIT 5
+[21-Feb-2026 11:00:41 Asia/Makassar] Prepare failed: Unknown column 'created_at' in 'order clause' SQL: SELECT * FROM satu_sehat ORDER BY created_at DESC LIMIT 5
+[21-Feb-2026 11:00:41 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:00:41 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\slide_pelaporan.php on line 161
+[21-Feb-2026 11:00:41 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\slide_pelaporan.php on line 191
+[21-Feb-2026 11:00:41 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\slide_pelaporan.php on line 220
+[21-Feb-2026 11:03:50 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_it_hardware' doesn't exist SQL: SELECT COUNT(*) as total FROM (SELECT id FROM tiket_it_software WHERE status != 'Completed' UNION ALL SELECT id FROM tiket_it_hardware WHERE status != 'Completed') AS t
+[21-Feb-2026 11:03:50 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 11
+[21-Feb-2026 11:03:50 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_sarpras' doesn't exist SQL: SELECT COUNT(*) as total FROM tiket_sarpras WHERE status != 'Completed'
+[21-Feb-2026 11:03:50 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 12
+[21-Feb-2026 11:03:50 Asia/Makassar] Prepare failed: Unknown column 'created_at' in 'order clause' SQL: SELECT persen_all FROM semua_antrian ORDER BY created_at DESC LIMIT 1
+[21-Feb-2026 11:03:50 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 13
+[21-Feb-2026 11:03:50 Asia/Makassar] Prepare failed: Table 'bexmedia.pengajuan_cuti' doesn't exist SQL: SELECT COUNT(*) as total FROM pengajuan_cuti WHERE status = 'Approved' AND CURDATE() BETWEEN tanggal_mulai AND tanggal_selesai
+[21-Feb-2026 11:03:50 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 14
+[21-Feb-2026 11:03:50 Asia/Makassar] Prepare failed: Unknown column 'created_at' in 'order clause' SQL: SELECT * FROM progres_kerja ORDER BY created_at DESC LIMIT 5
+[21-Feb-2026 11:03:50 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_masuk' doesn't exist SQL: SELECT * FROM surat_masuk ORDER BY tgl_terima DESC LIMIT 10
+[21-Feb-2026 11:03:50 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_keluar' doesn't exist SQL: SELECT * FROM surat_keluar ORDER BY tgl_surat DESC LIMIT 10
+[21-Feb-2026 11:03:50 Asia/Makassar] Prepare failed: Table 'bexmedia.agenda_direktur' doesn't exist SQL: SELECT * FROM agenda_direktur ORDER BY tanggal DESC, jam DESC LIMIT 5
+[21-Feb-2026 11:03:50 Asia/Makassar] Prepare failed: Table 'bexmedia.data_barang_it' doesn't exist SQL: SELECT * FROM data_barang_it ORDER BY created_at DESC LIMIT 10
+[21-Feb-2026 11:03:50 Asia/Makassar] Prepare failed: Table 'bexmedia.dokumen_tte' doesn't exist SQL: SELECT * FROM dokumen_tte ORDER BY tanggal_sign DESC LIMIT 10
+[21-Feb-2026 11:03:50 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:03:50 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 172
+[21-Feb-2026 11:03:50 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 184
+[21-Feb-2026 11:03:50 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 204
+[21-Feb-2026 11:03:50 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 220
+[21-Feb-2026 11:03:50 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_it_hardware' doesn't exist SQL: SELECT * FROM (SELECT id, nomor_tiket, kategori, kendala, petugas_nama as reporter, status, created_at FROM tiket_it_software UNION ALL SELECT id, nomor_tiket, kategori, kendala, petugas_nama as reporter, status, created_at FROM tiket_it_hardware) AS comb ORDER BY created_at DESC LIMIT 20
+[21-Feb-2026 11:03:50 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 250
+[21-Feb-2026 11:08:50 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_it_hardware' doesn't exist SQL: SELECT COUNT(*) as total FROM (SELECT id FROM tiket_it_software WHERE status != 'Completed' UNION ALL SELECT id FROM tiket_it_hardware WHERE status != 'Completed') AS t
+[21-Feb-2026 11:08:50 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 11
+[21-Feb-2026 11:08:50 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_sarpras' doesn't exist SQL: SELECT COUNT(*) as total FROM tiket_sarpras WHERE status != 'Completed'
+[21-Feb-2026 11:08:50 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 12
+[21-Feb-2026 11:08:50 Asia/Makassar] Prepare failed: Unknown column 'created_at' in 'order clause' SQL: SELECT persen_all FROM semua_antrian ORDER BY created_at DESC LIMIT 1
+[21-Feb-2026 11:08:50 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 13
+[21-Feb-2026 11:08:50 Asia/Makassar] Prepare failed: Table 'bexmedia.pengajuan_cuti' doesn't exist SQL: SELECT COUNT(*) as total FROM pengajuan_cuti WHERE status = 'Approved' AND CURDATE() BETWEEN tanggal_mulai AND tanggal_selesai
+[21-Feb-2026 11:08:50 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 14
+[21-Feb-2026 11:08:50 Asia/Makassar] Prepare failed: Unknown column 'created_at' in 'order clause' SQL: SELECT * FROM progres_kerja ORDER BY created_at DESC LIMIT 5
+[21-Feb-2026 11:08:50 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_masuk' doesn't exist SQL: SELECT * FROM surat_masuk ORDER BY tgl_terima DESC LIMIT 10
+[21-Feb-2026 11:08:50 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_keluar' doesn't exist SQL: SELECT * FROM surat_keluar ORDER BY tgl_surat DESC LIMIT 10
+[21-Feb-2026 11:08:50 Asia/Makassar] Prepare failed: Table 'bexmedia.agenda_direktur' doesn't exist SQL: SELECT * FROM agenda_direktur ORDER BY tanggal DESC, jam DESC LIMIT 5
+[21-Feb-2026 11:08:50 Asia/Makassar] Prepare failed: Table 'bexmedia.data_barang_it' doesn't exist SQL: SELECT * FROM data_barang_it ORDER BY created_at DESC LIMIT 10
+[21-Feb-2026 11:08:50 Asia/Makassar] Prepare failed: Table 'bexmedia.dokumen_tte' doesn't exist SQL: SELECT * FROM dokumen_tte ORDER BY tanggal_sign DESC LIMIT 10
+[21-Feb-2026 11:08:50 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:08:50 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 172
+[21-Feb-2026 11:08:50 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 184
+[21-Feb-2026 11:08:50 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 204
+[21-Feb-2026 11:08:50 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 220
+[21-Feb-2026 11:08:50 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_it_hardware' doesn't exist SQL: SELECT * FROM (SELECT id, nomor_tiket, kategori, kendala, petugas_nama as reporter, status, created_at FROM tiket_it_software UNION ALL SELECT id, nomor_tiket, kategori, kendala, petugas_nama as reporter, status, created_at FROM tiket_it_hardware) AS comb ORDER BY created_at DESC LIMIT 20
+[21-Feb-2026 11:08:50 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 250
+[21-Feb-2026 11:12:17 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_it_hardware' doesn't exist SQL: SELECT COUNT(*) as total FROM (SELECT id FROM tiket_it_software WHERE status != 'Completed' UNION ALL SELECT id FROM tiket_it_hardware WHERE status != 'Completed') AS t
+[21-Feb-2026 11:12:17 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 11
+[21-Feb-2026 11:12:17 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_sarpras' doesn't exist SQL: SELECT COUNT(*) as total FROM tiket_sarpras WHERE status != 'Completed'
+[21-Feb-2026 11:12:17 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 12
+[21-Feb-2026 11:12:17 Asia/Makassar] Prepare failed: Unknown column 'created_at' in 'order clause' SQL: SELECT persen_all FROM semua_antrian ORDER BY created_at DESC LIMIT 1
+[21-Feb-2026 11:12:17 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 13
+[21-Feb-2026 11:12:17 Asia/Makassar] Prepare failed: Table 'bexmedia.pengajuan_cuti' doesn't exist SQL: SELECT COUNT(*) as total FROM pengajuan_cuti WHERE status = 'Approved' AND CURDATE() BETWEEN tanggal_mulai AND tanggal_selesai
+[21-Feb-2026 11:12:17 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 14
+[21-Feb-2026 11:12:17 Asia/Makassar] Prepare failed: Unknown column 'created_at' in 'order clause' SQL: SELECT * FROM progres_kerja ORDER BY created_at DESC LIMIT 5
+[21-Feb-2026 11:12:17 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_masuk' doesn't exist SQL: SELECT * FROM surat_masuk ORDER BY tgl_terima DESC LIMIT 10
+[21-Feb-2026 11:12:17 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_keluar' doesn't exist SQL: SELECT * FROM surat_keluar ORDER BY tgl_surat DESC LIMIT 10
+[21-Feb-2026 11:12:17 Asia/Makassar] Prepare failed: Table 'bexmedia.agenda_direktur' doesn't exist SQL: SELECT * FROM agenda_direktur ORDER BY tanggal DESC, jam DESC LIMIT 5
+[21-Feb-2026 11:12:17 Asia/Makassar] Prepare failed: Table 'bexmedia.data_barang_it' doesn't exist SQL: SELECT * FROM data_barang_it ORDER BY created_at DESC LIMIT 10
+[21-Feb-2026 11:12:17 Asia/Makassar] Prepare failed: Table 'bexmedia.dokumen_tte' doesn't exist SQL: SELECT * FROM dokumen_tte ORDER BY tanggal_sign DESC LIMIT 10
+[21-Feb-2026 11:12:17 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:12:17 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 172
+[21-Feb-2026 11:12:17 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 184
+[21-Feb-2026 11:12:17 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 204
+[21-Feb-2026 11:12:17 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 220
+[21-Feb-2026 11:12:17 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_it_hardware' doesn't exist SQL: SELECT * FROM (SELECT id, nomor_tiket, kategori, kendala, petugas_nama as reporter, status, created_at FROM tiket_it_software UNION ALL SELECT id, nomor_tiket, kategori, kendala, petugas_nama as reporter, status, created_at FROM tiket_it_hardware) AS comb ORDER BY created_at DESC LIMIT 20
+[21-Feb-2026 11:12:17 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 250
+[21-Feb-2026 11:16:26 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_it_hardware' doesn't exist SQL: SELECT COUNT(*) as total FROM tiket_it_hardware WHERE status != 'Selesai'
+[21-Feb-2026 11:16:26 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 24
+[21-Feb-2026 11:16:26 Asia/Makassar] Prepare failed: Table 'bexmedia.pengajuan_cuti' doesn't exist SQL: SELECT COUNT(*) as total FROM pengajuan_cuti WHERE status = 'Approved' AND CURDATE() BETWEEN tanggal_mulai AND tanggal_selesai
+[21-Feb-2026 11:16:26 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 27
+[21-Feb-2026 11:16:26 Asia/Makassar] Prepare failed: Table 'bexmedia.koneksi_bridging' doesn't exist SQL: SELECT COUNT(*) as total FROM koneksi_bridging WHERE status = 'Active'
+[21-Feb-2026 11:16:26 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 31
+[21-Feb-2026 11:16:26 Asia/Makassar] Prepare failed: Table 'bexmedia.koneksi_bridging' doesn't exist SQL: SELECT COUNT(*) as total FROM koneksi_bridging
+[21-Feb-2026 11:16:26 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 32
+[21-Feb-2026 11:16:26 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_masuk' doesn't exist SQL: SELECT * FROM surat_masuk ORDER BY tgl_terima DESC LIMIT 5
+[21-Feb-2026 11:16:26 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_keluar' doesn't exist SQL: SELECT * FROM surat_keluar ORDER BY tgl_surat DESC LIMIT 5
+[21-Feb-2026 11:16:26 Asia/Makassar] Prepare failed: Table 'bexmedia.agenda_direktur' doesn't exist SQL: SELECT * FROM agenda_direktur WHERE tanggal >= CURDATE() ORDER BY tanggal ASC, jam ASC LIMIT 5
+[21-Feb-2026 11:16:37 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_it_hardware' doesn't exist SQL: SELECT COUNT(*) as total FROM tiket_it_hardware WHERE status != 'Selesai'
+[21-Feb-2026 11:16:37 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 24
+[21-Feb-2026 11:16:37 Asia/Makassar] Prepare failed: Table 'bexmedia.pengajuan_cuti' doesn't exist SQL: SELECT COUNT(*) as total FROM pengajuan_cuti WHERE status = 'Approved' AND CURDATE() BETWEEN tanggal_mulai AND tanggal_selesai
+[21-Feb-2026 11:16:37 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 27
+[21-Feb-2026 11:16:37 Asia/Makassar] Prepare failed: Table 'bexmedia.koneksi_bridging' doesn't exist SQL: SELECT COUNT(*) as total FROM koneksi_bridging WHERE status = 'Active'
+[21-Feb-2026 11:16:37 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 31
+[21-Feb-2026 11:16:37 Asia/Makassar] Prepare failed: Table 'bexmedia.koneksi_bridging' doesn't exist SQL: SELECT COUNT(*) as total FROM koneksi_bridging
+[21-Feb-2026 11:16:37 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 32
+[21-Feb-2026 11:16:37 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_masuk' doesn't exist SQL: SELECT * FROM surat_masuk ORDER BY tgl_terima DESC LIMIT 5
+[21-Feb-2026 11:16:37 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_keluar' doesn't exist SQL: SELECT * FROM surat_keluar ORDER BY tgl_surat DESC LIMIT 5
+[21-Feb-2026 11:16:37 Asia/Makassar] Prepare failed: Table 'bexmedia.agenda_direktur' doesn't exist SQL: SELECT * FROM agenda_direktur WHERE tanggal >= CURDATE() ORDER BY tanggal ASC, jam ASC LIMIT 5
+[21-Feb-2026 11:16:49 Asia/Makassar] Prepare failed: Table 'bexmedia.poli_antrian' doesn't exist SQL: SELECT pa.*, p.nama_poli FROM poli_antrian pa JOIN poliklinik p ON pa.id_poli = p.id ORDER BY pa.tahun DESC, pa.bulan DESC LIMIT 5
+[21-Feb-2026 11:16:49 Asia/Makassar] Prepare failed: Unknown column 'created_at' in 'order clause' SQL: SELECT * FROM data_erm ORDER BY created_at DESC LIMIT 5
+[21-Feb-2026 11:16:49 Asia/Makassar] Prepare failed: Unknown column 'created_at' in 'order clause' SQL: SELECT * FROM satu_sehat ORDER BY created_at DESC LIMIT 5
+[21-Feb-2026 11:16:49 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:16:49 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\slide_pelaporan.php on line 161
+[21-Feb-2026 11:16:49 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\slide_pelaporan.php on line 191
+[21-Feb-2026 11:16:49 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\slide_pelaporan.php on line 220
+[21-Feb-2026 11:16:53 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_it_hardware' doesn't exist SQL: SELECT COUNT(*) as total FROM tiket_it_hardware WHERE status != 'Selesai'
+[21-Feb-2026 11:16:53 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 24
+[21-Feb-2026 11:16:53 Asia/Makassar] Prepare failed: Table 'bexmedia.pengajuan_cuti' doesn't exist SQL: SELECT COUNT(*) as total FROM pengajuan_cuti WHERE status = 'Approved' AND CURDATE() BETWEEN tanggal_mulai AND tanggal_selesai
+[21-Feb-2026 11:16:53 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 27
+[21-Feb-2026 11:16:53 Asia/Makassar] Prepare failed: Table 'bexmedia.koneksi_bridging' doesn't exist SQL: SELECT COUNT(*) as total FROM koneksi_bridging WHERE status = 'Active'
+[21-Feb-2026 11:16:53 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 31
+[21-Feb-2026 11:16:53 Asia/Makassar] Prepare failed: Table 'bexmedia.koneksi_bridging' doesn't exist SQL: SELECT COUNT(*) as total FROM koneksi_bridging
+[21-Feb-2026 11:16:53 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 32
+[21-Feb-2026 11:16:53 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_masuk' doesn't exist SQL: SELECT * FROM surat_masuk ORDER BY tgl_terima DESC LIMIT 5
+[21-Feb-2026 11:16:53 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_keluar' doesn't exist SQL: SELECT * FROM surat_keluar ORDER BY tgl_surat DESC LIMIT 5
+[21-Feb-2026 11:16:53 Asia/Makassar] Prepare failed: Table 'bexmedia.agenda_direktur' doesn't exist SQL: SELECT * FROM agenda_direktur WHERE tanggal >= CURDATE() ORDER BY tanggal ASC, jam ASC LIMIT 5
+[21-Feb-2026 11:16:58 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:16:59 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_it_hardware' doesn't exist SQL: SELECT COUNT(*) as total FROM tiket_it_hardware WHERE status != 'Selesai'
+[21-Feb-2026 11:16:59 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 24
+[21-Feb-2026 11:16:59 Asia/Makassar] Prepare failed: Table 'bexmedia.pengajuan_cuti' doesn't exist SQL: SELECT COUNT(*) as total FROM pengajuan_cuti WHERE status = 'Approved' AND CURDATE() BETWEEN tanggal_mulai AND tanggal_selesai
+[21-Feb-2026 11:16:59 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 27
+[21-Feb-2026 11:16:59 Asia/Makassar] Prepare failed: Table 'bexmedia.koneksi_bridging' doesn't exist SQL: SELECT COUNT(*) as total FROM koneksi_bridging WHERE status = 'Active'
+[21-Feb-2026 11:16:59 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 31
+[21-Feb-2026 11:16:59 Asia/Makassar] Prepare failed: Table 'bexmedia.koneksi_bridging' doesn't exist SQL: SELECT COUNT(*) as total FROM koneksi_bridging
+[21-Feb-2026 11:16:59 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 32
+[21-Feb-2026 11:16:59 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_masuk' doesn't exist SQL: SELECT * FROM surat_masuk ORDER BY tgl_terima DESC LIMIT 5
+[21-Feb-2026 11:16:59 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_keluar' doesn't exist SQL: SELECT * FROM surat_keluar ORDER BY tgl_surat DESC LIMIT 5
+[21-Feb-2026 11:16:59 Asia/Makassar] Prepare failed: Table 'bexmedia.agenda_direktur' doesn't exist SQL: SELECT * FROM agenda_direktur WHERE tanggal >= CURDATE() ORDER BY tanggal ASC, jam ASC LIMIT 5
+[21-Feb-2026 11:34:14 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_it_hardware' doesn't exist SQL: SELECT COUNT(*) as total FROM tiket_it_hardware WHERE status != 'Selesai'
+[21-Feb-2026 11:34:14 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 24
+[21-Feb-2026 11:34:14 Asia/Makassar] Prepare failed: Table 'bexmedia.pengajuan_cuti' doesn't exist SQL: SELECT COUNT(*) as total FROM pengajuan_cuti WHERE status = 'Approved' AND CURDATE() BETWEEN tanggal_mulai AND tanggal_selesai
+[21-Feb-2026 11:34:14 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 27
+[21-Feb-2026 11:34:14 Asia/Makassar] Prepare failed: Table 'bexmedia.koneksi_bridging' doesn't exist SQL: SELECT COUNT(*) as total FROM koneksi_bridging WHERE status = 'Active'
+[21-Feb-2026 11:34:14 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 31
+[21-Feb-2026 11:34:14 Asia/Makassar] Prepare failed: Table 'bexmedia.koneksi_bridging' doesn't exist SQL: SELECT COUNT(*) as total FROM koneksi_bridging
+[21-Feb-2026 11:34:14 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 32
+[21-Feb-2026 11:34:14 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_masuk' doesn't exist SQL: SELECT * FROM surat_masuk ORDER BY tgl_terima DESC LIMIT 5
+[21-Feb-2026 11:34:14 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_keluar' doesn't exist SQL: SELECT * FROM surat_keluar ORDER BY tgl_surat DESC LIMIT 5
+[21-Feb-2026 11:34:14 Asia/Makassar] Prepare failed: Table 'bexmedia.agenda_direktur' doesn't exist SQL: SELECT * FROM agenda_direktur WHERE tanggal >= CURDATE() ORDER BY tanggal ASC, jam ASC LIMIT 5
+[21-Feb-2026 11:37:38 Asia/Makassar] Prepare failed: Table 'bexmedia.jatah_cuti' doesn't exist SQL: SELECT mc.nama_cuti, jc.lama_hari, jc.sisa_hari, (jc.lama_hari - jc.sisa_hari) AS terpakai 
+                        FROM jatah_cuti jc JOIN master_cuti mc ON jc.cuti_id = mc.id 
+                        WHERE jc.tahun = ?
+[21-Feb-2026 11:37:38 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_it_hardware' doesn't exist SQL: SELECT * FROM tiket_it_hardware ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:37:38 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_sarpras' doesn't exist SQL: SELECT * FROM tiket_sarpras ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:37:38 Asia/Makassar] Prepare failed: Table 'bexmedia.catatan_kerja' doesn't exist SQL: SELECT ck.*, u.nama_lengkap FROM catatan_kerja ck JOIN users u ON ck.user_id = u.id ORDER BY ck.tanggal DESC LIMIT 50
+[21-Feb-2026 11:37:38 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_masuk' doesn't exist SQL: SELECT * FROM surat_masuk ORDER BY tgl_terima DESC LIMIT 50
+[21-Feb-2026 11:37:38 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_keluar' doesn't exist SQL: SELECT * FROM surat_keluar ORDER BY tgl_surat DESC LIMIT 50
+[21-Feb-2026 11:37:38 Asia/Makassar] Prepare failed: Table 'bexmedia.arsip_digital' doesn't exist SQL: SELECT * FROM arsip_digital ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:37:38 Asia/Makassar] Prepare failed: Table 'bexmedia.agenda_direktur' doesn't exist SQL: SELECT * FROM agenda_direktur ORDER BY tanggal DESC, jam DESC LIMIT 50
+[21-Feb-2026 11:37:38 Asia/Makassar] Prepare failed: Table 'bexmedia.data_barang_it' doesn't exist SQL: SELECT * FROM data_barang_it ORDER BY created_at DESC LIMIT 50
+[21-Feb-2026 11:37:38 Asia/Makassar] Prepare failed: Table 'bexmedia.maintenance_rutin' doesn't exist SQL: SELECT mr.*, b.nama_barang, b.no_barang FROM maintenance_rutin mr LEFT JOIN data_barang_it b ON mr.barang_id = b.id ORDER BY mr.waktu_input DESC LIMIT 50
+[21-Feb-2026 11:37:38 Asia/Makassar] Prepare failed: Table 'bexmedia.izin_keluar' doesn't exist SQL: SELECT * FROM izin_keluar WHERE tanggal = CURDATE() ORDER BY created_at DESC
+[21-Feb-2026 11:37:38 Asia/Makassar] Prepare failed: Table 'bexmedia.dokumen' doesn't exist SQL: SELECT * FROM dokumen ORDER BY waktu_input DESC LIMIT 50
+[21-Feb-2026 11:37:38 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:37:38 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 232
+[21-Feb-2026 11:37:38 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 287
+[21-Feb-2026 11:37:38 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 312
+[21-Feb-2026 11:37:38 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 339
+[21-Feb-2026 11:39:27 Asia/Makassar] Prepare failed: Table 'bexmedia.jatah_cuti' doesn't exist SQL: SELECT mc.nama_cuti, jc.lama_hari, jc.sisa_hari, (jc.lama_hari - jc.sisa_hari) AS terpakai 
+                        FROM jatah_cuti jc JOIN master_cuti mc ON jc.cuti_id = mc.id 
+                        WHERE jc.tahun = ?
+[21-Feb-2026 11:39:27 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_it_hardware' doesn't exist SQL: SELECT * FROM tiket_it_hardware ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:39:27 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_sarpras' doesn't exist SQL: SELECT * FROM tiket_sarpras ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:39:27 Asia/Makassar] Prepare failed: Table 'bexmedia.catatan_kerja' doesn't exist SQL: SELECT ck.*, u.nama_lengkap FROM catatan_kerja ck JOIN users u ON ck.user_id = u.id ORDER BY ck.tanggal DESC LIMIT 50
+[21-Feb-2026 11:39:27 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_masuk' doesn't exist SQL: SELECT * FROM surat_masuk ORDER BY tgl_terima DESC LIMIT 50
+[21-Feb-2026 11:39:27 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_keluar' doesn't exist SQL: SELECT * FROM surat_keluar ORDER BY tgl_surat DESC LIMIT 50
+[21-Feb-2026 11:39:27 Asia/Makassar] Prepare failed: Table 'bexmedia.arsip_digital' doesn't exist SQL: SELECT * FROM arsip_digital ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:39:27 Asia/Makassar] Prepare failed: Table 'bexmedia.agenda_direktur' doesn't exist SQL: SELECT * FROM agenda_direktur ORDER BY tanggal DESC, jam DESC LIMIT 50
+[21-Feb-2026 11:39:27 Asia/Makassar] Prepare failed: Table 'bexmedia.data_barang_it' doesn't exist SQL: SELECT * FROM data_barang_it ORDER BY created_at DESC LIMIT 50
+[21-Feb-2026 11:39:27 Asia/Makassar] Prepare failed: Table 'bexmedia.maintenance_rutin' doesn't exist SQL: SELECT mr.*, b.nama_barang, b.no_barang FROM maintenance_rutin mr LEFT JOIN data_barang_it b ON mr.barang_id = b.id ORDER BY mr.waktu_input DESC LIMIT 50
+[21-Feb-2026 11:39:27 Asia/Makassar] Prepare failed: Table 'bexmedia.izin_keluar' doesn't exist SQL: SELECT * FROM izin_keluar WHERE tanggal = CURDATE() ORDER BY created_at DESC
+[21-Feb-2026 11:39:27 Asia/Makassar] Prepare failed: Table 'bexmedia.dokumen' doesn't exist SQL: SELECT * FROM dokumen ORDER BY waktu_input DESC LIMIT 50
+[21-Feb-2026 11:39:27 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:39:27 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 232
+[21-Feb-2026 11:39:27 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 287
+[21-Feb-2026 11:39:27 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 312
+[21-Feb-2026 11:39:27 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 339
+[21-Feb-2026 11:40:25 Asia/Makassar] Prepare failed: Table 'bexmedia.jatah_cuti' doesn't exist SQL: SELECT mc.nama_cuti, jc.lama_hari, jc.sisa_hari, (jc.lama_hari - jc.sisa_hari) AS terpakai 
+                        FROM jatah_cuti jc JOIN master_cuti mc ON jc.cuti_id = mc.id 
+                        WHERE jc.tahun = ?
+[21-Feb-2026 11:40:25 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_it_hardware' doesn't exist SQL: SELECT * FROM tiket_it_hardware ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:40:25 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_sarpras' doesn't exist SQL: SELECT * FROM tiket_sarpras ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:40:25 Asia/Makassar] Prepare failed: Table 'bexmedia.catatan_kerja' doesn't exist SQL: SELECT ck.*, u.nama_lengkap FROM catatan_kerja ck JOIN users u ON ck.user_id = u.id ORDER BY ck.tanggal DESC LIMIT 50
+[21-Feb-2026 11:40:25 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_masuk' doesn't exist SQL: SELECT * FROM surat_masuk ORDER BY tgl_terima DESC LIMIT 50
+[21-Feb-2026 11:40:25 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_keluar' doesn't exist SQL: SELECT * FROM surat_keluar ORDER BY tgl_surat DESC LIMIT 50
+[21-Feb-2026 11:40:25 Asia/Makassar] Prepare failed: Table 'bexmedia.arsip_digital' doesn't exist SQL: SELECT * FROM arsip_digital ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:40:25 Asia/Makassar] Prepare failed: Table 'bexmedia.agenda_direktur' doesn't exist SQL: SELECT * FROM agenda_direktur ORDER BY tanggal DESC, jam DESC LIMIT 50
+[21-Feb-2026 11:40:25 Asia/Makassar] Prepare failed: Table 'bexmedia.data_barang_it' doesn't exist SQL: SELECT * FROM data_barang_it ORDER BY created_at DESC LIMIT 50
+[21-Feb-2026 11:40:25 Asia/Makassar] Prepare failed: Table 'bexmedia.maintenance_rutin' doesn't exist SQL: SELECT mr.*, b.nama_barang, b.no_barang FROM maintenance_rutin mr LEFT JOIN data_barang_it b ON mr.barang_id = b.id ORDER BY mr.waktu_input DESC LIMIT 50
+[21-Feb-2026 11:40:25 Asia/Makassar] Prepare failed: Table 'bexmedia.izin_keluar' doesn't exist SQL: SELECT * FROM izin_keluar WHERE tanggal = CURDATE() ORDER BY created_at DESC
+[21-Feb-2026 11:40:25 Asia/Makassar] Prepare failed: Table 'bexmedia.dokumen' doesn't exist SQL: SELECT * FROM dokumen ORDER BY waktu_input DESC LIMIT 50
+[21-Feb-2026 11:40:25 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:40:25 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 232
+[21-Feb-2026 11:40:25 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 287
+[21-Feb-2026 11:40:25 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 312
+[21-Feb-2026 11:40:25 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 339
+[21-Feb-2026 11:40:31 Asia/Makassar] Prepare failed: Table 'bexmedia.jatah_cuti' doesn't exist SQL: SELECT mc.nama_cuti, jc.lama_hari, jc.sisa_hari, (jc.lama_hari - jc.sisa_hari) AS terpakai 
+                        FROM jatah_cuti jc JOIN master_cuti mc ON jc.cuti_id = mc.id 
+                        WHERE jc.tahun = ?
+[21-Feb-2026 11:40:31 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_it_hardware' doesn't exist SQL: SELECT * FROM tiket_it_hardware ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:40:31 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_sarpras' doesn't exist SQL: SELECT * FROM tiket_sarpras ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:40:31 Asia/Makassar] Prepare failed: Table 'bexmedia.catatan_kerja' doesn't exist SQL: SELECT ck.*, u.nama_lengkap FROM catatan_kerja ck JOIN users u ON ck.user_id = u.id ORDER BY ck.tanggal DESC LIMIT 50
+[21-Feb-2026 11:40:31 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_masuk' doesn't exist SQL: SELECT * FROM surat_masuk ORDER BY tgl_terima DESC LIMIT 50
+[21-Feb-2026 11:40:31 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_keluar' doesn't exist SQL: SELECT * FROM surat_keluar ORDER BY tgl_surat DESC LIMIT 50
+[21-Feb-2026 11:40:31 Asia/Makassar] Prepare failed: Table 'bexmedia.arsip_digital' doesn't exist SQL: SELECT * FROM arsip_digital ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:40:31 Asia/Makassar] Prepare failed: Table 'bexmedia.agenda_direktur' doesn't exist SQL: SELECT * FROM agenda_direktur ORDER BY tanggal DESC, jam DESC LIMIT 50
+[21-Feb-2026 11:40:31 Asia/Makassar] Prepare failed: Table 'bexmedia.data_barang_it' doesn't exist SQL: SELECT * FROM data_barang_it ORDER BY created_at DESC LIMIT 50
+[21-Feb-2026 11:40:31 Asia/Makassar] Prepare failed: Table 'bexmedia.maintenance_rutin' doesn't exist SQL: SELECT mr.*, b.nama_barang, b.no_barang FROM maintenance_rutin mr LEFT JOIN data_barang_it b ON mr.barang_id = b.id ORDER BY mr.waktu_input DESC LIMIT 50
+[21-Feb-2026 11:40:31 Asia/Makassar] Prepare failed: Table 'bexmedia.izin_keluar' doesn't exist SQL: SELECT * FROM izin_keluar WHERE tanggal = CURDATE() ORDER BY created_at DESC
+[21-Feb-2026 11:40:31 Asia/Makassar] Prepare failed: Table 'bexmedia.dokumen' doesn't exist SQL: SELECT * FROM dokumen ORDER BY waktu_input DESC LIMIT 50
+[21-Feb-2026 11:40:31 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:40:31 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 232
+[21-Feb-2026 11:40:31 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 287
+[21-Feb-2026 11:40:31 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 312
+[21-Feb-2026 11:40:31 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 339
+[21-Feb-2026 11:41:29 Asia/Makassar] Prepare failed: Table 'bexmedia.jatah_cuti' doesn't exist SQL: SELECT mc.nama_cuti, jc.lama_hari, jc.sisa_hari, (jc.lama_hari - jc.sisa_hari) AS terpakai 
+                        FROM jatah_cuti jc JOIN master_cuti mc ON jc.cuti_id = mc.id 
+                        WHERE jc.tahun = ?
+[21-Feb-2026 11:41:29 Asia/Makassar] Prepare failed: Table 'bexmedia.izin_keluar' doesn't exist SQL: SELECT * FROM izin_keluar WHERE tanggal = CURDATE() ORDER BY created_at DESC
+[21-Feb-2026 11:41:29 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_it_hardware' doesn't exist SQL: SELECT * FROM tiket_it_hardware ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:41:29 Asia/Makassar] Prepare failed: Table 'bexmedia.data_barang_it' doesn't exist SQL: SELECT * FROM data_barang_it ORDER BY created_at DESC LIMIT 50
+[21-Feb-2026 11:41:29 Asia/Makassar] Prepare failed: Table 'bexmedia.maintenance_rutin' doesn't exist SQL: SELECT mr.*, b.nama_barang, b.no_barang FROM maintenance_rutin mr LEFT JOIN data_barang_it b ON mr.barang_id = b.id ORDER BY mr.waktu_input DESC LIMIT 50
+[21-Feb-2026 11:41:29 Asia/Makassar] Prepare failed: Table 'bexmedia.catatan_kerja' doesn't exist SQL: SELECT ck.*, u.nama_lengkap FROM catatan_kerja ck JOIN users u ON ck.user_id = u.id ORDER BY ck.tanggal DESC LIMIT 50
+[21-Feb-2026 11:41:29 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_masuk' doesn't exist SQL: SELECT * FROM surat_masuk ORDER BY tgl_terima DESC LIMIT 50
+[21-Feb-2026 11:41:29 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_keluar' doesn't exist SQL: SELECT * FROM surat_keluar ORDER BY tgl_surat DESC LIMIT 50
+[21-Feb-2026 11:41:29 Asia/Makassar] Prepare failed: Table 'bexmedia.arsip_digital' doesn't exist SQL: SELECT * FROM arsip_digital ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:41:29 Asia/Makassar] Prepare failed: Table 'bexmedia.agenda_direktur' doesn't exist SQL: SELECT * FROM agenda_direktur ORDER BY tanggal DESC, jam DESC LIMIT 50
+[21-Feb-2026 11:41:29 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_sarpras' doesn't exist SQL: SELECT * FROM tiket_sarpras ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:41:29 Asia/Makassar] Prepare failed: Table 'bexmedia.dokumen' doesn't exist SQL: SELECT * FROM dokumen ORDER BY waktu_input DESC LIMIT 50
+[21-Feb-2026 11:41:29 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:41:29 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 222
+[21-Feb-2026 11:41:29 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 242
+[21-Feb-2026 11:41:29 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 297
+[21-Feb-2026 11:41:29 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 322
+[21-Feb-2026 11:41:29 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 373
+[21-Feb-2026 11:41:29 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 427
+[21-Feb-2026 11:41:29 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 454
+[21-Feb-2026 11:41:29 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 480
+[21-Feb-2026 11:41:30 Asia/Makassar] Prepare failed: Table 'bexmedia.jatah_cuti' doesn't exist SQL: SELECT mc.nama_cuti, jc.lama_hari, jc.sisa_hari, (jc.lama_hari - jc.sisa_hari) AS terpakai 
+                        FROM jatah_cuti jc JOIN master_cuti mc ON jc.cuti_id = mc.id 
+                        WHERE jc.tahun = ?
+[21-Feb-2026 11:41:30 Asia/Makassar] Prepare failed: Table 'bexmedia.izin_keluar' doesn't exist SQL: SELECT * FROM izin_keluar WHERE tanggal = CURDATE() ORDER BY created_at DESC
+[21-Feb-2026 11:41:30 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_it_hardware' doesn't exist SQL: SELECT * FROM tiket_it_hardware ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:41:30 Asia/Makassar] Prepare failed: Table 'bexmedia.data_barang_it' doesn't exist SQL: SELECT * FROM data_barang_it ORDER BY created_at DESC LIMIT 50
+[21-Feb-2026 11:41:30 Asia/Makassar] Prepare failed: Table 'bexmedia.maintenance_rutin' doesn't exist SQL: SELECT mr.*, b.nama_barang, b.no_barang FROM maintenance_rutin mr LEFT JOIN data_barang_it b ON mr.barang_id = b.id ORDER BY mr.waktu_input DESC LIMIT 50
+[21-Feb-2026 11:41:30 Asia/Makassar] Prepare failed: Table 'bexmedia.catatan_kerja' doesn't exist SQL: SELECT ck.*, u.nama_lengkap FROM catatan_kerja ck JOIN users u ON ck.user_id = u.id ORDER BY ck.tanggal DESC LIMIT 50
+[21-Feb-2026 11:41:30 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_masuk' doesn't exist SQL: SELECT * FROM surat_masuk ORDER BY tgl_terima DESC LIMIT 50
+[21-Feb-2026 11:41:30 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_keluar' doesn't exist SQL: SELECT * FROM surat_keluar ORDER BY tgl_surat DESC LIMIT 50
+[21-Feb-2026 11:41:30 Asia/Makassar] Prepare failed: Table 'bexmedia.arsip_digital' doesn't exist SQL: SELECT * FROM arsip_digital ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:41:30 Asia/Makassar] Prepare failed: Table 'bexmedia.agenda_direktur' doesn't exist SQL: SELECT * FROM agenda_direktur ORDER BY tanggal DESC, jam DESC LIMIT 50
+[21-Feb-2026 11:41:30 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_sarpras' doesn't exist SQL: SELECT * FROM tiket_sarpras ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:41:30 Asia/Makassar] Prepare failed: Table 'bexmedia.dokumen' doesn't exist SQL: SELECT * FROM dokumen ORDER BY waktu_input DESC LIMIT 50
+[21-Feb-2026 11:41:30 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:41:30 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 222
+[21-Feb-2026 11:41:30 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 242
+[21-Feb-2026 11:41:30 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 297
+[21-Feb-2026 11:41:30 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 322
+[21-Feb-2026 11:41:30 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 373
+[21-Feb-2026 11:41:30 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 427
+[21-Feb-2026 11:41:30 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 454
+[21-Feb-2026 11:41:30 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 480
+[21-Feb-2026 11:41:36 Asia/Makassar] Prepare failed: Table 'bexmedia.jatah_cuti' doesn't exist SQL: SELECT mc.nama_cuti, jc.lama_hari, jc.sisa_hari, (jc.lama_hari - jc.sisa_hari) AS terpakai 
+                        FROM jatah_cuti jc JOIN master_cuti mc ON jc.cuti_id = mc.id 
+                        WHERE jc.tahun = ?
+[21-Feb-2026 11:41:36 Asia/Makassar] Prepare failed: Table 'bexmedia.izin_keluar' doesn't exist SQL: SELECT * FROM izin_keluar WHERE tanggal = CURDATE() ORDER BY created_at DESC
+[21-Feb-2026 11:41:36 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_it_hardware' doesn't exist SQL: SELECT * FROM tiket_it_hardware ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:41:36 Asia/Makassar] Prepare failed: Table 'bexmedia.data_barang_it' doesn't exist SQL: SELECT * FROM data_barang_it ORDER BY created_at DESC LIMIT 50
+[21-Feb-2026 11:41:36 Asia/Makassar] Prepare failed: Table 'bexmedia.maintenance_rutin' doesn't exist SQL: SELECT mr.*, b.nama_barang, b.no_barang FROM maintenance_rutin mr LEFT JOIN data_barang_it b ON mr.barang_id = b.id ORDER BY mr.waktu_input DESC LIMIT 50
+[21-Feb-2026 11:41:36 Asia/Makassar] Prepare failed: Table 'bexmedia.catatan_kerja' doesn't exist SQL: SELECT ck.*, u.nama_lengkap FROM catatan_kerja ck JOIN users u ON ck.user_id = u.id ORDER BY ck.tanggal DESC LIMIT 50
+[21-Feb-2026 11:41:36 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_masuk' doesn't exist SQL: SELECT * FROM surat_masuk ORDER BY tgl_terima DESC LIMIT 50
+[21-Feb-2026 11:41:36 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_keluar' doesn't exist SQL: SELECT * FROM surat_keluar ORDER BY tgl_surat DESC LIMIT 50
+[21-Feb-2026 11:41:36 Asia/Makassar] Prepare failed: Table 'bexmedia.arsip_digital' doesn't exist SQL: SELECT * FROM arsip_digital ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:41:36 Asia/Makassar] Prepare failed: Table 'bexmedia.agenda_direktur' doesn't exist SQL: SELECT * FROM agenda_direktur ORDER BY tanggal DESC, jam DESC LIMIT 50
+[21-Feb-2026 11:41:36 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_sarpras' doesn't exist SQL: SELECT * FROM tiket_sarpras ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:41:36 Asia/Makassar] Prepare failed: Table 'bexmedia.dokumen' doesn't exist SQL: SELECT * FROM dokumen ORDER BY waktu_input DESC LIMIT 50
+[21-Feb-2026 11:41:36 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:41:36 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 222
+[21-Feb-2026 11:41:36 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 242
+[21-Feb-2026 11:41:36 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 297
+[21-Feb-2026 11:41:36 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 322
+[21-Feb-2026 11:41:36 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 373
+[21-Feb-2026 11:41:36 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 427
+[21-Feb-2026 11:41:36 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 454
+[21-Feb-2026 11:41:36 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 480
+[21-Feb-2026 11:44:21 Asia/Makassar] Prepare failed: Table 'bexmedia.jatah_cuti' doesn't exist SQL: SELECT mc.nama_cuti, jc.lama_hari, jc.sisa_hari, (jc.lama_hari - jc.sisa_hari) AS terpakai 
+                        FROM jatah_cuti jc JOIN master_cuti mc ON jc.cuti_id = mc.id 
+                        WHERE jc.tahun = ?
+[21-Feb-2026 11:44:21 Asia/Makassar] Prepare failed: Table 'bexmedia.izin_keluar' doesn't exist SQL: SELECT * FROM izin_keluar WHERE tanggal = CURDATE() ORDER BY created_at DESC
+[21-Feb-2026 11:44:21 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_it_hardware' doesn't exist SQL: SELECT * FROM tiket_it_hardware ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:44:21 Asia/Makassar] Prepare failed: Table 'bexmedia.data_barang_it' doesn't exist SQL: SELECT * FROM data_barang_it ORDER BY created_at DESC LIMIT 50
+[21-Feb-2026 11:44:21 Asia/Makassar] Prepare failed: Table 'bexmedia.maintenance_rutin' doesn't exist SQL: SELECT mr.*, b.nama_barang, b.no_barang FROM maintenance_rutin mr LEFT JOIN data_barang_it b ON mr.barang_id = b.id ORDER BY mr.waktu_input DESC LIMIT 50
+[21-Feb-2026 11:44:21 Asia/Makassar] Prepare failed: Table 'bexmedia.catatan_kerja' doesn't exist SQL: SELECT ck.*, u.nama_lengkap FROM catatan_kerja ck JOIN users u ON ck.user_id = u.id ORDER BY ck.tanggal DESC LIMIT 50
+[21-Feb-2026 11:44:21 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_masuk' doesn't exist SQL: SELECT * FROM surat_masuk ORDER BY tgl_terima DESC LIMIT 50
+[21-Feb-2026 11:44:21 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_keluar' doesn't exist SQL: SELECT * FROM surat_keluar ORDER BY tgl_surat DESC LIMIT 50
+[21-Feb-2026 11:44:21 Asia/Makassar] Prepare failed: Table 'bexmedia.arsip_digital' doesn't exist SQL: SELECT * FROM arsip_digital ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:44:21 Asia/Makassar] Prepare failed: Table 'bexmedia.agenda_direktur' doesn't exist SQL: SELECT * FROM agenda_direktur ORDER BY tanggal DESC, jam DESC LIMIT 50
+[21-Feb-2026 11:44:21 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_sarpras' doesn't exist SQL: SELECT * FROM tiket_sarpras ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:44:21 Asia/Makassar] Prepare failed: Table 'bexmedia.dokumen' doesn't exist SQL: SELECT * FROM dokumen ORDER BY waktu_input DESC LIMIT 50
+[21-Feb-2026 11:44:21 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 249
+[21-Feb-2026 11:44:21 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 269
+[21-Feb-2026 11:44:21 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 324
+[21-Feb-2026 11:44:21 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 349
+[21-Feb-2026 11:44:21 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 400
+[21-Feb-2026 11:44:21 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 454
+[21-Feb-2026 11:44:21 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 481
+[21-Feb-2026 11:44:21 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 507
+[21-Feb-2026 11:49:42 Asia/Makassar] Prepare failed: Table 'bexmedia.jatah_cuti' doesn't exist SQL: SELECT mc.nama_cuti, jc.lama_hari, jc.sisa_hari, (jc.lama_hari - jc.sisa_hari) AS terpakai 
+                        FROM jatah_cuti jc JOIN master_cuti mc ON jc.cuti_id = mc.id 
+                        WHERE jc.tahun = ?
+[21-Feb-2026 11:49:42 Asia/Makassar] Prepare failed: Table 'bexmedia.izin_keluar' doesn't exist SQL: SELECT * FROM izin_keluar WHERE tanggal = CURDATE() ORDER BY created_at DESC
+[21-Feb-2026 11:49:42 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_it_hardware' doesn't exist SQL: SELECT * FROM tiket_it_hardware ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:49:42 Asia/Makassar] Prepare failed: Table 'bexmedia.data_barang_it' doesn't exist SQL: SELECT * FROM data_barang_it ORDER BY created_at DESC LIMIT 50
+[21-Feb-2026 11:49:42 Asia/Makassar] Prepare failed: Table 'bexmedia.maintenance_rutin' doesn't exist SQL: SELECT mr.*, b.nama_barang, b.no_barang FROM maintenance_rutin mr LEFT JOIN data_barang_it b ON mr.barang_id = b.id ORDER BY mr.waktu_input DESC LIMIT 50
+[21-Feb-2026 11:49:42 Asia/Makassar] Prepare failed: Table 'bexmedia.catatan_kerja' doesn't exist SQL: SELECT ck.*, u.nama_lengkap FROM catatan_kerja ck JOIN users u ON ck.user_id = u.id ORDER BY ck.tanggal DESC LIMIT 50
+[21-Feb-2026 11:49:42 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_masuk' doesn't exist SQL: SELECT * FROM surat_masuk ORDER BY tgl_terima DESC LIMIT 50
+[21-Feb-2026 11:49:42 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_keluar' doesn't exist SQL: SELECT * FROM surat_keluar ORDER BY tgl_surat DESC LIMIT 50
+[21-Feb-2026 11:49:42 Asia/Makassar] Prepare failed: Table 'bexmedia.arsip_digital' doesn't exist SQL: SELECT * FROM arsip_digital ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:49:42 Asia/Makassar] Prepare failed: Table 'bexmedia.agenda_direktur' doesn't exist SQL: SELECT * FROM agenda_direktur ORDER BY tanggal DESC, jam DESC LIMIT 50
+[21-Feb-2026 11:49:42 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_sarpras' doesn't exist SQL: SELECT * FROM tiket_sarpras ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:49:42 Asia/Makassar] Prepare failed: Table 'bexmedia.dokumen' doesn't exist SQL: SELECT * FROM dokumen ORDER BY waktu_input DESC LIMIT 50
+[21-Feb-2026 11:49:42 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 249
+[21-Feb-2026 11:49:42 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 269
+[21-Feb-2026 11:49:42 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 324
+[21-Feb-2026 11:49:42 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 349
+[21-Feb-2026 11:49:42 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 400
+[21-Feb-2026 11:49:42 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 454
+[21-Feb-2026 11:49:42 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 481
+[21-Feb-2026 11:49:42 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 507
+[21-Feb-2026 11:49:42 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:49:43 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:49:44 Asia/Makassar] Prepare failed: Unknown column 'created_at' in 'order clause' SQL: SELECT * FROM data_erm ORDER BY created_at DESC LIMIT 50
+[21-Feb-2026 11:49:44 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:49:44 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\erm.php on line 125
+[21-Feb-2026 11:49:45 Asia/Makassar] Prepare failed: Unknown column 'created_at' in 'order clause' SQL: SELECT * FROM satu_sehat ORDER BY created_at DESC LIMIT 50
+[21-Feb-2026 11:49:45 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:49:45 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\satu_sehat.php on line 146
+[21-Feb-2026 11:49:45 Asia/Makassar] Prepare failed: Unknown column 'created_at' in 'order clause' SQL: SELECT * FROM progres_kerja ORDER BY tahun DESC, bulan DESC, created_at DESC LIMIT 20
+[21-Feb-2026 11:49:45 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:49:45 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\progres_kerja.php on line 130
+[21-Feb-2026 11:49:45 Asia/Makassar] Prepare failed: Table 'bexmedia.poli_antrian' doesn't exist SQL: SELECT pa.*, p.nama_poli FROM poli_antrian pa JOIN poliklinik p ON pa.id_poli = p.id ORDER BY pa.tahun DESC, pa.bulan DESC LIMIT 5
+[21-Feb-2026 11:49:45 Asia/Makassar] Prepare failed: Unknown column 'created_at' in 'order clause' SQL: SELECT * FROM data_erm ORDER BY created_at DESC LIMIT 5
+[21-Feb-2026 11:49:45 Asia/Makassar] Prepare failed: Unknown column 'created_at' in 'order clause' SQL: SELECT * FROM satu_sehat ORDER BY created_at DESC LIMIT 5
+[21-Feb-2026 11:49:45 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:49:45 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\slide_pelaporan.php on line 161
+[21-Feb-2026 11:49:45 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\slide_pelaporan.php on line 191
+[21-Feb-2026 11:49:45 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\slide_pelaporan.php on line 220
+[21-Feb-2026 11:50:31 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:50:32 Asia/Makassar] Prepare failed: Table 'bexmedia.jatah_cuti' doesn't exist SQL: SELECT mc.nama_cuti, jc.lama_hari, jc.sisa_hari, (jc.lama_hari - jc.sisa_hari) AS terpakai 
+                        FROM jatah_cuti jc JOIN master_cuti mc ON jc.cuti_id = mc.id 
+                        WHERE jc.tahun = ?
+[21-Feb-2026 11:50:32 Asia/Makassar] Prepare failed: Table 'bexmedia.izin_keluar' doesn't exist SQL: SELECT * FROM izin_keluar WHERE tanggal = CURDATE() ORDER BY created_at DESC
+[21-Feb-2026 11:50:32 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_it_hardware' doesn't exist SQL: SELECT * FROM tiket_it_hardware ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:50:32 Asia/Makassar] Prepare failed: Table 'bexmedia.data_barang_it' doesn't exist SQL: SELECT * FROM data_barang_it ORDER BY created_at DESC LIMIT 50
+[21-Feb-2026 11:50:32 Asia/Makassar] Prepare failed: Table 'bexmedia.maintenance_rutin' doesn't exist SQL: SELECT mr.*, b.nama_barang, b.no_barang FROM maintenance_rutin mr LEFT JOIN data_barang_it b ON mr.barang_id = b.id ORDER BY mr.waktu_input DESC LIMIT 50
+[21-Feb-2026 11:50:32 Asia/Makassar] Prepare failed: Table 'bexmedia.catatan_kerja' doesn't exist SQL: SELECT ck.*, u.nama_lengkap FROM catatan_kerja ck JOIN users u ON ck.user_id = u.id ORDER BY ck.tanggal DESC LIMIT 50
+[21-Feb-2026 11:50:32 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_masuk' doesn't exist SQL: SELECT * FROM surat_masuk ORDER BY tgl_terima DESC LIMIT 50
+[21-Feb-2026 11:50:32 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_keluar' doesn't exist SQL: SELECT * FROM surat_keluar ORDER BY tgl_surat DESC LIMIT 50
+[21-Feb-2026 11:50:32 Asia/Makassar] Prepare failed: Table 'bexmedia.arsip_digital' doesn't exist SQL: SELECT * FROM arsip_digital ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:50:32 Asia/Makassar] Prepare failed: Table 'bexmedia.agenda_direktur' doesn't exist SQL: SELECT * FROM agenda_direktur ORDER BY tanggal DESC, jam DESC LIMIT 50
+[21-Feb-2026 11:50:32 Asia/Makassar] Prepare failed: Table 'bexmedia.tiket_sarpras' doesn't exist SQL: SELECT * FROM tiket_sarpras ORDER BY tanggal_input DESC LIMIT 50
+[21-Feb-2026 11:50:32 Asia/Makassar] Prepare failed: Table 'bexmedia.dokumen' doesn't exist SQL: SELECT * FROM dokumen ORDER BY waktu_input DESC LIMIT 50
+[21-Feb-2026 11:50:32 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 249
+[21-Feb-2026 11:50:32 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 269
+[21-Feb-2026 11:50:32 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 324
+[21-Feb-2026 11:50:32 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 349
+[21-Feb-2026 11:50:32 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 400
+[21-Feb-2026 11:50:32 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 454
+[21-Feb-2026 11:50:32 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 481
+[21-Feb-2026 11:50:32 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 507
+[21-Feb-2026 11:50:32 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:50:33 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:50:33 Asia/Makassar] Prepare failed: Unknown column 'created_at' in 'order clause' SQL: SELECT * FROM data_erm ORDER BY created_at DESC LIMIT 50
+[21-Feb-2026 11:50:33 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:50:33 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\erm.php on line 125
+[21-Feb-2026 11:50:35 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:50:35 Asia/Makassar] PHP Notice:  Trying to access array offset on value of type null in C:\xampp\htdocs\BexMedia\dist\order_tiket_it_software.php on line 120
+[21-Feb-2026 11:50:35 Asia/Makassar] PHP Notice:  Trying to access array offset on value of type null in C:\xampp\htdocs\BexMedia\dist\order_tiket_it_software.php on line 121
+[21-Feb-2026 11:50:35 Asia/Makassar] PHP Notice:  Trying to access array offset on value of type null in C:\xampp\htdocs\BexMedia\dist\order_tiket_it_software.php on line 121
+[21-Feb-2026 11:50:36 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[21-Feb-2026 11:50:36 Asia/Makassar] PHP Notice:  Trying to access array offset on value of type null in C:\xampp\htdocs\BexMedia\dist\order_tiket_it_hardware.php on line 118
+[21-Feb-2026 11:50:36 Asia/Makassar] PHP Notice:  Trying to access array offset on value of type null in C:\xampp\htdocs\BexMedia\dist\order_tiket_it_hardware.php on line 119
+[21-Feb-2026 11:50:36 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14

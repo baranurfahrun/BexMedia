@@ -875,5 +875,8 @@ if (($_SESSION['login_source'] ?? 'BEXMEDIA') === 'BEXMEDIA') {
             document.getElementById('accessModal').classList.remove('active');
         }
     </script>
+
+    <!-- Dynamic Footer (Marquee & Copyright) -->
+    <?php include "footer.php"; ?>
 </body>
 </html>

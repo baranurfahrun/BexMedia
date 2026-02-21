@@ -308,8 +308,7 @@ if (mysqli_num_rows($check_empty) == 0) {
         </main>
     </div>
 
-    <script>
-        lucide.createIcons();
-    </script>
+    <!-- Dynamic Footer (Marquee & Copyright) -->
+    <?php include "footer.php"; ?>
 </body>
 </html>

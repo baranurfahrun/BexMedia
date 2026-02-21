@@ -215,17 +215,8 @@ if (!file_exists($logo_path) || md5_file($logo_path) !== $hash_content) {
     </div>
 
 
-    <div class="running-text-container">
-        <div class="marquee-content">
-            <div class="running-text">
-                <span>BexMedia News: Campaign and Analytics are performing at peak efficiency this month! • Welcome to the premium studio monitor dashboard • New Media Assets have been uploaded for the client review • Stay tuned for more updates! • </span>
-                <span>BexMedia News: Campaign and Analytics are performing at peak efficiency this month! • Welcome to the premium studio monitor dashboard • New Media Assets have been uploaded for the client review • Stay tuned for more updates! • </span>
-            </div>
-        </div>
-        <div class="fixed-copyright">
-            <?php echo $copyright_text; ?>
-        </div>
-    </div>
+    <!-- Dynamic Footer (Marquee & Copyright) -->
+    <?php include "footer.php"; ?>
 
     <script>
         // Initialize Lucide Icons
