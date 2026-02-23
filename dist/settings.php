@@ -181,19 +181,48 @@ if (($_SESSION['login_source'] ?? 'BEXMEDIA') === 'BEXMEDIA') {
             --primary-hover: #2563EB;
         }
 
+        /* Compact settings page layout */
+        main .dashboard-content {
+            padding-top: 16px;
+            padding-bottom: 20px;
+        }
+        .dashboard-content .dashboard-header {
+            margin-bottom: 10px;
+        }
+        .dashboard-content .dashboard-header h1 {
+            padding-top: 0;
+            margin-bottom: 2px;
+            font-size: 1.8rem;
+        }
+        .dashboard-content .dashboard-header p {
+            margin-bottom: 0;
+        }
+
         .settings-grid {
             display: grid;
             grid-template-columns: 250px 1fr;
-            gap: 30px;
-            margin-top: 30px;
+            gap: 20px;
+            margin-top: 0;
+            align-items: start;
         }
 
         .settings-nav {
             background: white;
-            padding: 20px;
-            border-radius: 20px;
+            padding: 14px;
+            border-radius: 16px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.03);
             height: fit-content;
+            position: sticky;
+            top: 10px;
+        }
+
+        .settings-content {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            position: relative;
+            min-height: 300px;
         }
 
         .settings-nav-item {
@@ -213,14 +242,6 @@ if (($_SESSION['login_source'] ?? 'BEXMEDIA') === 'BEXMEDIA') {
         .settings-nav-item:hover, .settings-nav-item.active {
             background: #F0F7FF;
             color: var(--primary);
-        }
-
-        .settings-content {
-            background: white;
-            padding: 40px;
-            border-radius: 24px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-            position: relative;
         }
 
         .tab-content {
@@ -609,9 +630,8 @@ if (($_SESSION['login_source'] ?? 'BEXMEDIA') === 'BEXMEDIA') {
                                     Untuk Gmail, gunakan SMTP <strong>smtp.gmail.com</strong> port <strong>587</strong> dan gunakan <strong>App Password</strong> (bukan password biasa).
                                 </div>
 
-                                <form method="POST">
-                                    <?php echo csrf_field(); ?>
-                                    <input type="hidden" name="save_mail" value="1">
+                                <div>
+                                    <input type="hidden" name="save_mail" value="0" id="save_mail_flag">
                                     <input type="hidden" name="mail_id" value="<?php echo $mail_setting['id'] ?? 0; ?>">
 
                                     <div class="form-row">
@@ -649,11 +669,11 @@ if (($_SESSION['login_source'] ?? 'BEXMEDIA') === 'BEXMEDIA') {
                                         <input type="text" name="base_url" value="<?php echo htmlspecialchars($mail_setting['base_url'] ?? ''); ?>" placeholder="http://localhost/bexmedia">
                                     </div>
 
-                                    <button type="submit" class="btn-save">
+                                    <button type="button" class="btn-save" onclick="submitMailForm()">
                                         <i data-lucide="save" size="16" style="vertical-align: middle; margin-right: 6px;"></i>
                                         Simpan Email Engine
                                     </button>
-                                </form>
+                                </div>
                             </div>
                         </div>
 
@@ -979,6 +999,12 @@ if (($_SESSION['login_source'] ?? 'BEXMEDIA') === 'BEXMEDIA') {
                 }
                 reader.readAsDataURL(input.files[0]);
             }
+        }
+
+        // Submit mail settings via outer form
+        function submitMailForm() {
+            document.getElementById('save_mail_flag').value = '1';
+            document.querySelector('form.settings-content').submit();
         }
 
         // Auto hide toast
