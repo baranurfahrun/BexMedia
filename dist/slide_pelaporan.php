@@ -1,264 +1,403 @@
 <?php
-require_once "../conf/config.php";
-checkLogin();
+include 'security.php';
+include 'koneksi.php';
+date_default_timezone_set('Asia/Jakarta');
 
-// MenuName: Executive Presentation Slides
-
-$user_id = $_SESSION['user_id'] ?? 0;
-
-$bulan_nama = [1=>"Jan", 2=>"Feb", 3=>"Mar", 4=>"Apr", 5=>"Mei", 6=>"Jun", 7=>"Jul", 8=>"Agu", 9=>"Sep", 10=>"Okt", 11=>"Nov", 12=>"Des"];
-
-// Fetch Data for Slides
-$q_antri = safe_query("SELECT * FROM semua_antrian ORDER BY tahun DESC, bulan DESC LIMIT 5");
-$q_poli = safe_query("SELECT pa.*, p.nama_poli FROM poli_antrian pa JOIN poliklinik p ON pa.id_poli = p.id ORDER BY pa.tahun DESC, pa.bulan DESC LIMIT 5");
-$q_mjkn = safe_query("SELECT * FROM mjk_performance ORDER BY tahun DESC, bulan DESC LIMIT 5");
-$q_erm = safe_query("SELECT * FROM data_erm ORDER BY created_at DESC LIMIT 5");
-$q_sync = safe_query("SELECT * FROM satu_sehat ORDER BY created_at DESC LIMIT 5");
+// === Query semua tabel ===
+$semua_antrian = mysqli_query($conn, "SELECT * FROM semua_antrian ORDER BY tahun DESC, bulan DESC");
+$poli_antrian = mysqli_query($conn, "SELECT * FROM poli_antrian ORDER BY tahun DESC, bulan DESC");
+$satu_sehat = mysqli_query($conn, "SELECT * FROM satu_sehat ORDER BY tahun DESC, bulan DESC");
+$maintanance_rutin = mysqli_query($conn, "SELECT * FROM maintanance_rutin ORDER BY waktu_input DESC");
+$progres_kerja = mysqli_query($conn, "SELECT * FROM progres_kerja ORDER BY tahun DESC, bulan DESC");
+$berita_acara = mysqli_query($conn, "SELECT * FROM berita_acara_hardware ORDER BY tanggal DESC");
+$data_erm = mysqli_query($conn, "SELECT * FROM data_erm ORDER BY tahun DESC, bulan DESC");
 ?>
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Executive Reporting - BexMedia</title>
-    <link rel="stylesheet" href="../css/index.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        .presentation-container {
-            max-width: 1200px;
-            margin: 40px auto;
-            position: relative;
-        }
-        .slide {
-            display: none;
-            animation: fadeIn 0.5s ease;
-        }
-        .slide.active {
-            display: block;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .slide-card {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 24px;
-            padding: 60px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            min-height: 600px;
-            display: flex;
-            flex-direction: column;
-        }
-        .slide-header {
-            text-align: center;
-            margin-bottom: 48px;
-        }
-        .slide-header h2 { font-size: 2.5rem; margin-bottom: 8px; color: var(--primary-color); }
-        .slide-header p { opacity: 0.5; font-size: 1.1rem; }
-        
-        .slide-nav {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 40px;
-        }
-        .nav-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: none;
-            color: #fff;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: grid;
-            place-items: center;
-            transition: all 0.3s ease;
-        }
-        .nav-btn:hover { background: var(--primary-color); color: #000; }
-        
-        .slide-counter {
-            text-align: center;
-            margin-top: 16px;
-            font-size: 0.9rem;
-            opacity: 0.4;
-            letter-spacing: 2px;
-        }
-        
-        .table-premium {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0 12px;
-        }
-        .table-premium th { padding: 12px 24px; text-align: left; opacity: 0.4; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
-        .table-premium td { padding: 24px; background: rgba(255, 255, 255, 0.02); border-top: 1px solid rgba(255, 255, 255, 0.05); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
-        .table-premium tr td:first-child { border-left: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px 0 0 12px; }
-        .table-premium tr td:last-child { border-right: 1px solid rgba(255, 255, 255, 0.05); border-radius: 0 12px 12px 0; }
-        
-        .percentage-ring { font-weight: 800; color: var(--primary-color); }
-    </style>
+    <link rel="icon" href="../images/logo_final.png">
+    
+  
+  <meta charset="UTF-8">
+  <title>Slide Pelaporan</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Poppins', sans-serif;
+    }
+    .container {
+      margin-top: 30px;
+    }
+    h2 {
+      font-weight: 600;
+      color: #0d6efd;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    table {
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    th {
+      background-color: #0d6efd;
+      color: white;
+      text-align: center;
+    }
+    td {
+      text-align: center;
+      vertical-align: middle;
+    }
+    .carousel {
+      position: relative;
+    }
+    .carousel-control-prev,
+    .carousel-control-next {
+      width: 5%;
+    }
+    .carousel-control-prev-icon,
+    .carousel-control-next-icon {
+      filter: invert(1);
+      background-color: rgba(0, 0, 0, 0.3);
+      border-radius: 50%;
+      padding: 10px;
+    }
+    .slide-content {
+      padding: 20px;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <?php include "sidebar.php"; ?>
-        
-        <main class="main-content">
-            <header class="header">
-                <div class="header-left">
-                    <h1>Executive Presentation Slides</h1>
-                    <p>Visualisasi data performa rumah sakit untuk rapat direksi dan pelaporan eksekutif.</p>
-                </div>
-            </header>
 
-            <div class="presentation-container">
-                <!-- SLIDE 1: GLOBAL ANTRIAN -->
-                <div class="slide active" id="slide1">
-                    <div class="slide-card">
-                        <div class="slide-header">
-                            <h2>Utilisasi Antrian Global</h2>
-                            <p>Performa bridging sistem antrian online terhadap total kunjungan pasien.</p>
-                        </div>
-                        <table class="table-premium">
-                            <thead>
-                                <tr>
-                                    <th>Periode</th>
-                                    <th>Total SEP</th>
-                                    <th>Volume Antrian</th>
-                                    <th>Capaian (%)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php while($r = mysqli_fetch_assoc($q_antri)): ?>
-                                <tr>
-                                    <td><?= $bulan_nama[$r['bulan']] ?> <?= $r['tahun'] ?></td>
-                                    <td><?= number_format($r['jumlah_sep']) ?></td>
-                                    <td><?= number_format($r['jumlah_antri']) ?></td>
-                                    <td class="percentage-ring"><?= $r['persen_all'] ?>%</td>
-                                </tr>
-                                <?php endwhile; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+<div class="container">
+  <h2>📊 Slide Pelaporan</h2>
 
-                <!-- SLIDE 2: POLI ANTRIAN -->
-                <div class="slide" id="slide2">
-                    <div class="slide-card">
-                        <div class="slide-header">
-                            <h2>Efektivitas Per Unit Poli</h2>
-                            <p>Distribusi pemanfaatan antrian online di poliklinik spesialis.</p>
-                        </div>
-                        <table class="table-premium">
-                            <thead>
-                                <tr>
-                                    <th>Poliklinik</th>
-                                    <th>Periode</th>
-                                    <th>Antrian Sukses</th>
-                                    <th>Utilisasi (%)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php while($r = mysqli_fetch_assoc($q_poli)): ?>
-                                <tr>
-                                    <td><strong><?= h($r['nama_poli']) ?></strong></td>
-                                    <td><?= $bulan_nama[$r['bulan']] ?> <?= $r['tahun'] ?></td>
-                                    <td><?= number_format($r['jumlah_antri']) ?></td>
-                                    <td class="percentage-ring"><?= $r['persen_all'] ?>%</td>
-                                </tr>
-                                <?php endwhile; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+  <div id="reportCarousel" class="carousel slide" data-bs-ride="false">
+    <div class="carousel-inner">
 
-                <!-- SLIDE 3: SATUSEHAT SYNC -->
-                <div class="slide" id="slide3">
-                    <div class="slide-card">
-                        <div class="slide-header">
-                            <h2>Status Integrasi SatuSehat</h2>
-                            <p>Log transmisi data HL7 FHIR ke platform SatuSehat Kemenkes.</p>
-                        </div>
-                        <table class="table-premium">
-                            <thead>
-                                <tr>
-                                    <th>FHIR Resource</th>
-                                    <th>Periode</th>
-                                    <th>Data Records</th>
-                                    <th>Sync Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php while($r = mysqli_fetch_assoc($q_sync)): ?>
-                                <tr>
-                                    <td><code style="color:var(--primary-color)"><?= h($r['endpoint']) ?></code></td>
-                                    <td><?= $bulan_nama[$r['bulan']] ?> <?= $r['tahun'] ?></td>
-                                    <td><?= number_format($r['jumlah_data']) ?> records</td>
-                                    <td style="color:#10b981; font-weight:700;">VERIFIED</td>
-                                </tr>
-                                <?php endwhile; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+      <!-- === Slide 1: Semua Antrian === -->
+      <div class="carousel-item active">
+        <div class="slide-content">
+          <h4 class="text-center mb-3">📋 Data Semua Antrian</h4>
+          <table class="table table-bordered table-striped table-hover">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>ID</th>
+                <th>ID Perusahaan</th>
+                <th>Jumlah SEP</th>
+                <th>Jumlah Antri</th>
+                <th>Jumlah MJKN</th>
+                <th>% Semua</th>
+                <th>% MJKN</th>
+                <th>Petugas Input</th>
+                <th>Tanggal Input</th>
+                <th>Bulan</th>
+                <th>Tahun</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php
+              $no = 1;
+              while ($r = mysqli_fetch_assoc($semua_antrian)) {
+                  echo "<tr>
+                          <td>{$no}</td>
+                          <td>{$r['id']}</td>
+                          <td>{$r['id_perusahaan']}</td>
+                          <td>{$r['jumlah_sep']}</td>
+                          <td>{$r['jumlah_antri']}</td>
+                          <td>{$r['jumlah_mjkn']}</td>
+                          <td>{$r['persen_all']}%</td>
+                          <td>{$r['persen_mjkn']}%</td>
+                          <td>{$r['petugas_input']}</td>
+                          <td>{$r['tanggal_input']}</td>
+                          <td>{$r['bulan']}</td>
+                          <td>{$r['tahun']}</td>
+                        </tr>";
+                  $no++;
+              }
+              ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-                <!-- SLIDE 4: E-RM ADOPTION -->
-                <div class="slide" id="slide4">
-                    <div class="slide-card">
-                        <div class="slide-header">
-                            <h2>Adopsi Rekam Medis Elektronik</h2>
-                            <p>Rekapitulasi implementasi E-RM per unit pelayanan rumah sakit.</p>
-                        </div>
-                        <table class="table-premium">
-                            <thead>
-                                <tr>
-                                    <th>Unit Pelayanan</th>
-                                    <th>Periode</th>
-                                    <th>Status Implementasi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php while($r = mysqli_fetch_assoc($q_erm)): ?>
-                                <tr>
-                                    <td><strong><?= h($r['nama_unit']) ?></strong></td>
-                                    <td><?= $bulan_nama[$r['bulan']] ?> <?= $r['tahun'] ?></td>
-                                    <td><?= truncate(h($r['catatan_erm']), 80) ?></td>
-                                </tr>
-                                <?php endwhile; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+      <!-- === Slide 2: Poli Antrian === -->
+      <div class="carousel-item">
+        <div class="slide-content">
+          <h4 class="text-center mb-3">🏥 Data Poli Antrian</h4>
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>ID</th>
+                <th>ID Poli</th>
+                <th>Bulan</th>
+                <th>Tahun</th>
+                <th>Jumlah SEP</th>
+                <th>Jumlah Antri</th>
+                <th>Jumlah MJKN</th>
+                <th>% Semua</th>
+                <th>% MJKN</th>
+                <th>Petugas Input</th>
+                <th>Tanggal Input</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php
+              $no = 1;
+              while ($r = mysqli_fetch_assoc($poli_antrian)) {
+                  echo "<tr>
+                          <td>{$no}</td>
+                          <td>{$r['id']}</td>
+                          <td>{$r['id_poli']}</td>
+                          <td>{$r['bulan']}</td>
+                          <td>{$r['tahun']}</td>
+                          <td>{$r['jumlah_sep']}</td>
+                          <td>{$r['jumlah_antri']}</td>
+                          <td>{$r['jumlah_mjkn']}</td>
+                          <td>{$r['persen_all']}%</td>
+                          <td>{$r['persen_mjkn']}%</td>
+                          <td>{$r['petugas_input']}</td>
+                          <td>{$r['tanggal_input']}</td>
+                        </tr>";
+                  $no++;
+              }
+              ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-                <div class="slide-nav">
-                    <button class="nav-btn" onclick="changeSlide(-1)"><i data-lucide="chevron-left"></i></button>
-                    <button class="nav-btn" onclick="changeSlide(1)"><i data-lucide="chevron-right"></i></button>
-                </div>
-                <div class="slide-counter">
-                    SLIDE <span id="current-slide">1</span> / 4
-                </div>
-            </div>
-        </main>
+
+ <!-- === Slide 3: Satu Sehat === -->
+      <div class="carousel-item">
+        <div class="slide-content">
+          <h4 class="text-center mb-3">🩺 Data Satu Sehat</h4>
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>ID</th>
+                <th>Bulan</th>
+                <th>Tahun</th>
+                <th>Endpoint</th>
+                <th>Jumlah</th>
+                <th>Petugas Input</th>
+                <th>Tanggal Input</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php
+              $no = 1;
+              while ($r = mysqli_fetch_assoc($satu_sehat)) {
+                  echo "<tr>
+                          <td>{$no}</td>
+                          <td>{$r['id']}</td>
+                          <td>{$r['bulan']}</td>
+                          <td>{$r['tahun']}</td>
+                          <td>{$r['endpoint']}</td>
+                          <td>{$r['jumlah']}</td>
+                          <td>{$r['petugas_input']}</td>
+                          <td>{$r['tanggal_input']}</td>
+                        </tr>";
+                  $no++;
+              }
+              ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- === Slide 4: Maintanance Rutin === -->
+      <div class="carousel-item">
+        <div class="slide-content">
+          <h4 class="text-center mb-3">🧰 Data Maintanance Rutin</h4>
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>ID</th>
+                <th>Barang ID</th>
+                <th>User ID</th>
+                <th>Nama Teknisi</th>
+                <th>Waktu Input</th>
+                <th>Kondisi Fisik</th>
+                <th>Fungsi Perangkat</th>
+                <th>Catatan</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php
+              $no = 1;
+              while ($r = mysqli_fetch_assoc($maintanance_rutin)) {
+                  echo "<tr>
+                          <td>{$no}</td>
+                          <td>{$r['id']}</td>
+                          <td>{$r['barang_id']}</td>
+                          <td>{$r['user_id']}</td>
+                          <td>{$r['nama_teknisi']}</td>
+                          <td>{$r['waktu_input']}</td>
+                          <td>{$r['kondisi_fisik']}</td>
+                          <td>{$r['fungsi_perangkat']}</td>
+                          <td>{$r['catatan']}</td>
+                        </tr>";
+                  $no++;
+              }
+              ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- === Slide 5: Progres Kerja === -->
+      <div class="carousel-item">
+        <div class="slide-content">
+          <h4 class="text-center mb-3">📈 Data Progres Kerja</h4>
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>ID</th>
+                <th>Bulan</th>
+                <th>Tahun</th>
+                <th>Progres</th>
+                <th>Petugas Input</th>
+                <th>Tanggal Input</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php
+              $no = 1;
+              while ($r = mysqli_fetch_assoc($progres_kerja)) {
+                  echo "<tr>
+                          <td>{$no}</td>
+                          <td>{$r['id']}</td>
+                          <td>{$r['bulan']}</td>
+                          <td>{$r['tahun']}</td>
+                          <td>{$r['progres']}</td>
+                          <td>{$r['petugas_input']}</td>
+                          <td>{$r['tanggal_input']}</td>
+                        </tr>";
+                  $no++;
+              }
+              ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- === Slide 6: Berita Acara Hardware === -->
+      <div class="carousel-item">
+        <div class="slide-content">
+          <h4 class="text-center mb-3">🧾 Data Berita Acara Hardware</h4>
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>ID</th>
+                <th>Nomor Tiket</th>
+                <th>Nomor BA</th>
+                <th>Tanggal</th>
+                <th>Nama Pelapor</th>
+                <th>Unit Kerja</th>
+                <th>Kategori</th>
+                <th>Kendala</th>
+                <th>Teknisi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php
+              $no = 1;
+              while ($r = mysqli_fetch_assoc($berita_acara)) {
+                  echo "<tr>
+                          <td>{$no}</td>
+                          <td>{$r['id']}</td>
+                          <td>{$r['nomor_tiket']}</td>
+                          <td>{$r['nomor_ba']}</td>
+                          <td>{$r['tanggal']}</td>
+                          <td>{$r['nama_pelapor']}</td>
+                          <td>{$r['unit_kerja']}</td>
+                          <td>{$r['kategori']}</td>
+                          <td>{$r['kendala']}</td>
+                          <td>{$r['teknisi']}</td>
+                        </tr>";
+                  $no++;
+              }
+              ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- === Slide 7: Data ERM === -->
+      <div class="carousel-item">
+        <div class="slide-content">
+          <h4 class="text-center mb-3">💻 Data ERM</h4>
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>ID</th>
+                <th>ID Unit</th>
+                <th>Bulan</th>
+                <th>Tahun</th>
+                <th>Menu ERM</th>
+                <th>Petugas Input</th>
+                <th>Tanggal Input</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php
+              $no = 1;
+              while ($r = mysqli_fetch_assoc($data_erm)) {
+                  echo "<tr>
+                          <td>{$no}</td>
+                          <td>{$r['id']}</td>
+                          <td>{$r['id_unit']}</td>
+                          <td>{$r['bulan']}</td>
+                          <td>{$r['tahun']}</td>
+                          <td>{$r['menu_erm']}</td>
+                          <td>{$r['petugas_input']}</td>
+                          <td>{$r['tanggal_input']}</td>
+                        </tr>";
+                  $no++;
+              }
+              ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+      <!-- === Tambahkan slide lainnya di bawah seperti yang kamu punya === -->
+      <!-- (Satu Sehat, Maintanance Rutin, Progres Kerja, Berita Acara, Data ERM) -->
+
     </div>
 
-    <script>
-        lucide.createIcons();
-        
-        let currentSlide = 1;
-        const totalSlides = 4;
-        
-        function changeSlide(direction) {
-            $(`#slide${currentSlide}`).removeClass('active');
-            currentSlide += direction;
-            
-            if (currentSlide > totalSlides) currentSlide = 1;
-            if (currentSlide < 1) currentSlide = totalSlides;
-            
-            $(`#slide${currentSlide}`).addClass('active');
-            $(`#current-slide`).text(currentSlide);
-        }
-        
-        // Auto slide every 10 seconds
-        setInterval(() => changeSlide(1), 10000);
-    </script>
+    <!-- Tombol navigasi -->
+    <button class="carousel-control-prev" type="button" data-bs-target="#reportCarousel" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#reportCarousel" data-bs-slide="next">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Next</span>
+    </button>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
+
+
+
+
+
+

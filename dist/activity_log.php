@@ -44,6 +44,9 @@ $activities = $conn->query($sql);
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" href="../images/logo_final.png">
+    
+  
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Universal Activity Log - BexMedia</title>
@@ -246,3 +249,10 @@ $activities = $conn->query($sql);
     <script>lucide.createIcons();</script>
 </body>
 </html>
+
+
+
+
+
+
+

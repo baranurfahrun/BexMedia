@@ -46,6 +46,9 @@ $total_keluar = mysqli_fetch_assoc(safe_query("SELECT COUNT(*) as total FROM sur
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" href="../images/logo_final.png">
+    
+  
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Correspondence - BexMedia</title>
@@ -141,3 +144,10 @@ $total_keluar = mysqli_fetch_assoc(safe_query("SELECT COUNT(*) as total FROM sur
     </script>
 </body>
 </html>
+
+
+
+
+
+
+

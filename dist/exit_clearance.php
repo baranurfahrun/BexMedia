@@ -1,396 +1,355 @@
 <?php
-require_once "../conf/config.php";
-checkLogin();
-
-// MenuName: Exit Clearance System
+include 'security.php'; 
+include 'koneksi.php';
+date_default_timezone_set('Asia/Jakarta');
 
 $user_id = $_SESSION['user_id'] ?? 0;
+$current_file = basename(__FILE__);
 
-// Handle Form Submission
-if (isset($_POST['simpan'])) {
-    csrf_verify();
-    
-    $id_karyawan = intval($_POST['id_karyawan']);
-    $tgl_resign  = cleanInput($_POST['tgl_resign']);
-    
-    // Get user details
-    $uData = mysqli_fetch_assoc(safe_query("SELECT nik, nama_lengkap, jabatan, unit_kerja FROM users WHERE id = ?", [$id_karyawan]));
-    
-    $nik = $uData['nik'];
-    $nama = $uData['nama_lengkap'];
-    $jabatan = $uData['jabatan'];
-    $unit_kerja = $uData['unit_kerja'];
-    
-    $aset = json_encode($_POST['aset']);
-    $serah_terima = json_encode([
-        'checklist' => $_POST['checklist'],
-        'dokumen'   => $_POST['dokumen'],
-        'penerima'  => $_POST['penerima'],
-        'tgl_serah' => $_POST['tgl_serah'],
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-
-    // Create table if not exists (Lazy Load)
-    safe_query("CREATE TABLE IF NOT EXISTS exit_clearance (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT,
-        nik VARCHAR(50),
-        nama VARCHAR(255),
-        jabatan VARCHAR(255),
-        unit_kerja VARCHAR(255),
-        tgl_resign DATE,
-        aset TEXT,
-        serah_terima TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )");
-
-    $res = safe_query("INSERT INTO exit_clearance (user_id, nik, nama, jabatan, unit_kerja, tgl_resign, aset, serah_terima) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-           [$id_karyawan, $nik, $nama, $jabatan, $unit_kerja, $tgl_resign, $aset, $serah_terima]);
-
-    if ($res) {
-        write_log("EXIT_CLEARANCE_CREATE", "Membuat form exit clearance untuk $nama");
-        $_SESSION['flash_success'] = "Data Exit Clearance berhasil disimpan.";
-    } else {
-        $_SESSION['flash_error'] = "Gagal menyimpan data.";
-    }
-    header("Location: exit_clearance.php");
-    exit;
+// ========================
+// Cek hak akses halaman
+// ========================
+$qAkses = "SELECT 1 FROM akses_menu 
+           JOIN menu ON akses_menu.menu_id = menu.id 
+           WHERE akses_menu.user_id = '$user_id' 
+             AND menu.file_menu = '$current_file'";
+$rAkses = mysqli_query($conn, $qAkses);
+if (mysqli_num_rows($rAkses) == 0) {
+  echo "<script>alert('Anda tidak memiliki akses ke halaman ini.'); window.location.href='dashboard.php';</script>";
+  exit;
 }
 
-// Get employees for dropdown
+// ========================
+// Ambil semua data karyawan (users) untuk pilihan
+// ========================
+$karyawanList = mysqli_query($conn, "SELECT id, nik, nama, jabatan, unit_kerja FROM users ORDER BY nama ASC");
+
+// simpan array karyawan untuk dropdown penerima
 $karyawanData = [];
-$res_emp = safe_query("SELECT id, nik, nama_lengkap as nama, jabatan, unit_kerja FROM users WHERE status='active' ORDER BY nama_lengkap ASC");
-while ($row = mysqli_fetch_assoc($res_emp)) {
+mysqli_data_seek($karyawanList, 0);
+while ($row = mysqli_fetch_assoc($karyawanList)) {
     $karyawanData[] = $row;
 }
 
-// Get existing clearance data
-$dataExit = safe_query("SELECT * FROM exit_clearance ORDER BY created_at DESC");
+// ========================
+// Proses simpan form
+// ========================
+if (isset($_POST['simpan'])) {
+    $id_karyawan = intval($_POST['id_karyawan']);
+    $tgl_resign  = mysqli_real_escape_string($conn, $_POST['tgl_resign']);
+
+    // Ambil detail user dari tabel users
+    $qUser  = mysqli_query($conn, "SELECT nik, nama, jabatan, unit_kerja FROM users WHERE id = '$id_karyawan'");
+    $uData  = mysqli_fetch_assoc($qUser);
+
+    $nik        = $uData['nik'];
+    $nama       = $uData['nama'];
+    $jabatan    = $uData['jabatan'];
+    $unit_kerja = $uData['unit_kerja'];
+
+    $aset = json_encode($_POST['aset']);
+$serah_terima = json_encode([
+    'checklist' => $_POST['checklist'],
+    'dokumen'   => $_POST['dokumen'],
+    'penerima'  => $_POST['penerima'],
+    'tgl_serah' => $_POST['tgl_serah'],
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+    $sql = "INSERT INTO exit_clearance 
+            (user_id, nik, nama, jabatan, unit_kerja, tgl_resign, aset, serah_terima, created_at) 
+            VALUES 
+            ('$id_karyawan','$nik','$nama','$jabatan','$unit_kerja','$tgl_resign','$aset','$serah_terima',NOW())";
+
+    if (mysqli_query($conn, $sql)) {
+        echo "<script>alert('Data exit clearance berhasil disimpan'); window.location.href='exit_clearance.php';</script>";
+    } else {
+        echo "<script>alert('Gagal menyimpan data: " . mysqli_error($conn) . "');</script>";
+    }
+}
+
+// ========================
+// Ambil data exit clearance tersimpan
+// ========================
+$dataExit = mysqli_query($conn, "SELECT * FROM exit_clearance ORDER BY created_at DESC");
 ?>
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exit Clearance System - BexMedia</title>
-    <link rel="stylesheet" href="../css/index.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        .clearance-grid {
-            margin-top: 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
+    <link rel="icon" href="../images/logo_final.png">
+    
+  
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Exit Clearance</title>
 
-        .premium-card {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 20px;
-            padding: 32px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-        }
+  <link rel="stylesheet" href="assets/modules/bootstrap/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="assets/modules/fontawesome/css/all.min.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
 
-        .section-title {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 24px;
-            color: var(--primary-color);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            padding-bottom: 12px;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 32px;
-        }
-
-        .aset-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 12px;
-        }
-
-        .aset-table th {
-            text-align: left;
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-
-        .aset-table td {
-            padding: 12px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .aset-table input, .aset-table select {
-            width: 100%;
-            padding: 8px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
-            border-radius: 6px;
-        }
-
-        .tab-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            padding: 12px 24px;
-            cursor: pointer;
-            font-weight: 600;
-            border-bottom: 2px solid transparent;
-            transition: all 0.3s;
-        }
-
-        .tab-btn.active {
-            color: var(--primary-color);
-            border-bottom-color: var(--primary-color);
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .badge-done { background: rgba(16, 185, 129, 0.2); color: #10b981; }
-        .badge-pending { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
-    </style>
+  <style>
+    .table thead th { background-color: #000 !important; color: #fff !important; }
+    .scroll-x { overflow-x: auto; }
+    .wide-table { min-width: 1200px; } /* tabel panjang ke kanan */
+  </style>
 </head>
+
 <body>
-    <div class="container">
-        <?php include "sidebar.php"; ?>
-        
-        <main class="main-content">
-            <header class="header">
-                <div class="header-left">
-                    <h1>Exit Clearance</h1>
-                    <p>Sistem pengembalian inventaris dan serah terima pekerjaan karyawan resign.</p>
-                </div>
-                <div class="header-right">
-                    <div class="tabs">
-                        <button class="tab-btn active" onclick="showTab('input')">Form Input</button>
-                        <button class="tab-btn" onclick="showTab('data')">Arsip Data</button>
-                    </div>
-                </div>
-            </header>
+<div id="app">
+  <div class="main-wrapper main-wrapper-1">
+    <?php include 'navbar.php'; ?>
+    <?php include 'sidebar.php'; ?>
 
-            <?php if (isset($_SESSION['flash_success'])): ?>
-                <div style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
-                    <?= $_SESSION['flash_success']; unset($_SESSION['flash_success']); ?>
-                </div>
-            <?php endif; ?>
-
-            <div class="clearance-grid">
-                <!-- FORM INPUT -->
-                <div id="tab-input" class="tab-content active">
-                    <form method="POST">
-                        <?= csrf_field(); ?>
-                        
-                        <div class="premium-card">
-                            <div class="section-title">
-                                <i data-lucide="user"></i>
-                                <h2>Identitas Karyawan</h2>
-                            </div>
-                            
-                            <div class="form-grid">
-                                <div class="input-group">
-                                    <label>Pilih Karyawan</label>
-                                    <select name="id_karyawan" id="id_karyawan" required>
-                                        <option value="">-- Pilih Karyawan --</option>
-                                        <?php foreach ($karyawanData as $row) { ?>
-                                            <option value="<?= $row['id']; ?>"
-                                                data-nik="<?= $row['nik']; ?>"
-                                                data-nama="<?= $row['nama']; ?>"
-                                                data-jabatan="<?= $row['jabatan']; ?>"
-                                                data-unit="<?= $row['unit_kerja']; ?>">
-                                                <?= $row['nik']." - ".$row['nama']; ?>
-                                            </option>
-                                        <?php } ?>
-                                    </select>
-                                </div>
-                                <div class="input-group">
-                                    <label>NIK</label>
-                                    <input type="text" id="nik" readonly class="readonly">
-                                </div>
-                                <div class="input-group">
-                                    <label>Jabatan</label>
-                                    <input type="text" id="jabatan" readonly class="readonly">
-                                </div>
-                                <div class="input-group">
-                                    <label>Departemen</label>
-                                    <input type="text" id="unit_kerja" readonly class="readonly">
-                                </div>
-                                <div class="input-group">
-                                    <label>Tanggal Resign</label>
-                                    <input type="date" name="tgl_resign" required>
-                                </div>
-                            </div>
-
-                            <div class="section-title">
-                                <i data-lucide="package"></i>
-                                <h2>Pengembalian Aset</h2>
-                            </div>
-                            
-                            <table class="aset-table">
-                                <thead>
-                                    <tr>
-                                        <th>Jenis Aset</th>
-                                        <th>Keterangan</th>
-                                        <th>Status</th>
-                                        <th>Penerima</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php
-                                    $aset_list = [
-                                        ["Laptop / PC", "Merk, Serial Number"],
-                                        ["ID Card / Access", "Nomor ID"],
-                                        ["Seragam", "Ukuran, jumlah"],
-                                        ["HP / SIM Card", "Provider, nomor"],
-                                        ["Kendaraan", "Plat nomor"],
-                                    ];
-                                    foreach ($aset_list as $i => $a) { ?>
-                                        <tr>
-                                            <td><?= $a[0] ?></td>
-                                            <td><input type="text" name="aset[<?= $i ?>][keterangan]" placeholder="<?= $a[1] ?>"></td>
-                                            <td>
-                                                <select name="aset[<?= $i ?>][status]">
-                                                    <option value="Belum">Belum</option>
-                                                    <option value="Sudah">Sudah</option>
-                                                </select>
-                                            </td>
-                                            <td>
-                                                <select name="aset[<?= $i ?>][penerima]">
-                                                    <option value="">-- Penerima --</option>
-                                                    <?php foreach ($karyawanData as $k) { ?>
-                                                        <option value="<?= $k['nama'] ?>"><?= $k['nama'] ?></option>
-                                                    <?php } ?>
-                                                </select>
-                                            </td>
-                                            <input type="hidden" name="aset[<?= $i ?>][jenis]" value="<?= $a[0] ?>">
-                                        </tr>
-                                    <?php } ?>
-                                </tbody>
-                            </table>
-
-                            <div class="section-title" style="margin-top: 32px;">
-                                <i data-lucide="clipboard-list"></i>
-                                <h2>Handover Pekerjaan</h2>
-                            </div>
-                            
-                            <div style="display: grid; gap: 20px;">
-                                <div class="input-group">
-                                    <label>Checklist Tugas Selesai</label>
-                                    <textarea name="checklist" placeholder="Sebutkan tugas/proyek yang sudah difinalisasi..."></textarea>
-                                </div>
-                                <div class="input-group">
-                                    <label>Dokumen / File Diserahkan</label>
-                                    <textarea name="dokumen" placeholder="Daftar file atau folder fisik yang dipindah-tangankan..."></textarea>
-                                </div>
-                                <div class="form-grid">
-                                    <div class="input-group">
-                                        <label>Penerima Tugas</label>
-                                        <select name="penerima" required>
-                                            <option value="">-- Pilih Penerima --</option>
-                                            <?php foreach ($karyawanData as $k) { ?>
-                                                <option value="<?= $k['nama']; ?>"><?= $k['nama']; ?></option>
-                                            <?php } ?>
-                                        </select>
-                                    </div>
-                                    <div class="input-group">
-                                        <label>Tanggal Handover</label>
-                                        <input type="date" name="tgl_serah" required>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div style="margin-top: 32px;">
-                                <button type="submit" name="simpan" class="btn btn-primary" style="width: 200px;">
-                                    <i data-lucide="check-circle"></i> Simpan Clearance
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- DATA TAB -->
-                <div id="tab-data" class="tab-content">
-                    <div class="premium-card">
-                        <div style="overflow-x: auto;">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Karyawan</th>
-                                        <th>Resign</th>
-                                        <th>Progress Aset</th>
-                                        <th>Penerima</th>
-                                        <th>Status</th>
-                                        <th>Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php if ($dataExit && $dataExit->num_rows > 0): ?>
-                                        <?php while ($d = $dataExit->fetch_assoc()): 
-                                            $aset = json_decode($d['aset'], true);
-                                            $sudah = 0;
-                                            if ($aset) {
-                                                foreach($aset as $a) if($a['status'] == 'Sudah') $sudah++;
-                                            }
-                                        ?>
-                                            <tr>
-                                                <td>
-                                                    <strong><?= $d['nama'] ?></strong><br>
-                                                    <small style="opacity:0.6;"><?= $d['nik'] ?></small>
-                                                </td>
-                                                <td><?= date('d/m/Y', strtotime($d['tgl_resign'])) ?></td>
-                                                <td><?= $sudah ?> / 5 Item</td>
-                                                <td><?= json_decode($d['serah_terima'], true)['penerima'] ?></td>
-                                                <td>
-                                                    <span class="status-tag <?= $sudah == 5 ? 'tag-success' : 'tag-warning' ?>">
-                                                        <?= $sudah == 5 ? 'Complete' : 'Pending' ?>
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <button class="btn btn-outline btn-sm">Preview</button>
-                                                </td>
-                                            </tr>
-                                        <?php endwhile; ?>
-                                    <?php else: ?>
-                                        <tr><td colspan="6" style="text-align:center; opacity:0.5; padding:40px;">Belum ada arsip clearance.</td></tr>
-                                    <?php endif; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+    <div class="main-content">
+      <section class="section">
+        <div class="section-body">
+          <div class="card">
+            <div class="card-header">
+              <h4><i class="fas fa-user-check text-primary mr-2"></i> Exit Clearance</h4>
             </div>
-        </main>
+
+            <div class="card-body">
+              <!-- Nav Tabs -->
+              <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item">
+                  <a class="nav-link active" id="input-tab" data-toggle="tab" href="#input" role="tab">Input Exit Clearance</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" id="data-tab" data-toggle="tab" href="#data" role="tab">Data Tersimpan</a>
+                </li>
+              </ul>
+
+              <div class="tab-content mt-3" id="myTabContent">
+                <!-- Tab Input -->
+                <div class="tab-pane fade show active" id="input" role="tabpanel">
+                  <form method="POST" action="">
+                    <h5 class="mb-3 text-primary">1. Identitas Karyawan</h5>
+                    <div class="form-group col-md-6">
+                      <label>Pilih Karyawan</label>
+                      <select name="id_karyawan" id="id_karyawan" class="form-control" required>
+                        <option value="">-- Pilih Karyawan --</option>
+                        <?php foreach ($karyawanData as $row) { ?>
+                          <option value="<?= $row['id']; ?>"
+                            data-nik="<?= $row['nik']; ?>"
+                            data-nama="<?= $row['nama']; ?>"
+                            data-jabatan="<?= $row['jabatan']; ?>"
+                            data-unit="<?= $row['unit_kerja']; ?>">
+                            <?= $row['nik']." - ".$row['nama']; ?>
+                          </option>
+                        <?php } ?>
+                      </select>
+                    </div>
+
+                    <div class="row">
+                      <div class="form-group col-md-3">
+                        <label>NIK</label>
+                        <input type="text" id="nik" class="form-control" readonly>
+                      </div>
+                      <div class="form-group col-md-3">
+                        <label>Nama</label>
+                        <input type="text" id="nama" class="form-control" readonly>
+                      </div>
+                      <div class="form-group col-md-3">
+                        <label>Jabatan</label>
+                        <input type="text" id="jabatan" class="form-control" readonly>
+                      </div>
+                      <div class="form-group col-md-3">
+                        <label>Departemen</label>
+                        <input type="text" id="unit_kerja" class="form-control" readonly>
+                      </div>
+                      <div class="form-group col-md-3">
+                        <label>Tanggal Efektif Resign</label>
+                        <input type="date" name="tgl_resign" class="form-control" required>
+                      </div>
+                    </div>
+
+                    <hr>
+                    <h5 class="mb-3 text-primary">2. Pengembalian Aset Perusahaan</h5>
+                    <div class="table-responsive">
+                      <table class="table table-bordered">
+                        <thead>
+                          <tr>
+                            <th>Jenis Aset</th>
+                            <th>Keterangan</th>
+                            <th>Status</th>
+                            <th>Penerima</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <?php
+                          $aset_list = [
+                            ["Laptop / PC", "Merk, Serial Number"],
+                            ["ID Card / Access Card", "Nomor ID"],
+                            ["Seragam / Jaket", "Ukuran, jumlah"],
+                            ["HP Kantor / SIM Card", "Provider, nomor"],
+                            ["Kendaraan Operasional", "Plat nomor"],
+                          ];
+                          foreach ($aset_list as $i => $a) {
+                            echo "<tr>
+                              <td>{$a[0]}</td>
+                              <td><input type='text' name='aset[$i][keterangan]' class='form-control' placeholder='{$a[1]}'></td>
+                              <td>
+                                <select name='aset[$i][status]' class='form-control'>
+                                  <option value=''>Pilih</option>
+                                  <option value='Sudah'>Sudah</option>
+                                  <option value='Belum'>Belum</option>
+                                </select>
+                              </td>
+                              <td>
+                                <select name='aset[$i][penerima]' class='form-control'>
+                                  <option value=''>-- Pilih Penerima --</option>";
+                                  foreach ($karyawanData as $k) {
+                                    echo "<option value='{$k['nama']}'>{$k['nama']} - {$k['jabatan']}</option>";
+                                  }
+                            echo "  </select>
+                              </td>
+                              <input type='hidden' name='aset[$i][jenis]' value='{$a[0]}'>
+                            </tr>";
+                          }
+                          ?>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <hr>
+                    <h5 class="mb-3 text-primary">3. Penyelesaian Pekerjaan / Serah Terima</h5>
+                    <div class="row">
+                      <div class="form-group col-md-12">
+                        <label>Checklist tugas yang sudah diselesaikan</label>
+                        <textarea name="checklist" class="form-control" rows="3"></textarea>
+                      </div>
+                      <div class="form-group col-md-12">
+                        <label>Dokumen atau file yang sudah diserahkan</label>
+                        <textarea name="dokumen" class="form-control" rows="3"></textarea>
+                      </div>
+                      <div class="form-group col-md-4">
+                        <label>Nama penerima tugas</label>
+                        <select name="penerima" class="form-control" required>
+                          <option value="">-- Pilih Penerima --</option>
+                          <?php foreach ($karyawanData as $k) { ?>
+                            <option value="<?= $k['nama']; ?>"><?= $k['nama']." - ".$k['jabatan']; ?></option>
+                          <?php } ?>
+                        </select>
+                      </div>
+                      <div class="form-group col-md-4">
+                        <label>Tanggal serah terima</label>
+                        <input type="date" name="tgl_serah" class="form-control">
+                      </div>
+                    </div>
+
+                    <button type="submit" name="simpan" class="btn btn-primary"><i class="fas fa-save"></i> Simpan Exit Clearance</button>
+                  </form>
+                </div>
+
+                <!-- Tab Data -->
+              <!-- Tab Data -->
+<div class="tab-pane fade" id="data" role="tabpanel">
+  <h5 class="mb-3 text-primary">Data Exit Clearance Tersimpan</h5>
+  <div class="scroll-x">
+    <table class="table table-bordered wide-table">
+      <thead>
+        <tr>
+          <th>NIK</th>
+          <th>Nama</th>
+          <th>Jabatan</th>
+          <th>Departemen</th>
+          <th>Tanggal Resign</th>
+          <th>Aset</th>
+          <th>Serah Terima</th>
+          <th>Dibuat</th>
+          <th>Aksi</th> <!-- Kolom baru -->
+        </tr>
+      </thead>
+      <tbody>
+    <?php while ($d = mysqli_fetch_assoc($dataExit)) { 
+  $aset  = json_decode($d['aset'], true);
+  $serah = json_decode($d['serah_terima'], true); // cukup begini saja
+?>
+
+  <tr>
+    <td><?= $d['nik']; ?></td>
+    <td><?= $d['nama']; ?></td>
+    <td><?= $d['jabatan']; ?></td>
+    <td><?= $d['unit_kerja']; ?></td>
+    <td><?= $d['tgl_resign']; ?></td>
+    <td>
+      <ul>
+        <?php if ($aset) { foreach ($aset as $a) { ?>
+          <li><?= $a['jenis']; ?> (<?= $a['keterangan']; ?>) - <?= $a['status']; ?>, Penerima: <?= $a['penerima']; ?></li>
+        <?php } } ?>
+      </ul>
+    </td>
+    <td>
+    <?php if ($serah) { ?>
+  <ul style="padding-left:18px; margin:0;">
+    <?php if (!empty($serah['checklist'])) { ?>
+      <li><strong>Checklist:</strong><br><?= nl2br(htmlspecialchars($serah['checklist'])); ?></li>
+    <?php } ?>
+    <?php if (!empty($serah['dokumen'])) { ?>
+      <li><strong>Dokumen:</strong><br><?= nl2br(htmlspecialchars($serah['dokumen'])); ?></li>
+    <?php } ?>
+    <?php if (!empty($serah['penerima'])) { ?>
+      <li><strong>Penerima:</strong> <?= htmlspecialchars($serah['penerima']); ?></li>
+    <?php } ?>
+    <?php if (!empty($serah['tgl_serah'])) { ?>
+      <li><strong>Tgl Serah:</strong> <?= htmlspecialchars($serah['tgl_serah']); ?></li>
+    <?php } ?>
+  </ul>
+<?php } else { ?>
+  <i>Tidak ada data</i>
+<?php } ?>
+
+    </td>
+    <td><?= $d['created_at']; ?></td>
+    <td>
+      <a href="cetak_exit_clearance.php?id=<?= $d['id']; ?>" target="_blank" class="btn btn-sm btn-info">
+        <i class="fas fa-print"></i>
+      </a>
+    </td>
+  </tr>
+<?php } ?>
+
+
+      </tbody>
+    </table>
+  </div>
+</div>
+
+              <!-- End Tab Content -->
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
+  </div>
+</div>
 
-    <script>
-        lucide.createIcons();
-
-        function showTab(tab) {
-            $('.tab-content').removeClass('active');
-            $('.tab-btn').removeClass('active');
-            $('#tab-' + tab).addClass('active');
-            $(`button[onclick="showTab('${tab}')"]`).addClass('active');
-        }
-
-        $('#id_karyawan').on('change', function() {
-            var opt = $(this).find(':selected');
-            $('#nik').val(opt.data('nik'));
-            $('#jabatan').val(opt.data('jabatan'));
-            $('#unit_kerja').val(opt.data('unit'));
-        });
-    </script>
+<!-- Scripts -->
+<script src="assets/modules/jquery.min.js"></script>
+<script>
+  // Auto isi field berdasarkan pilihan karyawan
+  $('#id_karyawan').on('change', function() {
+    var opt = $(this).find(':selected');
+    $('#nik').val(opt.data('nik'));
+    $('#nama').val(opt.data('nama'));
+    $('#jabatan').val(opt.data('jabatan'));
+    $('#unit_kerja').val(opt.data('unit'));
+  });
+</script>
+<script src="assets/modules/popper.js"></script>
+<script src="assets/modules/bootstrap/js/bootstrap.min.js"></script>
+<script src="assets/modules/nicescroll/jquery.nicescroll.min.js"></script>
+<script src="assets/modules/moment.min.js"></script>
+<script src="assets/js/stisla.js"></script>
+<script src="assets/js/scripts.js"></script>
+<script src="assets/js/custom.js"></script>
 </body>
 </html>
+
+
+
+
+
+
+

@@ -32,6 +32,31 @@ if (!file_exists($logo_path) || md5_file($logo_path) !== $hash_content) {
 
 $status_msg = "";
 
+// --- MAIL SETTINGS SAVE ---
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_mail'])) {
+    csrf_verify();
+    $mid              = intval($_POST['mail_id'] ?? 0);
+    $mail_host        = mysqli_real_escape_string($conn, $_POST['mail_host'] ?? '');
+    $mail_port        = intval($_POST['mail_port'] ?? 587);
+    $mail_username    = mysqli_real_escape_string($conn, $_POST['mail_username'] ?? '');
+    $mail_password    = mysqli_real_escape_string($conn, $_POST['mail_password'] ?? '');
+    $mail_from_email  = mysqli_real_escape_string($conn, $_POST['mail_from_email'] ?? '');
+    $mail_from_name   = mysqli_real_escape_string($conn, $_POST['mail_from_name'] ?? '');
+    $base_url         = mysqli_real_escape_string($conn, $_POST['base_url'] ?? '');
+
+    if ($mid > 0) {
+        mysqli_query($conn, "UPDATE mail_settings SET mail_host='$mail_host', mail_port=$mail_port, mail_username='$mail_username', mail_password='$mail_password', mail_from_email='$mail_from_email', mail_from_name='$mail_from_name', base_url='$base_url' WHERE id=$mid");
+    } else {
+        mysqli_query($conn, "INSERT INTO mail_settings (mail_host, mail_port, mail_username, mail_password, mail_from_email, mail_from_name, base_url) VALUES ('$mail_host', $mail_port, '$mail_username', '$mail_password', '$mail_from_email', '$mail_from_name', '$base_url')");
+    }
+    write_log("UPDATE_MAIL_SETTINGS", "User " . $_SESSION['username'] . " memperbarui Email Engine settings.");
+    $status_msg = "Email Engine settings berhasil disimpan!";
+    
+    // Refresh mail settings
+    header("Location: settings.php?tab=email&saved=1");
+    exit;
+}
+
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_settings'])) {
     csrf_verify();
     
@@ -141,6 +166,9 @@ if (($_SESSION['login_source'] ?? 'BEXMEDIA') === 'BEXMEDIA') {
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" href="../images/logo_final.png">
+    
+  
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Settings | <?php echo h($brand_name); ?></title>
@@ -427,6 +455,9 @@ if (($_SESSION['login_source'] ?? 'BEXMEDIA') === 'BEXMEDIA') {
                         <div class="settings-nav-item" onclick="showTab('connection')">
                             <i data-lucide="database"></i> Database
                         </div>
+                        <div class="settings-nav-item" onclick="showTab('email')">
+                            <i data-lucide="mail"></i> Email Engine
+                        </div>
                         
                         <!-- Account Management Dropdown -->
                         <div class="settings-nav-item dropdown-trigger" onclick="toggleSub('acc-mgmt')">
@@ -447,6 +478,9 @@ if (($_SESSION['login_source'] ?? 'BEXMEDIA') === 'BEXMEDIA') {
 
                         <div class="settings-nav-item" onclick="showTab('logs')">
                             <i data-lucide="activity"></i> Audit Logs
+                        </div>
+                        <div class="settings-nav-item" onclick="showTab('integrity')">
+                            <i data-lucide="shield-check"></i> Performance Guard
                         </div>
                     </div>
 
@@ -556,6 +590,70 @@ if (($_SESSION['login_source'] ?? 'BEXMEDIA') === 'BEXMEDIA') {
                                         <input type="password" name="pass_bex" value="<?php echo h(get_setting('pass_bex')); ?>">
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB: EMAIL ENGINE -->
+                        <div id="email" class="tab-content">
+                            <?php
+                            $mail_setting = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM mail_settings LIMIT 1"));
+                            ?>
+                            <div class="form-section">
+                                <h3>Email Engine (SMTP Config)</h3>
+                                <p style="color: #64748B; font-size: 0.9rem; margin-bottom: 25px;">
+                                    Konfigurasi SMTP server untuk pengiriman email otomatis (laporan audit, notifikasi sistem).
+                                </p>
+
+                                <div style="background: #F0F9FF; border-left: 4px solid var(--primary); border-radius: 0 12px 12px 0; padding: 14px 18px; margin-bottom: 25px; font-size: 0.85rem; color: #0369a1;">
+                                    <i data-lucide="info" size="16" style="vertical-align: middle; margin-right: 6px;"></i>
+                                    Untuk Gmail, gunakan SMTP <strong>smtp.gmail.com</strong> port <strong>587</strong> dan gunakan <strong>App Password</strong> (bukan password biasa).
+                                </div>
+
+                                <form method="POST">
+                                    <?php echo csrf_field(); ?>
+                                    <input type="hidden" name="save_mail" value="1">
+                                    <input type="hidden" name="mail_id" value="<?php echo $mail_setting['id'] ?? 0; ?>">
+
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>SMTP Host</label>
+                                            <input type="text" name="mail_host" value="<?php echo htmlspecialchars($mail_setting['mail_host'] ?? ''); ?>" placeholder="smtp.gmail.com">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>SMTP Port</label>
+                                            <input type="number" name="mail_port" value="<?php echo htmlspecialchars($mail_setting['mail_port'] ?? '587'); ?>" placeholder="587">
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Username (Email)</label>
+                                            <input type="text" name="mail_username" value="<?php echo htmlspecialchars($mail_setting['mail_username'] ?? ''); ?>" placeholder="yourname@gmail.com">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>App Password</label>
+                                            <input type="password" name="mail_password" value="<?php echo htmlspecialchars($mail_setting['mail_password'] ?? ''); ?>" placeholder="••••••••••••">
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>From Email</label>
+                                            <input type="email" name="mail_from_email" value="<?php echo htmlspecialchars($mail_setting['mail_from_email'] ?? ''); ?>" placeholder="noreply@bexmedia.id">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>From Name</label>
+                                            <input type="text" name="mail_from_name" value="<?php echo htmlspecialchars($mail_setting['mail_from_name'] ?? ''); ?>" placeholder="BexMedia System">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Base URL Aplikasi</label>
+                                        <input type="text" name="base_url" value="<?php echo htmlspecialchars($mail_setting['base_url'] ?? ''); ?>" placeholder="http://localhost/bexmedia">
+                                    </div>
+
+                                    <button type="submit" class="btn-save">
+                                        <i data-lucide="save" size="16" style="vertical-align: middle; margin-right: 6px;"></i>
+                                        Simpan Email Engine
+                                    </button>
+                                </form>
                             </div>
                         </div>
 
@@ -726,6 +824,46 @@ if (($_SESSION['login_source'] ?? 'BEXMEDIA') === 'BEXMEDIA') {
                             </div>
                         </div>
 
+                        <!-- TAB: INTEGRITY GUARD -->
+                        <div id="integrity" class="tab-content">
+                            <div class="form-section">
+                                <h3>Performance Guard</h3>
+                                <p style="color: #64748B; font-size: 0.9rem; margin-bottom: 25px;">
+                                    Sistem perlindungan integritas file inti dan validasi aset digital BexMedia.
+                                </p>
+
+                                <div style="background: rgba(59,130,246,0.03); border: 1px dashed rgba(59,130,246,0.3); border-radius: 20px; padding: 35px; text-align: center; margin-bottom: 30px;">
+                                    <div style="background: white; width: 64px; height: 64px; border-radius: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 8px 20px rgba(59,130,246,0.1);">
+                                        <i data-lucide="shield-check" style="color: var(--primary)" size="30"></i>
+                                    </div>
+                                    <h4 style="font-family: 'Outfit', sans-serif; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 10px;">Security Manifest Console</h4>
+                                    <p style="color: #64748B; font-size: 0.85rem; max-width: 420px; margin: 0 auto 25px; line-height: 1.7;">
+                                        Jika Anda melakukan perubahan sah pada file <strong>sidebar.php</strong> atau <strong>footer.php</strong>, gunakan konsol ini untuk mensinkronkan ulang sidik jari keamanan agar sistem tidak terblokir.
+                                    </p>
+                                    <a href="generate_hash_asli.php" class="btn-save" style="text-decoration: none; display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px;">
+                                        <i data-lucide="external-link" size="16"></i> Buka Integrity Console
+                                    </a>
+                                </div>
+
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                    <div style="padding: 20px; background: #F8FAFC; border-radius: 16px; border: 1px solid #E2E8F0;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <span style="font-weight: 600; font-size: 0.9rem;">sidebar.php</span>
+                                            <span class="badge badge-success">Protected</span>
+                                        </div>
+                                        <div style="margin-top: 8px; font-size: 0.75rem; color: #94A3B8;">Core Navigation Matrix</div>
+                                    </div>
+                                    <div style="padding: 20px; background: #F8FAFC; border-radius: 16px; border: 1px solid #E2E8F0;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <span style="font-weight: 600; font-size: 0.9rem;">footer.php</span>
+                                            <span class="badge badge-success">Protected</span>
+                                        </div>
+                                        <div style="margin-top: 8px; font-size: 0.75rem; color: #94A3B8;">Legal &amp; Copyright Entity</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div id="saveContainer" style="margin-top: 20px;">
                             <button type="submit" name="save_settings" class="btn-save">
                                 <i data-lucide="save" size="18" style="vertical-align: middle; margin-right: 8px"></i>
@@ -774,6 +912,17 @@ if (($_SESSION['login_source'] ?? 'BEXMEDIA') === 'BEXMEDIA') {
     <script>
         lucide.createIcons();
 
+        // Auto-open tab from URL param (e.g. after save redirect)
+        const urlParams = new URLSearchParams(window.location.search);
+        const activeTab = urlParams.get('tab');
+        if (activeTab) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            const el = document.getElementById(activeTab);
+            if (el) el.classList.add('active');
+            document.getElementById('saveContainer').style.display = 
+                ['logs','confirm','access','userlist','integrity','email'].includes(activeTab) ? 'none' : 'block';
+        }
+
         function showTab(tabId) {
             // Update nav
             document.querySelectorAll('.settings-nav-item').forEach(item => {
@@ -789,7 +938,7 @@ if (($_SESSION['login_source'] ?? 'BEXMEDIA') === 'BEXMEDIA') {
 
             // Save button visibility
             const saveBtn = document.getElementById('saveContainer');
-            if (tabId === 'logs' || tabId === 'confirm' || tabId === 'access' || tabId === 'userlist') {
+            if (tabId === 'logs' || tabId === 'confirm' || tabId === 'access' || tabId === 'userlist' || tabId === 'integrity' || tabId === 'email') {
                 saveBtn.style.display = 'none';
             } else {
                 saveBtn.style.display = 'block';
@@ -880,3 +1029,10 @@ if (($_SESSION['login_source'] ?? 'BEXMEDIA') === 'BEXMEDIA') {
     <?php include "footer.php"; ?>
 </body>
 </html>
+
+
+
+
+
+
+

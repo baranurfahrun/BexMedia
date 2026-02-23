@@ -42,6 +42,9 @@ if (mysqli_num_rows($check_empty) == 0) {
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" href="../images/logo_final.png">
+    
+  
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clients Management | <?php echo h($brand_name); ?></title>
@@ -312,3 +315,10 @@ if (mysqli_num_rows($check_empty) == 0) {
     <?php include "footer.php"; ?>
 </body>
 </html>
+
+
+
+
+
+
+

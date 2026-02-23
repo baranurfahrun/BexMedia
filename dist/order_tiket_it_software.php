@@ -1,205 +1,248 @@
 <?php
-require_once "../conf/config.php";
-checkLogin();
+include 'security.php'; 
+include 'koneksi.php';
+date_default_timezone_set('Asia/Jakarta');
 
-// MenuName: IT Software Support
+$user_id = $_SESSION['user_id'];
+$current_file = basename(__FILE__); // 
 
-$user_id = $_SESSION['user_id'] ?? 0;
-
-// Lazy Load Tables
-safe_query("CREATE TABLE IF NOT EXISTS tiket_it_software (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    nomor_tiket VARCHAR(50),
-    kategori VARCHAR(100),
-    kendala TEXT,
-    catatan_it TEXT,
-    status ENUM('menunggu', 'diproses', 'selesai', 'ditolak') DEFAULT 'menunggu',
-    status_validasi ENUM('Belum Validasi', 'Diterima', 'Ditolak') DEFAULT 'Belum Validasi',
-    tanggal_input DATETIME DEFAULT CURRENT_TIMESTAMP,
-    tanggal_selesai DATETIME NULL
-)");
-
-// Mock data categories if not exists
-$categories = ['SIMRS Khanza', 'Website Profile', 'E-RM System', 'Email & Collaboration', 'BexMedia App', 'Lainnya'];
-
-// Handle Save
-if (isset($_POST['simpan'])) {
-    csrf_verify();
-    
-    $kategori = cleanInput($_POST['kategori']);
-    $kendala = cleanInput($_POST['kendala']);
-    $nomor_tiket = "TKT/SW/" . date('Ymd') . "/" . strtoupper(substr(uniqid(), -4));
-    
-    $res = safe_query("INSERT INTO tiket_it_software (user_id, nomor_tiket, kategori, kendala) VALUES (?, ?, ?, ?)", 
-                       [$user_id, $nomor_tiket, $kategori, $kendala]);
-    
-    if($res) {
-        write_log("TICKET_CREATED", "Membuat tiket baru: $nomor_tiket [$kategori]");
-        $_SESSION['flash_success'] = "Tiket Anda berhasil dikirim dengan nomor: $nomor_tiket";
-    }
-    header("Location: order_tiket_it_software.php");
-    exit;
+// Cek apakah user boleh mengakses halaman ini
+$query = "SELECT 1 FROM akses_menu 
+          JOIN menu ON akses_menu.menu_id = menu.id 
+          WHERE akses_menu.user_id = '$user_id' AND menu.file_menu = '$current_file'";
+$result = mysqli_query($conn, $query);
+if (mysqli_num_rows($result) == 0) {
+  echo "<script>alert('Anda tidak memiliki akses ke halaman ini.'); window.location.href='dashboard.php';</script>";
+  exit;
 }
 
-// Handle Validation
-if (isset($_POST['validasi'])) {
-    csrf_verify();
-    $id = intval($_POST['tiket_id']);
-    safe_query("UPDATE tiket_it_software SET status_validasi='Diterima' WHERE id=? AND user_id=?", [$id, $user_id]);
-    $_SESSION['flash_success'] = "Tiket telah diverifikasi sebagai selesai.";
-    header("Location: order_tiket_it_software.php");
-    exit;
-}
+$user_id = $_SESSION['user_id'];
+$queryUser = mysqli_query($conn, "SELECT nik, nama, jabatan, unit_kerja FROM users WHERE id = '$user_id'");
+$userData = mysqli_fetch_assoc($queryUser);
 
-$u = mysqli_fetch_assoc(safe_query("SELECT * FROM users WHERE id=?", [$user_id]));
-$data_tiket = safe_query("SELECT * FROM tiket_it_software WHERE user_id=? ORDER BY tanggal_input DESC", [$user_id]);
+$keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IT Software Tiket - BexMedia</title>
-    <link rel="stylesheet" href="../css/index.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        .ticket-container { margin-top: 24px; }
-        .premium-card {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 20px;
-            padding: 32px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 24px; }
-        .tabs { border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 32px; }
-        .tab-btn {
-            background: none; border: none; color: var(--text-muted);
-            padding: 12px 24px; cursor: pointer; font-weight: 600;
-            border-bottom: 2px solid transparent; transition: 0.3s;
-        }
-        .tab-btn.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        
-        .status-badge { padding: 4px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
-        .st-menunggu { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
-        .st-diproses { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
-        .st-selesai { background: rgba(16, 185, 129, 0.2); color: #10b981; }
-        .st-ditolak { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
-    </style>
+    <link rel="icon" href="../images/logo_final.png">
+    
+  
+  <meta charset="UTF-8" />
+  <meta content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no" name="viewport" />
+  <title>BexMedia Dashboard</title>
+
+  <link rel="stylesheet" href="assets/modules/bootstrap/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="assets/modules/fontawesome/css/all.min.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+
+  <style>
+    .table-responsive-custom {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .table-responsive-custom table {
+      width: 100%;
+      min-width: 1200px;
+      white-space: nowrap;
+    }
+
+    .d-flex.gap-1 > form {
+      margin-right: 5px;
+    }
+
+    .table thead th {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+  </style>
 </head>
+
 <body>
-    <div class="container">
-        <?php include "sidebar.php"; ?>
-        
-        <main class="main-content">
-            <header class="header">
-                <div class="header-left">
-                    <h1>IT Software Support</h1>
-                    <p>Laporkan kendala aplikasi atau ajukan permintaan fitur baru ke tim pengembang.</p>
-                </div>
-                <div class="header-right">
-                    <div class="tabs">
-                        <button class="tab-btn active" onclick="showTab('new')">Request Baru</button>
-                        <button class="tab-btn" onclick="showTab('history')">Tiket Saya</button>
-                    </div>
-                </div>
-            </header>
+<div id="app">
+  <div class="main-wrapper main-wrapper-1">
+    <?php include 'navbar.php'; ?>
+    <?php include 'sidebar.php'; ?>
 
-            <div class="ticket-container">
-                <!-- NEW TICKET TAB -->
-                <div id="tab-new" class="tab-content active">
-                    <form method="POST">
-                        <?= csrf_field(); ?>
-                        <div class="premium-card">
-                            <div class="form-grid">
-                                <div>
-                                    <label style="opacity:0.5; font-size:0.8rem;">PELAPOR</label>
-                                    <p style="font-weight:700; font-size:1.1rem;"><?= h($u['nama_lengkap']) ?></p>
-                                    <small style="opacity:0.4;"><?= h($u['jabatan']) ?> / <?= h($u['unit_kerja']) ?></small>
-                                </div>
-                                <div class="input-group">
-                                    <label>Kategori Kendala</label>
-                                    <select name="kategori" required>
-                                        <option value="">-- Pilih Sistem --</option>
-                                        <?php foreach($categories as $cat): ?>
-                                            <option value="<?= $cat ?>"><?= $cat ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="input-group" style="margin-bottom: 24px;">
-                                <label>Deskripsi Kendala Secara Detail</label>
-                                <textarea name="kendala" rows="5" placeholder="Jelaskan apa yang terjadi, apa yang Anda harapkan, dan langkah untuk mereproduksi error tersebut..." required></textarea>
-                            </div>
-
-                            <div style="display:flex; justify-content: space-between; align-items: center;">
-                                <div style="display:flex; gap:12px; color:var(--text-muted); font-size:0.85rem;">
-                                    <i data-lucide="info" size="16"></i>
-                                    <span>Tim IT akan merespon dalam waktu maksimal 1x24 jam kerja.</span>
-                                </div>
-                                <button type="submit" name="simpan" class="btn btn-primary" style="padding: 16px 48px;">
-                                    <i data-lucide="send"></i> Kirim Tiket
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- HISTORY TAB -->
-                <div id="tab-history" class="tab-content">
-                    <div class="premium-card">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>No. Tiket</th>
-                                    <th>Kategori</th>
-                                    <th>Tanggal</th>
-                                    <th>Status</th>
-                                    <th>Aksi / Info</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php while ($d = mysqli_fetch_assoc($data_tiket)): ?>
-                                    <tr>
-                                        <td><strong><?= h($d['nomor_tiket']) ?></strong></td>
-                                        <td><?= h($d['kategori']) ?></td>
-                                        <td><?= date('d/m/Y H:i', strtotime($d['tanggal_input'])) ?></td>
-                                        <td><span class="status-badge st-<?= $d['status'] ?>"><?= $d['status'] ?></span></td>
-                                        <td>
-                                            <?php if($d['status'] == 'selesai' && $d['status_validasi'] == 'Belum Validasi'): ?>
-                                                <form method="POST" style="display:inline;">
-                                                    <?= csrf_field(); ?>
-                                                    <input type="hidden" name="tiket_id" value="<?= $d['id'] ?>">
-                                                    <button type="submit" name="validasi" class="btn btn-primary btn-sm">Verifikasi Selesai</button>
-                                                </form>
-                                            <?php elseif($d['status_validasi'] == 'Diterima'): ?>
-                                                <span style="color:#10b981; font-size:0.8rem; font-weight:700;">Verified <i data-lucide="check" size="12"></i></span>
-                                            <?php else: ?>
-                                                <button class="btn btn-outline btn-sm" onclick="alert('Detail: <?= addslashes($d['kendala']) ?>\n\nCatatan IT: <?= addslashes($d['catatan_it'] ?: '-') ?>')">Detail</button>
-                                            <?php endif; ?>
-                                        </td>
-                                    </tr>
-                                <?php endwhile; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+    <div class="main-content">
+      <section class="section">
+        <div class="section-body">
+          <div class="card">
+            <div class="card-header">
+              <h4>Order Tiket IT Software</h4>
             </div>
-        </main>
-    </div>
+            <div class="card-body">
 
-    <script>
-        lucide.createIcons();
-        function showTab(tab) {
-            $('.tab-content').removeClass('active');
-            $('.tab-btn').removeClass('active');
-            $('#tab-' + tab).addClass('active');
-            $(`button[onclick="showTab('${tab}')"]`).addClass('active');
-        }
-    </script>
+              <!-- Nav Tabs -->
+              <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item">
+                  <a class="nav-link active" id="order-tab" data-toggle="tab" href="#order" role="tab">Order Tiket</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" id="tiket-saya-tab" data-toggle="tab" href="#tiket-saya" role="tab">Tiket Saya</a>
+                </li>
+              </ul>
+
+              <!-- Tab Content -->
+              <div class="tab-content mt-4" id="myTabContent">
+
+                <!-- Order Tiket -->
+                <div class="tab-pane fade show active" id="order" role="tabpanel">
+                  <form method="POST" action="simpan_tiket_it_software.php">
+                    <div class="row">
+                      <div class="form-group col-md-4">
+                        <label for="nik">NIK</label>
+                        <input type="text" name="nik" id="nik" class="form-control" value="<?= $userData['nik']; ?>" readonly>
+                      </div>
+
+                      <div class="form-group col-md-4">
+                        <label for="nama">Nama</label>
+                        <input type="text" name="nama" id="nama" class="form-control" value="<?= $userData['nama']; ?>" readonly>
+                      </div>
+
+                      <div class="form-group col-md-4">
+                        <label for="jabatan">Jabatan</label>
+                        <input type="text" name="jabatan" id="jabatan" class="form-control" value="<?= $userData['jabatan']; ?>" readonly>
+                      </div>
+
+                      <div class="form-group col-md-4">
+                        <label for="unit_kerja">Unit Kerja</label>
+                        <input type="text" name="unit_kerja" id="unit_kerja" class="form-control" value="<?= $userData['unit_kerja']; ?>" readonly>
+                      </div>
+
+                      <div class="form-group col-md-4">
+                        <label for="kategori">Kategori Software</label>
+                        <select class="form-control" name="kategori" required>
+                          <option value="">-- Pilih Kategori --</option>
+                          <?php
+                          $kategoriResult = mysqli_query($conn, "SELECT nama_kategori FROM kategori_software");
+                          while ($k = mysqli_fetch_assoc($kategoriResult)) {
+                            echo "<option value='{$k['nama_kategori']}'>{$k['nama_kategori']}</option>";
+                          }
+                          ?>
+                        </select>
+                      </div>
+
+                      <div class="form-group col-md-12">
+                        <label for="kendala">Kendala / Laporan</label>
+                        <textarea name="kendala" class="form-control" rows="3" required></textarea>
+                      </div>
+                    </div>
+
+                    <button type="submit" name="simpan" class="btn btn-primary">Simpan Tiket</button>
+                  </form>
+                </div>
+
+                <!-- Tiket Saya -->
+                <div class="tab-pane fade" id="tiket-saya" role="tabpanel">
+                  <div class="table-responsive-custom">
+                    <table class="table table-striped table-bordered">
+                      <thead>
+                        <tr>
+                          <th>No</th>
+                          <th>Nomor Tiket</th>
+                          <th>Tanggal</th>
+                          <th>Kategori</th>
+                          <th>Kendala</th>
+                          <th>Catatan IT</th>
+                          <th>Status</th>
+                          <th>Validasi</th>
+                          <th>Ticket</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <?php
+                        $no = 1;
+                        $queryTiket = mysqli_query($conn, "SELECT * FROM tiket_it_software WHERE user_id = '$user_id' ORDER BY tanggal_input DESC");
+                        if (mysqli_num_rows($queryTiket) > 0) {
+                          while ($row = mysqli_fetch_assoc($queryTiket)) {
+                            echo "<tr>
+                                    <td>{$no}</td>
+                                    <td>{$row['nomor_tiket']}</td>
+                                    <td>" . date('d-m-Y H:i', strtotime($row['tanggal_input'])) . "</td>
+                                    <td>{$row['kategori']}</td>
+                                    <td>{$row['kendala']}</td>
+                                    <td>" . (!empty($row['catatan_it']) ? nl2br(htmlspecialchars($row['catatan_it'])) : '-') . "</td>
+                                    <td><span class='badge badge-" . statusColor($row['status']) . "'>{$row['status']}</span></td>
+                                    <td>" . renderValidasiButton($row['status_validasi'], $row['id']) . "</td>
+                                     <td>
+                                      <a href='cetak_tiket_it_software.php?id={$row['id']}' target='_blank' class='btn btn-sm btn-info' title='Lihat Tiket'>
+                                        <i class='fas fa-print'></i>
+                                      </a>
+                                    </td>
+                                  </tr>";
+                            $no++;
+                          }
+                        } else {
+                          echo "<tr><td colspan='8' class='text-center'>Belum ada tiket.</td></tr>";
+                        }
+
+                        function statusColor($status) {
+                          switch (strtolower($status)) {
+                            case 'menunggu': return 'warning';
+                            case 'diproses': return 'info';
+                            case 'selesai': return 'success';
+                            case 'ditolak': return 'danger';
+                            default: return 'secondary';
+                          }
+                        }
+
+                        function renderValidasiButton($status_validasi, $id) {
+                          switch ($status_validasi) {
+                            case 'Belum Validasi':
+                              return "
+                                <div class='d-flex gap-1'>
+                                  <form method='post' action='validasi_tiket_software.php' style='display:inline-block; margin-right: 5px;'>
+                                    <input type='hidden' name='tiket_id' value='$id'>
+                                    <button type='submit' name='validasi' class='btn btn-sm btn-success'>Terima</button>
+                                  </form>
+                                  <form method='post' action='validasi_tiket.php' style='display:inline-block;'>
+                                    <input type='hidden' name='tiket_id' value='$id'>
+                                    <button type='submit' name='tolak' class='btn btn-sm btn-danger'>Tolak</button>
+                                  </form>
+                                </div>";
+                            case 'Diterima':
+                              return "<span class='badge badge-success'>Diterima</span>";
+                            case 'Ditolak':
+                              return "<span class='badge badge-danger'>Ditolak</span>";
+                            default:
+                              return "<span class='badge badge-secondary'>Tidak Diketahui</span>";
+                          }
+                        }
+                        ?>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+              </div> <!-- .tab-content -->
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="assets/modules/jquery.min.js"></script>
+<script src="assets/modules/popper.js"></script>
+<script src="assets/modules/bootstrap/js/bootstrap.min.js"></script>
+<script src="assets/modules/nicescroll/jquery.nicescroll.min.js"></script>
+<script src="assets/modules/moment.min.js"></script>
+<script src="assets/js/stisla.js"></script>
+<script src="assets/js/scripts.js"></script>
+<script src="assets/js/custom.js"></script>
 </body>
 </html>
+
+
+
+
+
+
+

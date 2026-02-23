@@ -640,3 +640,125 @@
 [21-Feb-2026 11:50:36 Asia/Makassar] PHP Notice:  Trying to access array offset on value of type null in C:\xampp\htdocs\BexMedia\dist\order_tiket_it_hardware.php on line 118
 [21-Feb-2026 11:50:36 Asia/Makassar] PHP Notice:  Trying to access array offset on value of type null in C:\xampp\htdocs\BexMedia\dist\order_tiket_it_hardware.php on line 119
 [21-Feb-2026 11:50:36 Asia/Makassar] PHP Notice:  Undefined variable: logo_path in C:\xampp\htdocs\BexMedia\dist\sidebar.php on line 14
+[23-Feb-2026 09:05:04 Asia/Makassar] Prepare failed: Table 'bexmedia.jatah_cuti' doesn't exist SQL: SELECT mc.nama_cuti, jc.lama_hari, jc.sisa_hari, (jc.lama_hari - jc.sisa_hari) AS terpakai 
+                        FROM jatah_cuti jc JOIN master_cuti mc ON jc.cuti_id = mc.id 
+                        WHERE jc.tahun = ?
+[23-Feb-2026 09:05:04 Asia/Makassar] Prepare failed: Table 'bexmedia.izin_keluar' doesn't exist SQL: SELECT * FROM izin_keluar WHERE tanggal = CURDATE() ORDER BY created_at DESC
+[23-Feb-2026 09:05:04 Asia/Makassar] Prepare failed: Table 'bexmedia.data_barang_it' doesn't exist SQL: SELECT * FROM data_barang_it ORDER BY created_at DESC LIMIT 50
+[23-Feb-2026 09:05:04 Asia/Makassar] Prepare failed: Table 'bexmedia.maintenance_rutin' doesn't exist SQL: SELECT mr.*, b.nama_barang, b.no_barang FROM maintenance_rutin mr LEFT JOIN data_barang_it b ON mr.barang_id = b.id ORDER BY mr.waktu_input DESC LIMIT 50
+[23-Feb-2026 09:05:04 Asia/Makassar] Prepare failed: Table 'bexmedia.catatan_kerja' doesn't exist SQL: SELECT ck.*, u.nama_lengkap FROM catatan_kerja ck JOIN users u ON ck.user_id = u.id ORDER BY ck.tanggal DESC LIMIT 50
+[23-Feb-2026 09:05:04 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_masuk' doesn't exist SQL: SELECT * FROM surat_masuk ORDER BY tgl_terima DESC LIMIT 50
+[23-Feb-2026 09:05:04 Asia/Makassar] Prepare failed: Table 'bexmedia.surat_keluar' doesn't exist SQL: SELECT * FROM surat_keluar ORDER BY tgl_surat DESC LIMIT 50
+[23-Feb-2026 09:05:04 Asia/Makassar] Prepare failed: Table 'bexmedia.arsip_digital' doesn't exist SQL: SELECT * FROM arsip_digital ORDER BY tanggal_input DESC LIMIT 50
+[23-Feb-2026 09:05:04 Asia/Makassar] Prepare failed: Table 'bexmedia.agenda_direktur' doesn't exist SQL: SELECT * FROM agenda_direktur ORDER BY tanggal DESC, jam DESC LIMIT 50
+[23-Feb-2026 09:05:04 Asia/Makassar] Prepare failed: Table 'bexmedia.dokumen' doesn't exist SQL: SELECT * FROM dokumen ORDER BY waktu_input DESC LIMIT 50
+[23-Feb-2026 09:05:04 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 249
+[23-Feb-2026 09:05:04 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 324
+[23-Feb-2026 09:05:04 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 349
+[23-Feb-2026 09:05:04 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 454
+[23-Feb-2026 09:05:04 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 481
+[23-Feb-2026 09:05:04 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 507
+[23-Feb-2026 09:05:24 Asia/Makassar] PHP Warning:  include(security.php): failed to open stream: No such file or directory in C:\xampp\htdocs\BexMedia\dist\absensi.php on line 3
+[23-Feb-2026 09:05:24 Asia/Makassar] PHP Warning:  include(): Failed opening 'security.php' for inclusion (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\BexMedia\dist\absensi.php on line 3
+[23-Feb-2026 09:05:24 Asia/Makassar] PHP Warning:  include(koneksi.php): failed to open stream: No such file or directory in C:\xampp\htdocs\BexMedia\dist\absensi.php on line 4
+[23-Feb-2026 09:05:24 Asia/Makassar] PHP Warning:  include(): Failed opening 'koneksi.php' for inclusion (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\BexMedia\dist\absensi.php on line 4
+[23-Feb-2026 09:05:33 Asia/Makassar] PHP Warning:  include(security.php): failed to open stream: No such file or directory in C:\xampp\htdocs\BexMedia\dist\absensi.php on line 3
+[23-Feb-2026 09:05:33 Asia/Makassar] PHP Warning:  include(): Failed opening 'security.php' for inclusion (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\BexMedia\dist\absensi.php on line 3
+[23-Feb-2026 09:05:33 Asia/Makassar] PHP Warning:  include(koneksi.php): failed to open stream: No such file or directory in C:\xampp\htdocs\BexMedia\dist\absensi.php on line 4
+[23-Feb-2026 09:05:33 Asia/Makassar] PHP Warning:  include(): Failed opening 'koneksi.php' for inclusion (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\BexMedia\dist\absensi.php on line 4
+[23-Feb-2026 09:10:59 Asia/Makassar] PHP Warning:  include(security.php): failed to open stream: No such file or directory in C:\xampp\htdocs\BexMedia\dist\absensi.php on line 3
+[23-Feb-2026 09:10:59 Asia/Makassar] PHP Warning:  include(): Failed opening 'security.php' for inclusion (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\BexMedia\dist\absensi.php on line 3
+[23-Feb-2026 09:10:59 Asia/Makassar] PHP Warning:  include(koneksi.php): failed to open stream: No such file or directory in C:\xampp\htdocs\BexMedia\dist\absensi.php on line 4
+[23-Feb-2026 09:10:59 Asia/Makassar] PHP Warning:  include(): Failed opening 'koneksi.php' for inclusion (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\BexMedia\dist\absensi.php on line 4
+[23-Feb-2026 08:21:12 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\semua_antrian.php on line 14
+[23-Feb-2026 09:25:53 Asia/Makassar] PHP Warning:  include(navbar.php): failed to open stream: No such file or directory in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 235
+[23-Feb-2026 09:25:53 Asia/Makassar] PHP Warning:  include(): Failed opening 'navbar.php' for inclusion (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 235
+[23-Feb-2026 08:25:53 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 782
+[23-Feb-2026 09:25:55 Asia/Makassar] PHP Warning:  include(navbar.php): failed to open stream: No such file or directory in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 235
+[23-Feb-2026 09:25:55 Asia/Makassar] PHP Warning:  include(): Failed opening 'navbar.php' for inclusion (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 235
+[23-Feb-2026 08:25:55 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 782
+[23-Feb-2026 09:26:13 Asia/Makassar] PHP Warning:  include(navbar.php): failed to open stream: No such file or directory in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 235
+[23-Feb-2026 09:26:13 Asia/Makassar] PHP Warning:  include(): Failed opening 'navbar.php' for inclusion (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 235
+[23-Feb-2026 08:26:13 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 782
+[23-Feb-2026 09:26:13 Asia/Makassar] PHP Warning:  include(navbar.php): failed to open stream: No such file or directory in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 235
+[23-Feb-2026 09:26:13 Asia/Makassar] PHP Warning:  include(): Failed opening 'navbar.php' for inclusion (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 235
+[23-Feb-2026 08:26:13 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 782
+[23-Feb-2026 09:26:52 Asia/Makassar] PHP Warning:  include(navbar.php): failed to open stream: No such file or directory in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 235
+[23-Feb-2026 09:26:52 Asia/Makassar] PHP Warning:  include(): Failed opening 'navbar.php' for inclusion (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 235
+[23-Feb-2026 08:26:52 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 782
+[23-Feb-2026 08:26:58 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\semua_antrian.php on line 14
+[23-Feb-2026 09:35:22 Asia/Jakarta] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\navbar.php on line 236
+[23-Feb-2026 09:35:22 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\navbar.php on line 548
+[23-Feb-2026 09:35:22 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\navbar.php on line 570
+[23-Feb-2026 09:35:22 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 782
+[23-Feb-2026 10:35:23 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\get_online_users.php on line 15
+[23-Feb-2026 09:36:40 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\semua_antrian.php on line 14
+[23-Feb-2026 09:45:25 Asia/Jakarta] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\navbar.php on line 236
+[23-Feb-2026 09:45:25 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\navbar.php on line 548
+[23-Feb-2026 09:45:25 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\navbar.php on line 570
+[23-Feb-2026 09:45:25 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 782
+[23-Feb-2026 10:45:25 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\get_online_users.php on line 15
+[23-Feb-2026 09:45:31 Asia/Jakarta] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\navbar.php on line 236
+[23-Feb-2026 09:45:31 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\navbar.php on line 548
+[23-Feb-2026 09:45:31 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\navbar.php on line 570
+[23-Feb-2026 09:45:31 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 782
+[23-Feb-2026 10:45:31 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\get_online_users.php on line 15
+[23-Feb-2026 10:06:17 Asia/Jakarta] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\navbar.php on line 236
+[23-Feb-2026 10:06:17 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\navbar.php on line 548
+[23-Feb-2026 10:06:17 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\navbar.php on line 570
+[23-Feb-2026 10:06:17 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 782
+[23-Feb-2026 10:06:22 Asia/Jakarta] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\navbar.php on line 236
+[23-Feb-2026 10:06:22 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\navbar.php on line 548
+[23-Feb-2026 10:06:22 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\navbar.php on line 570
+[23-Feb-2026 10:06:22 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 782
+[23-Feb-2026 10:06:23 Asia/Jakarta] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\navbar.php on line 236
+[23-Feb-2026 10:06:23 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\navbar.php on line 548
+[23-Feb-2026 10:06:23 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\navbar.php on line 570
+[23-Feb-2026 10:06:23 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 782
+[23-Feb-2026 10:06:24 Asia/Jakarta] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\navbar.php on line 236
+[23-Feb-2026 10:06:24 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\navbar.php on line 548
+[23-Feb-2026 10:06:24 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\navbar.php on line 570
+[23-Feb-2026 10:06:24 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 782
+[23-Feb-2026 10:11:13 Asia/Jakarta] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\navbar.php on line 236
+[23-Feb-2026 10:11:13 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\navbar.php on line 548
+[23-Feb-2026 10:11:13 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\navbar.php on line 570
+[23-Feb-2026 10:11:13 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 782
+[23-Feb-2026 11:11:13 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\get_online_users.php on line 15
+[23-Feb-2026 11:38:11 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\get_online_users.php on line 15
+[23-Feb-2026 11:39:04 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\get_online_users.php on line 15
+[23-Feb-2026 11:39:12 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\get_online_users.php on line 15
+[23-Feb-2026 11:42:09 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\get_online_users.php on line 15
+[23-Feb-2026 11:42:11 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\get_online_users.php on line 15
+[23-Feb-2026 10:43:50 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 782
+[23-Feb-2026 11:43:51 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\get_online_users.php on line 15
+[23-Feb-2026 10:43:54 Asia/Jakarta] PHP Warning:  mysqli_num_rows() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\dashboard2.php on line 782
+[23-Feb-2026 11:43:54 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\get_online_users.php on line 15
+[23-Feb-2026 10:43:56 Asia/Jakarta] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\semua_antrian.php on line 20
+[23-Feb-2026 11:43:56 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\get_online_users.php on line 15
+[23-Feb-2026 10:43:58 Asia/Jakarta] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\mjkn_antrian.php on line 20
+[23-Feb-2026 11:43:58 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\get_online_users.php on line 15
+[23-Feb-2026 10:43:59 Asia/Jakarta] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\erm.php on line 21
+[23-Feb-2026 11:43:59 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\get_online_users.php on line 15
+[23-Feb-2026 10:44:01 Asia/Jakarta] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\satu_sehat.php on line 20
+[23-Feb-2026 11:44:01 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\get_online_users.php on line 15
+[23-Feb-2026 10:44:02 Asia/Jakarta] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\progres_kerja.php on line 20
+[23-Feb-2026 11:44:02 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\get_online_users.php on line 15
+[23-Feb-2026 10:44:03 Asia/Jakarta] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\antrian_pertanggal.php on line 73
+[23-Feb-2026 10:44:03 Asia/Jakarta] PHP Warning:  mysqli_data_seek() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\antrian_pertanggal.php on line 77
+[23-Feb-2026 10:44:03 Asia/Jakarta] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\antrian_pertanggal.php on line 220
+[23-Feb-2026 11:44:03 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\get_online_users.php on line 15
+[23-Feb-2026 10:44:12 Asia/Jakarta] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\antrian_pertanggal.php on line 73
+[23-Feb-2026 10:44:12 Asia/Jakarta] PHP Warning:  mysqli_data_seek() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\antrian_pertanggal.php on line 77
+[23-Feb-2026 10:44:12 Asia/Jakarta] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\antrian_pertanggal.php on line 220
+[23-Feb-2026 11:44:12 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\get_online_users.php on line 15
+[23-Feb-2026 10:44:13 Asia/Jakarta] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\slide_pelaporan.php on line 149
+[23-Feb-2026 10:44:13 Asia/Jakarta] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\slide_pelaporan.php on line 312
+[23-Feb-2026 10:44:23 Asia/Jakarta] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\antrian_pertanggal.php on line 73
+[23-Feb-2026 10:44:23 Asia/Jakarta] PHP Warning:  mysqli_data_seek() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\antrian_pertanggal.php on line 77
+[23-Feb-2026 10:44:23 Asia/Jakarta] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\antrian_pertanggal.php on line 220
+[23-Feb-2026 11:44:23 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\get_online_users.php on line 15
+[23-Feb-2026 11:44:42 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\get_online_users.php on line 15
+[23-Feb-2026 11:53:38 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\get_online_users.php on line 15
+[23-Feb-2026 11:59:30 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\get_online_users.php on line 15
+[23-Feb-2026 11:59:33 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\get_online_users.php on line 15
+[23-Feb-2026 12:03:38 Asia/Makassar] PHPMailer Error: Invalid address:  (From): 

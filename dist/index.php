@@ -32,13 +32,16 @@ if (md5($sig_logo . $private_key) !== $hash_path) die("Security Breach: Logo pat
 $logo_path = "../" . base64_decode($sig_logo);
 
 if (!file_exists($logo_path) || md5_file($logo_path) !== $hash_content) {
-    die("Security Breach: Logo file content compromised or missing! Hubungi hak cipta: bara.n.fahrun (085117476001)");
+    die("Security Breach: Logo file compromised! Hubungi <a href='https://wa.me/6285117476001' style='color:#ef4444;font-weight:bold;'>Bara N. Fahrun (085117476001)</a>.");
 }
 ?>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
+    <link rel="icon" href="../images/logo_final.png">
+    
+  
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BexMedia Dashboard | Swiss Minimalist</title>
@@ -225,3 +228,10 @@ if (!file_exists($logo_path) || md5_file($logo_path) !== $hash_content) {
 </body>
 
 </html>
+
+
+
+
+
+
+

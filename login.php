@@ -30,12 +30,12 @@ $hash_path     = "55dc42da93bc5f52de4c1b967b5f35fe";
 $hash_content  = "0201dd7a6e3b787967c12fa9e61d9b6a"; // Hash fisik file
 
 if (md5($sig_logo . $private_key) !== $hash_path) {
-    show_breach("Integritas Path Terganggu", "Security Breach: Logo path modified! Hubungi hak cipta: bara.n.fahrun (085117476001)");
+    show_breach("Integritas Path Terganggu", "Security Breach: Logo path modified! Hubungi <a href='https://wa.me/6285117476001' style='color:#ef4444;font-weight:bold;text-decoration:underline;'>Bara N. Fahrun (085117476001)</a> untuk bantuan.");
 }
 $logo_path = base64_decode($sig_logo);
 
 if (!file_exists($logo_path) || md5_file($logo_path) !== $hash_content) {
-    show_breach("Modifikasi Tidak Sah", "Security Breach: Logo file content compromised or missing! Hubungi hak cipta: bara.n.fahrun (085117476001)");
+    show_breach("Modifikasi Tidak Sah", "Security Breach: Logo file compromised! Hubungi <a href='https://wa.me/6285117476001' style='color:#ef4444;font-weight:bold;text-decoration:underline;'>Bara N. Fahrun (085117476001)</a> untuk bantuan.");
 }
 
 require_once "conf/config.php";
@@ -139,6 +139,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" href="images/logo_final.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | <?php echo $brand_name; ?></title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">

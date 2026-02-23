@@ -1,276 +1,1013 @@
 <?php
-require_once "../conf/config.php";
-checkLogin();
+/**
+ * BUBUHKAN_TTE.PHP - IMPROVED VERSION
+ * - Null checks untuk semua getElementById
+ * - Error handling yang lebih baik
+ * - Konsisten dengan tte_dokumen.php yang berhasil
+ */
 
-// MenuName: Digital Signature System
+session_start();
+include 'koneksi.php';
+require_once 'license_config.php';
+require_once 'license_validator.php';
+date_default_timezone_set('Asia/Jakarta');
 
 $user_id = $_SESSION['user_id'] ?? 0;
+if ($user_id == 0) {
+    header("Location: login.php");
+    exit;
+}
 
-// Lazy Load Tables
-safe_query("CREATE TABLE IF NOT EXISTS tte_user (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    nama VARCHAR(255),
-    nik VARCHAR(50),
-    jabatan VARCHAR(255),
-    token VARCHAR(255),
-    status ENUM('aktif', 'nonaktif') DEFAULT 'aktif',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)");
+$current_file = basename(__FILE__);
+$query = "SELECT 1 FROM akses_menu 
+          JOIN menu ON akses_menu.menu_id = menu.id 
+          WHERE akses_menu.user_id = ? AND menu.file_menu = ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("is", $user_id, $current_file);
+$stmt->execute();
+if ($stmt->get_result()->num_rows == 0) {
+    header("Location: dashboard.php");
+    exit;
+}
 
-// Cek TTE user
-$dataTte = safe_query("SELECT * FROM tte_user WHERE user_id=? AND status='aktif' LIMIT 1", [$user_id]);
-$tte = mysqli_fetch_assoc($dataTte);
+$qTte = $conn->prepare("SELECT * FROM tte_user WHERE user_id=? AND status='aktif' LIMIT 1");
+$qTte->bind_param("i", $user_id);
+$qTte->execute();
+$dataTte = $qTte->get_result();
+$tte = $dataTte->fetch_assoc();
 
 if (!$tte) {
-    // Info user saat ini
-    $u = mysqli_fetch_assoc(safe_query("SELECT * FROM users WHERE id=?", [$user_id]));
-    $token = md5($user_id . time() . "BEXMEDIA_SALT");
-    safe_query("INSERT INTO tte_user (user_id, nama, nik, jabatan, token) VALUES (?, ?, ?, ?, ?)", 
-               [$user_id, $u['nama_lengkap'], $u['nik'], $u['jabatan'], $token]);
-    $tte = mysqli_fetch_assoc(safe_query("SELECT * FROM tte_user WHERE user_id=? AND status='aktif' LIMIT 1", [$user_id]));
+    header("Location: buat_tte.php");
+    exit;
 }
 
-$success_file = null;
-if (isset($_POST['bubuhkan_tte'])) {
-    csrf_verify();
-    
-    // Simulating processing
-    $success_file = "Signed_" . time() . ".pdf";
-    write_log("TTE_APPLIED", "Membubuhkan TTE pada dokumen halaman {$_POST['target_page']} di posisi X:{$_POST['position_x']}%, Y:{$_POST['position_y']}%");
-    $_SESSION['flash_success'] = "Dokumen berhasil ditandatangani secara digital.";
+$required_folders = [
+    __DIR__ . '/uploads/temp',
+    __DIR__ . '/uploads/signed',
+    __DIR__ . '/uploads/qr_temp',
+    __DIR__ . '/uploads/phpword_temp'
+];
+
+foreach ($required_folders as $folder) {
+    if (!is_dir($folder)) {
+        @mkdir($folder, 0755, true);
+    }
 }
 
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Signature - BexMedia</title>
-    <link rel="stylesheet" href="../css/index.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <style>
-        .tte-container { margin-top: 24px; max-width: 1200px; }
-        .grid-layout { display: grid; grid-template-columns: 1fr 350px; gap: 32px; }
-        .premium-card {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 24px;
-            padding: 32px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .preview-box {
-            background: rgba(0,0,0,0.2);
-            border-radius: 16px;
-            position: relative;
-            min-height: 700px;
-            border: 1px dashed rgba(255,255,255,0.1);
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-        }
-        .canvas-wrapper { position: relative; display: inline-block; background: white; margin: 40px; box-shadow: 0 30px 60px rgba(0,0,0,0.5); }
-        .sign-marker {
-            position: absolute;
-            width: 80px;
-            height: 80px;
-            border: 2px solid var(--primary-color);
-            background: rgba(255, 255, 255, 0.9);
-            cursor: move;
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-            border-radius: 8px;
-        }
-        .sign-marker img { width: 100%; border-radius: 4px; }
-        .pos-badge {
-            position: absolute;
-            top: -25px;
-            background: var(--primary-color);
-            color: white;
-            font-size: 10px;
-            padding: 2px 8px;
-            border-radius: 4px;
-            white-space: nowrap;
-        }
-        .upload-overlay {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: rgba(15,15,15,0.8);
-            backdrop-filter: blur(10px);
-            z-index: 200;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <?php include "sidebar.php"; ?>
-        
-        <main class="main-content">
-            <header class="header">
-                <div class="header-left">
-                    <h1>Digital Signature (TTE)</h1>
-                    <p>Tanda tangani dokumen resmi secara digital dengan standar keamanan tinggi.</p>
-                </div>
-            </header>
+require_once __DIR__ . '/tte_hash_helper.php';
 
-            <div class="tte-container">
-                <div class="grid-layout">
-                    <!-- PREVIEW AREA -->
-                    <div class="premium-card" style="padding: 0;">
-                        <div class="preview-box" id="dropZone">
-                            <div id="uploadOverlay" class="upload-overlay">
-                                <i data-lucide="file-up" size="64" style="margin-bottom: 24px; opacity: 0.3;"></i>
-                                <button class="btn btn-primary" onclick="$('#fileInput').click()">Select PDF Document</button>
-                                <p style="margin-top: 16px; opacity: 0.5; font-size: 0.9rem;">Drag & drop PDF here to start signing</p>
-                                <input type="file" id="fileInput" style="display: none;" accept=".pdf" onchange="loadPDF(this.files[0])">
-                            </div>
+$autoload_file = __DIR__ . '/lib/autoload.php';
+if (file_exists($autoload_file)) {
+    require_once $autoload_file;
+}
 
-                            <div class="canvas-wrapper" id="canvasWrapper" style="display: none;">
-                                <canvas id="pdfCanvas"></canvas>
-                                <div id="signMarker" class="sign-marker">
-                                    <div class="pos-badge" id="posBadge">X: 75% Y: 80%</div>
-                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=TTE-VERIFY-<?= $tte['token'] ?>" alt="QR">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+$success_data = null;
+$error_message = null;
 
-                    <!-- CONTROLS -->
-                    <div style="display: flex; flex-direction: column; gap: 24px;">
-                        <div class="premium-card">
-                            <h3 style="margin-bottom: 20px;">Identity</h3>
-                            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
-                                <div style="width: 50px; height: 50px; background: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                    <i data-lucide="user" color="white"></i>
-                                </div>
-                                <div>
-                                    <strong style="display: block; font-size: 1.1rem;"><?= h($tte['nama']) ?></strong>
-                                    <small style="opacity: 0.6;"><?= h($tte['jabatan']) ?></small>
-                                </div>
-                            </div>
-                            <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                                <small style="display: block; opacity: 0.5; margin-bottom: 4px;">Security Token</small>
-                                <code style="font-size: 0.75rem; word-break: break-all;"><?= $tte['token'] ?></code>
-                            </div>
-                        </div>
+function processPDFCustomPosition($filepath, $qr_file, $position_x, $position_y, $tte, $filename, $target_page) {
+    if (!class_exists('setasign\\Fpdi\\Fpdi')) {
+        return false;
+    }
 
-                        <div class="premium-card">
-                            <h3 style="margin-bottom: 20px;">Sign Settings</h3>
-                            <form method="POST" id="submitForm">
-                                <?= csrf_field(); ?>
-                                <input type="hidden" name="position_x" id="posX" value="75">
-                                <input type="hidden" name="position_y" id="posY" value="80">
-                                <input type="hidden" name="target_page" id="targetPage" value="1">
+    try {
+        $pdf = new \setasign\Fpdi\Fpdi();
+        $pageCount = $pdf->setSourceFile($filepath);
 
-                                <div style="margin-bottom: 16px;">
-                                    <label style="display: block; margin-bottom: 8px; font-size: 0.85rem; opacity: 0.6;">Apply to Page</label>
-                                    <div style="display: flex; gap: 8px; align-items: center;">
-                                        <button type="button" class="btn btn-outline btn-sm" onclick="changePage(-1)"><i data-lucide="chevron-left"></i></button>
-                                        <span id="pageDisplay" style="flex: 1; text-align: center; font-weight: 700;">1 / 1</span>
-                                        <button type="button" class="btn btn-outline btn-sm" onclick="changePage(1)"><i data-lucide="chevron-right"></i></button>
-                                    </div>
-                                </div>
+        for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+            $tplIdx = $pdf->importPage($pageNo);
+            $size = $pdf->getTemplateSize($tplIdx);
 
-                                <button type="submit" name="bubuhkan_tte" class="btn btn-primary" style="width: 100%; padding: 16px; margin-top: 12px;">
-                                    Finalize Signature
-                                </button>
-                                <button type="button" class="btn btn-outline" style="width: 100%; margin-top: 12px;" onclick="location.reload()">Reset</button>
-                            </form>
-                        </div>
+            $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+            $pdf->useTemplate($tplIdx);
 
-                        <?php if ($success_file): ?>
-                            <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; padding: 20px; border-radius: 16px; text-align: center;">
-                                <i data-lucide="check-circle" color="#10b981" size="32"></i>
-                                <p style="margin-top: 12px; font-size: 0.9rem;">Document Signed!</p>
-                                <a href="#" class="btn btn-primary btn-sm" style="margin-top: 12px;">Download</a>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
+            if ($pageNo == $target_page) {
+                // FLEXIBLE QR SIZE
+                $qr_size_percent = 3.5;
+                $qr_size = ($qr_size_percent / 100) * $size['width'];
+                
+                if ($qr_size < 30) $qr_size = 30;
+                if ($qr_size > 80) $qr_size = 80;
+                
+                // POSITION FROM PERCENTAGE
+                $x = ($position_x / 100) * $size['width'];
+                $y = ($position_y / 100) * $size['height'];
+                
+                // Boundary check
+                if ($x + $qr_size > $size['width']) $x = $size['width'] - $qr_size - 5;
+                if ($y + $qr_size > $size['height']) $y = $size['height'] - $qr_size - 5;
+                if ($x < 0) $x = 5;
+                if ($y < 0) $y = 5;
 
-    <script>
-        lucide.createIcons();
-        
-        // PDF Logic
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        let pdfDoc = null;
-        let currentPage = 1;
+                if (file_exists($qr_file)) {
+                    $pdf->Image($qr_file, $x, $y, $qr_size, $qr_size);
+                }
 
-        async function loadPDF(file) {
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async function() {
-                const typedarray = new Uint8Array(this.result);
-                pdfDoc = await pdfjsLib.getDocument(typedarray).promise;
-                $('#uploadOverlay').fadeOut();
-                $('#canvasWrapper').show();
-                renderPage(1);
-            };
-            reader.readAsArrayBuffer(file);
-        }
-
-        async function renderPage(num) {
-            const page = await pdfDoc.getPage(num);
-            const canvas = document.getElementById('pdfCanvas');
-            const context = canvas.getContext('2d');
-            const viewport = page.getViewport({ scale: 1.5 });
-            
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-            
-            await page.render({ canvasContext: context, viewport: viewport }).promise;
-            
-            $('#pageDisplay').text(`${num} / ${pdfDoc.numPages}`);
-            $('#targetPage').val(num);
-        }
-
-        function changePage(delta) {
-            if (!pdfDoc) return;
-            const newPage = currentPage + delta;
-            if (newPage >= 1 && newPage <= pdfDoc.numPages) {
-                currentPage = newPage;
-                renderPage(currentPage);
+                // Hidden token
+                $pdf->SetFont('helvetica', '', 1);
+                $pdf->SetTextColor(255, 255, 255);
+                $pdf->SetXY(0, 0);
+                $pdf->Cell(0, 0, 'TTE-TOKEN:' . $tte['token'], 0, 0, 'L');
             }
         }
 
-        // Drag Logic
-        const marker = document.getElementById('signMarker');
-        const wrapper = document.getElementById('canvasWrapper');
-        let isDragging = false;
+        $output_dir = __DIR__ . '/uploads/signed/';
+        $output_file = $output_dir . $filename;
+        
+        $pdf->SetCreator('FixPoint TTE System v2.0');
+        $pdf->SetAuthor($tte['nama'] . ' (NIK: ' . $tte['nik'] . ')');
+        $pdf->SetTitle('Dokumen Resmi - ' . pathinfo($filename, PATHINFO_FILENAME));
+        
+        // Clean output path
+        $cleanOutputPath = str_replace('//', '/', $output_file);
+        
+        // Ensure directory writable
+        if (!is_writable($output_dir)) {
+            throw new Exception("Output directory not writable");
+        }
+        
+        $pdf->Output($cleanOutputPath, 'F');
+        
+        if (!file_exists($cleanOutputPath)) {
+            throw new Exception("Failed to create PDF");
+        }
+        
+        @chmod($cleanOutputPath, 0644);
+        
+        if (file_exists($cleanOutputPath)) {
+            @unlink($filepath);
+            return $cleanOutputPath;
+        }
+        return false;
+    } catch (Exception $e) {
+        error_log("PDF processing error: " . $e->getMessage());
+        return false;
+    }
+}
 
-        marker.addEventListener('mousedown', () => isDragging = true);
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            const rect = wrapper.getBoundingClientRect();
-            let x = e.clientX - rect.left - 40;
-            let y = e.clientY - rect.top - 40;
+function processWordCustomPosition($filepath, $qr_file, $position_x, $position_y, $tte, $filename) {
+    if (!class_exists('PhpOffice\\PhpWord\\IOFactory')) {
+        return false;
+    }
+
+    try {
+        $custom_temp = __DIR__ . '/uploads/phpword_temp/';
+        \PhpOffice\PhpWord\Settings::setTempDir($custom_temp);
+        
+        $phpWord = \PhpOffice\PhpWord\IOFactory::load($filepath);
+        $section = $phpWord->addSection();
+        
+        if ($position_y < 50) {
+            $section->addTextBreak(3);
+        }
+        
+        $table = $section->addTable([
+            'borderSize' => 0, 
+            'cellMargin' => 80,
+            'width' => 100 * 50,
+            'unit' => \PhpOffice\PhpWord\SimpleType\TblWidth::PERCENT
+        ]);
+        
+        $table->addRow();
+        
+        if ($position_x > 50) {
+            $table->addCell(7000);
+            $cell = $table->addCell(5000);
+        } else {
+            $cell = $table->addCell(5000);
+            $table->addCell(7000);
+        }
+        
+        if (file_exists($qr_file)) {
+            $cell->addImage($qr_file, [
+                'width' => 60,  
+                'height' => 60, 
+                'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER
+            ]);
+        }
+        
+        $cell->addText('Ditandatangani oleh:', 
+            ['size' => 7, 'bold' => true], 
+            ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER, 'spaceAfter' => 60]
+        );
+        
+        $cell->addText($tte['nama'], 
+            ['size' => 8, 'bold' => true], 
+            ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER, 'spaceAfter' => 50]
+        );
+        
+        if (!empty($tte['nik'])) {
+            $cell->addText('NIK: ' . $tte['nik'], 
+                ['size' => 6], 
+                ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER, 'spaceAfter' => 50]
+            );
+        }
+        
+        if (!empty($tte['jabatan'])) {
+            $cell->addText($tte['jabatan'], 
+                ['size' => 7],  
+                ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER, 'spaceAfter' => 50]
+            );
+        }
+        
+        $cell->addText(date('d F Y, H:i') . ' WIB', 
+            ['size' => 6, 'italic' => true, 'color' => '666666'],  
+            ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]
+        );
+        
+        $section->addText('TTE-TOKEN:' . $tte['token'], ['size' => 1, 'color' => 'FFFFFF']);
+        
+        $output_dir = __DIR__ . '/uploads/signed/';
+        $output_file = $output_dir . pathinfo($filename, PATHINFO_FILENAME) . '_signed.docx';
+        
+        $docInfo = $phpWord->getDocInfo();
+        $docInfo->setCreator('FixPoint TTE System v2.0');
+        $docInfo->setLastModifiedBy($tte['nama']);
+        
+        $objWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
+        $objWriter->save($output_file);
+        
+        if (file_exists($output_file)) {
+            @unlink($filepath);
+            return $output_file;
+        }
+        return false;
+    } catch (Exception $e) {
+        error_log("Word processing error: " . $e->getMessage());
+        return false;
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bubuhkan_tte'])) {
+    if (!isset($_FILES['dokumen']) || $_FILES['dokumen']['error'] !== UPLOAD_ERR_OK) {
+        $error_message = "File tidak terdeteksi atau upload gagal.";
+    } else {
+        $file = $_FILES['dokumen'];
+        $position_x = floatval($_POST['position_x'] ?? 70);
+        $position_y = floatval($_POST['position_y'] ?? 80);
+        $target_page = intval($_POST['target_page'] ?? 1);
+        
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        $allowed = ['pdf', 'doc', 'docx'];
+        
+        if (!in_array($ext, $allowed)) {
+            $error_message = "Format file tidak valid.";
+        } elseif ($file['size'] > 10485760) {
+            $error_message = "Ukuran file maksimal 10MB.";
+        } else {
+            $upload_dir = __DIR__ . '/uploads/temp/';
+            $temp_filename = 'temp_' . time() . '_' . uniqid() . '.' . $ext;
+            $temp_filepath = $upload_dir . $temp_filename;
             
-            x = Math.max(0, Math.min(x, rect.width - 80));
-            y = Math.max(0, Math.min(y, rect.height - 80));
-            
-            const px = (x / rect.width * 100).toFixed(1);
-            const py = (y / rect.height * 100).toFixed(1);
-            
-            marker.style.left = x + 'px';
-            marker.style.top = y + 'px';
-            
-            $('#posX').val(px);
-            $('#posY').val(py);
-            $('#posBadge').text(`X: ${px}% Y: ${py}%`);
+            if (move_uploaded_file($file['tmp_name'], $temp_filepath)) {
+                $qr_dir = __DIR__ . '/uploads/qr_temp/';
+                $qr_file = $qr_dir . 'qr_' . time() . '.png';
+                
+                // QR Content
+                $perusahaan_info = null;
+                if (!empty($tte['perusahaan_id'])) {
+                    $qPer = $conn->prepare("SELECT nama_perusahaan, kota, provinsi FROM perusahaan WHERE id = ?");
+                    $qPer->bind_param("i", $tte['perusahaan_id']);
+                    $qPer->execute();
+                    $perusahaan_info = $qPer->get_result()->fetch_assoc();
+                }
+                
+                $original_name = pathinfo($file['name'], PATHINFO_FILENAME);
+                $qr_content = "=== TANDA TANGAN ELEKTRONIK ===\n\n";
+                $qr_content .= "NAMA DOKUMEN:\n";
+                $qr_content .= $original_name . "\n\n";
+                $qr_content .= "INFORMASI PENANDATANGAN:\n";
+                $qr_content .= "Nama: " . $tte['nama'] . "\n";
+                $qr_content .= "NIK/NIP: " . $tte['nik'] . "\n";
+                $qr_content .= "Jabatan: " . ($tte['jabatan'] ?? '-') . "\n";
+                $qr_content .= "Unit/Bagian: " . ($tte['unit_kerja'] ?? '-') . "\n\n";
+                
+                if ($perusahaan_info) {
+                    $qr_content .= "PERUSAHAAN/INSTANSI:\n";
+                    $qr_content .= $perusahaan_info['nama_perusahaan'] . "\n\n";
+                }
+                
+                $qr_content .= "WAKTU PENANDATANGANAN:\n";
+                $qr_content .= "Tanggal: " . date('d F Y') . "\n";
+                $qr_content .= "Jam: " . date('H:i') . " WIB\n\n";
+                $qr_content .= "Token: " . substr($tte['token'], 0, 16) . "...\n\n";
+                $qr_content .= "✓ TTE Terverifikasi\n";
+                $qr_content .= "Sesuai UU No.11/2008 tentang ITE";
+                
+                $qr_image = @file_get_contents("https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" . urlencode($qr_content));
+                
+                if ($qr_image !== false) {
+                    file_put_contents($qr_file, $qr_image);
+                    
+                    $final_filename = $original_name . '_signed_' . time() . '.' . $ext;
+                    
+                    if ($ext === 'pdf') {
+                        $hasil_file = processPDFCustomPosition($temp_filepath, $qr_file, $position_x, $position_y, $tte, $final_filename, $target_page);
+                    } else {
+                        $hasil_file = processWordCustomPosition($temp_filepath, $qr_file, $position_x, $position_y, $tte, $final_filename);
+                    }
+                    
+                    @unlink($qr_file);
+                    
+                    if ($hasil_file && file_exists($hasil_file)) {
+                        $file_hash = generateFileHash($hasil_file);
+                        if ($file_hash) {
+                            saveFileHashToDatabase($conn, $tte['token'], $file_hash);
+                            saveDocumentSigningLog($conn, $tte['token'], $user_id, basename($hasil_file), $file_hash);
+                        }
+                        
+                        $success_data = [
+                            'filename' => basename($hasil_file),
+                            'web_path' => 'uploads/signed/' . basename($hasil_file),
+                            'filesize' => filesize($hasil_file),
+                            'original_name' => $file['name'],
+                            'tte_nama' => $tte['nama'],
+                            'tte_nik' => $tte['nik'],
+                            'tte_jabatan' => $tte['jabatan'],
+                            'tte_token' => $tte['token'],
+                            'timestamp' => date('d F Y, H:i:s'),
+                            'target_page' => $target_page,
+                            'file_type' => strtoupper($ext)
+                        ];
+                    } else {
+                        $error_message = "Gagal memproses dokumen.";
+                    }
+                } else {
+                    $error_message = "Gagal generate QR Code.";
+                    @unlink($temp_filepath);
+                }
+            } else {
+                $error_message = "Gagal upload file.";
+            }
+        }
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <link rel="icon" href="../images/logo_final.png">
+    
+  
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bubuhkan TTE</title>
+<link rel="stylesheet" href="assets/modules/bootstrap/css/bootstrap.min.css">
+<link rel="stylesheet" href="assets/modules/fontawesome/css/all.min.css">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+.card-modern { border: none; border-radius: 15px; box-shadow: 0 0.15rem 1.75rem 0 rgba(58,59,69,0.15); }
+.card-header-modern { background: linear-gradient(135deg, #6777ef 0%, #4834df 100%); color: white; padding: 1.5rem; }
+.upload-area { border: 3px dashed #d1d3e0; border-radius: 12px; padding: 3rem 2rem; text-align: center; background: #f8f9fc; cursor: pointer; transition: all 0.3s; }
+.upload-area:hover { border-color: #6777ef; background: #f0f3ff; }
+.preview-container { position: relative; border: 2px solid #6777ef; border-radius: 12px; background: #f8f9fa; min-height: 600px; display: none; margin-top: 1.5rem; overflow: hidden; }
+.preview-container.active { display: block; }
+#pdfCanvas { max-width: 100%; background: white; display: block; margin: 0 auto; }
+.tte-stamp { position: absolute; width: 100px; height: 100px; cursor: move; background: rgba(103,119,239,0.15); border: 3px dashed #6777ef; border-radius: 10px; padding: 5px; text-align: center; user-select: none; z-index: 50; left: 50px; top: 50px; }
+.tte-stamp img { width: 80px; height: 80px; pointer-events: none; }
+.position-info { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.85); color: white; padding: 10px 15px; border-radius: 8px; font-size: 0.85rem; font-family: monospace; z-index: 100; }
+.page-navigation { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.85); color: white; padding: 10px 15px; border-radius: 8px; z-index: 100; }
+.page-navigation button { background: #6777ef; border: none; color: white; padding: 5px 12px; margin: 0 5px; border-radius: 5px; cursor: pointer; }
+.page-navigation button:disabled { background: #ccc; cursor: not-allowed; }
+.quick-position-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 1rem; }
+.quick-pos-btn { padding: 1.2rem; border: 2px solid #e3e6f0; border-radius: 10px; background: white; cursor: pointer; transition: all 0.2s; text-align: center; font-weight: 600; }
+.quick-pos-btn:hover { border-color: #6777ef; background: #f8f9ff; transform: translateY(-2px); }
+.mode-tabs { display: flex; gap: 0; margin-bottom: 1.5rem; border-radius: 10px; overflow: hidden; border: 2px solid #6777ef; }
+.mode-tab { flex: 1; padding: 1rem; background: white; border: none; cursor: pointer; font-weight: 600; color: #6777ef; transition: all 0.3s; }
+.mode-tab.active { background: linear-gradient(135deg, #6777ef 0%, #4834df 100%); color: white; }
+.btn-submit-tte { background: linear-gradient(135deg, #6777ef 0%, #4834df 100%); border: none; padding: 1rem 3rem; font-size: 1.1rem; font-weight: 600; border-radius: 10px; color: white; }
+.word-preview { padding: 3rem; background: white; border: 2px solid #6777ef; border-radius: 12px; text-align: center; min-height: 400px; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+.info-badge { display: inline-block; padding: 0.5rem 1rem; background: #f0f3ff; border-radius: 8px; margin: 0.25rem; font-size: 0.9rem; }
+.info-badge i { color: #6777ef; margin-right: 5px; }
+</style>
+</head>
+<body>
+<div id="app">
+<div class="main-wrapper main-wrapper-1">
+<?php include 'navbar.php'; ?>
+<?php include 'sidebar.php'; ?>
+
+<div class="main-content">
+<section class="section">
+<div class="section-header">
+    <h1><i class="fas fa-stamp"></i> Bubuhkan TTE - Drag & Drop</h1>
+</div>
+
+<div class="section-body">
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card card-modern">
+            <div class="card-header card-header-modern">
+                <h4><i class="fas fa-mouse-pointer"></i> Posisi TTE Fleksibel</h4>
+            </div>
+            <div class="card-body p-4">
+                
+                <div class="mode-tabs">
+                    <button class="mode-tab active" id="tabDrag" onclick="switchMode('drag')">
+                        <i class="fas fa-hand-paper"></i> Drag & Drop
+                    </button>
+                    <button class="mode-tab" id="tabQuick" onclick="switchMode('quick')">
+                        <i class="fas fa-th"></i> Quick Position
+                    </button>
+                </div>
+                
+                <div class="upload-area" id="uploadArea">
+                    <div style="font-size: 4rem; color: #6777ef; margin-bottom: 1rem;">
+                        <i class="fas fa-file-upload"></i>
+                    </div>
+                    <div style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem;">
+                        Upload Dokumen (PDF / Word)
+                    </div>
+                    <button type="button" class="btn btn-primary btn-lg" id="btnSelectFile">
+                        <i class="fas fa-folder-open"></i> Pilih File
+                    </button>
+                    <input type="file" id="dokumenInput" accept=".pdf,.doc,.docx" style="display: none;">
+                    <div class="mt-3" style="font-size: 0.9rem; color: #666;">
+                        Format: PDF, DOC, DOCX | Maksimal 10MB
+                    </div>
+                </div>
+                
+                <div class="preview-container" id="previewContainer">
+                    <div class="page-navigation" id="pageNavigation" style="display: none;">
+                        <button onclick="prevPage()"><i class="fas fa-chevron-left"></i></button>
+                        <span id="pageInfo">Page 1 / 1</span>
+                        <button onclick="nextPage()"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <canvas id="pdfCanvas"></canvas>
+                    <div class="word-preview" id="wordPreview" style="display: none;">
+                        <div style="font-size: 3rem; color: #6777ef; margin-bottom: 1rem;">
+                            <i class="fas fa-file-word"></i>
+                        </div>
+                        <h4>Dokumen Word Terdeteksi</h4>
+                        <p class="text-muted">Gunakan Quick Position untuk menentukan posisi TTE</p>
+                        <p class="mt-3"><strong id="wordFileName"></strong></p>
+                    </div>
+                    <div class="tte-stamp" id="tteStamp">
+                        <img src="generate_qr.php?token=<?= $tte['token'] ?>" alt="TTE">
+                        <div style="font-size: 0.7rem; color: #6777ef; font-weight: 700; margin-top: 3px;">
+                            <i class="fas fa-arrows-alt"></i> DRAG
+                        </div>
+                    </div>
+                    <div class="position-info" id="positionInfo">X: 70% | Y: 80%</div>
+                </div>
+                
+                <div id="quickPositionPanel" style="display: none;">
+                    <label class="font-weight-bold mb-3" style="font-size: 1.1rem;">
+                        <i class="fas fa-map-marker-alt"></i> Pilih Posisi TTE:
+                    </label>
+                    <div class="quick-position-grid">
+                        <button type="button" class="quick-pos-btn" onclick="setQuickPosition(10, 10)">
+                            <div style="font-size: 2rem;">↖️</div>
+                            <div>Kiri Atas</div>
+                        </button>
+                        <button type="button" class="quick-pos-btn" onclick="setQuickPosition(70, 10)">
+                            <div style="font-size: 2rem;">↗️</div>
+                            <div>Kanan Atas</div>
+                        </button>
+                        <button type="button" class="quick-pos-btn" onclick="setQuickPosition(10, 80)">
+                            <div style="font-size: 2rem;">↙️</div>
+                            <div>Kiri Bawah</div>
+                        </button>
+                        <button type="button" class="quick-pos-btn" onclick="setQuickPosition(70, 80)">
+                            <div style="font-size: 2rem;">↘️</div>
+                            <div>Kanan Bawah</div>
+                        </button>
+                    </div>
+                </div>
+                
+                <form method="POST" id="tteForm" enctype="multipart/form-data" style="display:none;">
+                    <input type="hidden" name="position_x" id="positionX" value="70">
+                    <input type="hidden" name="position_y" id="positionY" value="80">
+                    <input type="hidden" name="target_page" id="targetPage" value="1">
+                    <div class="text-center mt-4">
+                        <button type="submit" name="bubuhkan_tte" class="btn btn-submit-tte">
+                            <i class="fas fa-stamp"></i> Bubuhkan TTE Sekarang
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-lg ml-2" onclick="location.reload()">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
+                    </div>
+                </form>
+                
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card card-modern">
+            <div class="card-header card-header-modern">
+                <h4><i class="fas fa-id-card"></i> Informasi TTE</h4>
+            </div>
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <img src="generate_qr.php?token=<?= $tte['token'] ?>" width="150" alt="QR" class="mb-3">
+                </div>
+                
+                <div class="info-badge w-100 mb-2">
+                    <i class="fas fa-user"></i>
+                    <strong>Nama:</strong> <?= htmlspecialchars($tte['nama']) ?>
+                </div>
+                
+                <div class="info-badge w-100 mb-2">
+                    <i class="fas fa-id-card-alt"></i>
+                    <strong>NIK:</strong> <?= htmlspecialchars($tte['nik']) ?>
+                </div>
+                
+                <?php if (!empty($tte['jabatan'])): ?>
+                <div class="info-badge w-100 mb-2">
+                    <i class="fas fa-briefcase"></i>
+                    <strong>Jabatan:</strong> <?= htmlspecialchars($tte['jabatan']) ?>
+                </div>
+                <?php endif; ?>
+                
+                <?php if (!empty($tte['instansi'])): ?>
+                <div class="info-badge w-100 mb-2">
+                    <i class="fas fa-building"></i>
+                    <strong>Instansi:</strong> <?= htmlspecialchars($tte['instansi']) ?>
+                </div>
+                <?php endif; ?>
+                
+                <div class="info-badge w-100 mb-2">
+                    <i class="fas fa-key"></i>
+                    <strong>Token:</strong> <small><?= substr($tte['token'], 0, 20) ?>...</small>
+                </div>
+                
+                <div class="info-badge w-100 mb-2">
+                    <i class="fas fa-calendar"></i>
+                    <strong>Dibuat:</strong> <?= date('d/m/Y', strtotime($tte['created_at'])) ?>
+                </div>
+                
+                <div class="info-badge w-100 mb-2">
+                    <i class="fas fa-check-circle text-success"></i>
+                    <strong>Status:</strong> <span class="text-success text-uppercase"><?= $tte['status'] ?></span>
+                </div>
+                
+                <hr class="my-3">
+                
+                <div class="alert alert-info mb-0">
+                    <i class="fas fa-info-circle"></i>
+                    <small><strong>Tips:</strong> Drag marker QR untuk memposisikan sesuai keinginan. QR akan menyesuaikan ukuran dengan dokumen.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+</section>
+</div>
+
+</div>
+</div>
+
+<script src="assets/modules/jquery.min.js"></script>
+<script src="assets/modules/popper.js"></script>
+<script src="assets/modules/bootstrap/js/bootstrap.min.js"></script>
+<script src="assets/modules/nicescroll/jquery.nicescroll.min.js"></script>
+<script src="assets/modules/moment.min.js"></script>
+<script src="assets/js/stisla.js"></script>
+<script src="assets/js/scripts.js"></script>
+<script src="assets/js/custom.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+let currentMode = 'drag';
+let currentX = 70, currentY = 80;
+let pdfDoc = null;
+let currentPage = 1;
+let totalPages = 1;
+let currentFileType = '';
+let pageRendering = false;
+let pageNumPending = null;
+let scale = 1.5;
+
+const btnSelectFile = document.getElementById('btnSelectFile');
+const dokumenInput = document.getElementById('dokumenInput');
+
+if (btnSelectFile) {
+    btnSelectFile.onclick = function() {
+        if (dokumenInput) dokumenInput.click();
+    };
+}
+
+if (dokumenInput) {
+    dokumenInput.onchange = function(e) {
+        if (this.files && this.files[0]) {
+            handleFileSelect(this.files[0]);
+        }
+    };
+}
+
+function handleFileSelect(file) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    currentFileType = ext;
+    
+    if (!['pdf', 'doc', 'docx'].includes(ext)) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Format Tidak Valid',
+            text: 'Hanya file PDF, DOC, dan DOCX yang diperbolehkan'
         });
-        document.addEventListener('mouseup', () => isDragging = false);
-    </script>
+        return;
+    }
+    
+    if (file.size > 10485760) {
+        Swal.fire({
+            icon: 'error',
+            title: 'File Terlalu Besar',
+            text: 'Ukuran file maksimal 10MB'
+        });
+        return;
+    }
+    
+    const uploadArea = document.getElementById('uploadArea');
+    const tteForm = document.getElementById('tteForm');
+    
+    if (uploadArea) uploadArea.style.display = 'none';
+    if (tteForm) tteForm.style.display = 'block';
+    
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    
+    let input = document.querySelector('input[name="dokumen"]');
+    if (!input) {
+        input = document.createElement('input');
+        input.type = 'file';
+        input.name = 'dokumen';
+        input.style.display = 'none';
+        if (tteForm) tteForm.appendChild(input);
+    }
+    input.files = dt.files;
+    
+    if (ext === 'pdf') {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            loadPDF(e.target.result);
+        };
+        reader.readAsArrayBuffer(file);
+    } else {
+        const wordFileNameEl = document.getElementById('wordFileName');
+        const previewContainer = document.getElementById('previewContainer');
+        const wordPreview = document.getElementById('wordPreview');
+        const pdfCanvas = document.getElementById('pdfCanvas');
+        const tteStamp = document.getElementById('tteStamp');
+        const positionInfo = document.getElementById('positionInfo');
+        
+        if (wordFileNameEl) wordFileNameEl.textContent = file.name;
+        if (previewContainer) previewContainer.classList.add('active');
+        if (wordPreview) wordPreview.style.display = 'flex';
+        if (pdfCanvas) pdfCanvas.style.display = 'none';
+        if (tteStamp) tteStamp.style.display = 'none';
+        if (positionInfo) positionInfo.style.display = 'none';
+        switchMode('quick');
+    }
+}
+
+function loadPDF(data) {
+    pdfjsLib.getDocument({data: data}).promise.then(function(pdf) {
+        pdfDoc = pdf;
+        totalPages = pdf.numPages;
+        currentPage = 1;
+        
+        const pageNavigation = document.getElementById('pageNavigation');
+        if (totalPages > 1 && pageNavigation) {
+            pageNavigation.style.display = 'block';
+        }
+        
+        renderPage(currentPage);
+    }).catch(function(error) {
+        console.error('Error loading PDF:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Gagal memuat PDF: ' + error.message
+        });
+    });
+}
+
+function renderPage(num) {
+    if (!pdfDoc) return;
+    
+    pageRendering = true;
+    
+    pdfDoc.getPage(num).then(function(page) {
+        const canvas = document.getElementById('pdfCanvas');
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        const viewport = page.getViewport({scale: scale});
+        
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        
+        const renderContext = {
+            canvasContext: ctx,
+            viewport: viewport
+        };
+        
+        const renderTask = page.render(renderContext);
+        
+        renderTask.promise.then(function() {
+            pageRendering = false;
+            if (pageNumPending !== null) {
+                renderPage(pageNumPending);
+                pageNumPending = null;
+            }
+            
+            const previewContainer = document.getElementById('previewContainer');
+            const pdfCanvas = document.getElementById('pdfCanvas');
+            const wordPreview = document.getElementById('wordPreview');
+            const tteStamp = document.getElementById('tteStamp');
+            const positionInfo = document.getElementById('positionInfo');
+            
+            if (previewContainer) previewContainer.classList.add('active');
+            if (pdfCanvas) pdfCanvas.style.display = 'block';
+            if (wordPreview) wordPreview.style.display = 'none';
+            if (tteStamp) tteStamp.style.display = 'block';
+            if (positionInfo) positionInfo.style.display = 'block';
+            
+            updatePosition(currentX, currentY);
+            updatePageInfo();
+        }).catch(function(error) {
+            console.error('Error rendering page:', error);
+        });
+    }).catch(function(error) {
+        console.error('Error getting page:', error);
+    });
+}
+
+function updatePageInfo() {
+    const pageInfoEl = document.getElementById('pageInfo');
+    const pageNumberInput = document.getElementById('targetPage');
+    const prevBtnEl = document.getElementById('prevBtn');
+    const nextBtnEl = document.getElementById('nextBtn');
+    
+    if (pageInfoEl) {
+        pageInfoEl.textContent = `Page ${currentPage} / ${totalPages}`;
+    }
+    if (pageNumberInput) {
+        pageNumberInput.value = currentPage;
+    }
+    if (prevBtnEl) {
+        prevBtnEl.disabled = (currentPage <= 1);
+    }
+    if (nextBtnEl && pdfDoc) {
+        nextBtnEl.disabled = (currentPage >= pdfDoc.numPages);
+    }
+}
+
+function prevPage() {
+    if (currentPage <= 1) return;
+    currentPage--;
+    queueRenderPage(currentPage);
+}
+
+function nextPage() {
+    if (!pdfDoc || currentPage >= pdfDoc.numPages) return;
+    currentPage++;
+    queueRenderPage(currentPage);
+}
+
+function queueRenderPage(num) {
+    if (pageRendering) {
+        pageNumPending = num;
+    } else {
+        renderPage(num);
+    }
+}
+
+// Drag functionality
+const stamp = document.getElementById('tteStamp');
+let dragging = false;
+let startX, startY, startLeft, startTop;
+
+if (stamp) {
+    stamp.onmousedown = function(e) {
+        dragging = true;
+        
+        const rect = stamp.getBoundingClientRect();
+        const canvas = document.getElementById('pdfCanvas');
+        if (!canvas) return;
+        
+        const canvasRect = canvas.getBoundingClientRect();
+        
+        startLeft = rect.left - canvasRect.left;
+        startTop = rect.top - canvasRect.top;
+        startX = e.clientX;
+        startY = e.clientY;
+        
+        e.preventDefault();
+    };
+}
+
+document.onmousemove = function(e) {
+    if (!dragging) return;
+    
+    const canvas = document.getElementById('pdfCanvas');
+    if (!canvas) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    
+    const deltaX = e.clientX - startX;
+    const deltaY = e.clientY - startY;
+    
+    let newLeft = startLeft + deltaX;
+    let newTop = startTop + deltaY;
+    
+    newLeft = Math.max(0, Math.min(newLeft, canvas.width - 100));
+    newTop = Math.max(0, Math.min(newTop, canvas.height - 100));
+    
+    const xp = (newLeft / canvas.width) * 100;
+    const yp = (newTop / canvas.height) * 100;
+    
+    updatePosition(xp, yp);
+};
+
+document.onmouseup = function() {
+    dragging = false;
+};
+
+function updatePosition(x, y) {
+    currentX = x;
+    currentY = y;
+    
+    const stamp = document.getElementById('tteStamp');
+    const positionXInput = document.getElementById('positionX');
+    const positionYInput = document.getElementById('positionY');
+    const positionInfoEl = document.getElementById('positionInfo');
+    
+    if (stamp) {
+        stamp.style.left = x + '%';
+        stamp.style.top = y + '%';
+    }
+    if (positionXInput) {
+        positionXInput.value = x.toFixed(2);
+    }
+    if (positionYInput) {
+        positionYInput.value = y.toFixed(2);
+    }
+    if (positionInfoEl) {
+        positionInfoEl.textContent = `X: ${x.toFixed(0)}% | Y: ${y.toFixed(0)}%`;
+    }
+}
+
+function switchMode(mode) {
+    currentMode = mode;
+
+    const tabDrag = document.getElementById('tabDrag');
+    const tabQuick = document.getElementById('tabQuick');
+    const previewContainer = document.getElementById('previewContainer');
+    const quickPositionPanel = document.getElementById('quickPositionPanel');
+    
+    if (tabDrag) tabDrag.classList.remove('active');
+    if (tabQuick) tabQuick.classList.remove('active');
+    
+    if (mode === 'drag') {
+        if (tabDrag) tabDrag.classList.add('active');
+        if (currentFileType === 'pdf' && pdfDoc) {
+            if (previewContainer) previewContainer.style.display = 'block';
+            if (quickPositionPanel) quickPositionPanel.style.display = 'none';
+        } else if (currentFileType !== 'pdf') {
+            Swal.fire({
+                icon: 'info',
+                title: 'Mode Drag & Drop',
+                text: 'Mode drag & drop hanya tersedia untuk file PDF. Gunakan Quick Position untuk file Word.'
+            });
+            switchMode('quick');
+        }
+    } else {
+        if (tabQuick) tabQuick.classList.add('active');
+        if (currentFileType === 'pdf' && previewContainer) {
+            previewContainer.style.display = 'none';
+        }
+        if (quickPositionPanel) {
+            quickPositionPanel.style.display = 'block';
+        }
+    }
+}
+
+function setQuickPosition(x, y) {
+    currentX = x;
+    currentY = y;
+    
+    const positionXInput = document.getElementById('positionX');
+    const positionYInput = document.getElementById('positionY');
+    
+    if (positionXInput) positionXInput.value = x;
+    if (positionYInput) positionYInput.value = y;
+    
+    updatePosition(x, y);
+    
+    Swal.fire({
+        icon: 'success',
+        title: 'Posisi Dipilih',
+        text: `X: ${x}%, Y: ${y}%`,
+        timer: 1500,
+        showConfirmButton: false
+    });
+}
+
+<?php if ($success_data): ?>
+Swal.fire({
+    icon: 'success',
+    title: 'TTE Berhasil Dibubuhkan! ✅',
+    html: `
+        <div style="text-align: left; padding: 0.5rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 0.8rem;">
+                <div style="background: #f8f9fa; padding: 0.6rem; border-radius: 8px;">
+                    <div style="font-size: 0.75rem; color: #666; margin-bottom: 0.3rem;">📄 Dokumen Asli</div>
+                    <div style="font-size: 0.85rem; font-weight: 600;"><?= htmlspecialchars($success_data['original_name']) ?></div>
+                </div>
+                <div style="background: #f8f9fa; padding: 0.6rem; border-radius: 8px;">
+                    <div style="font-size: 0.75rem; color: #666; margin-bottom: 0.3rem;">📝 File Output</div>
+                    <div style="font-size: 0.85rem; font-weight: 600;"><?= htmlspecialchars($success_data['filename']) ?></div>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.6rem; margin-bottom: 0.8rem;">
+                <div style="background: #e3f2fd; padding: 0.5rem; border-radius: 6px; text-align: center;">
+                    <div style="font-size: 0.7rem; color: #1976d2;">💾 Ukuran</div>
+                    <div style="font-size: 0.8rem; font-weight: 600; color: #1565c0;"><?= number_format($success_data['filesize']/1024, 1) ?> KB</div>
+                </div>
+                <div style="background: #e8f5e9; padding: 0.5rem; border-radius: 6px; text-align: center;">
+                    <div style="font-size: 0.7rem; color: #388e3c;">📄 Tipe</div>
+                    <div style="font-size: 0.8rem; font-weight: 600; color: #2e7d32;"><?= $success_data['file_type'] ?></div>
+                </div>
+                <div style="background: #fff3e0; padding: 0.5rem; border-radius: 6px; text-align: center;">
+                    <div style="font-size: 0.7rem; color: #f57c00;">⏰ Waktu</div>
+                    <div style="font-size: 0.75rem; font-weight: 600; color: #ef6c00;"><?= date('H:i:s', strtotime($success_data['timestamp'])) ?></div>
+                </div>
+            </div>
+            
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 0.8rem; border-radius: 8px; color: white; margin-bottom: 0.8rem;">
+                <div style="font-size: 0.75rem; opacity: 0.9; margin-bottom: 0.4rem;">✍️ Ditandatangani oleh:</div>
+                <div style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.3rem;"><?= htmlspecialchars($success_data['tte_nama']) ?></div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.8rem;">
+                    <div>🆔 <?= htmlspecialchars($success_data['tte_nik']) ?></div>
+                    <?php if (!empty($success_data['tte_jabatan'])): ?>
+                    <div>💼 <?= htmlspecialchars($success_data['tte_jabatan']) ?></div>
+                    <?php endif; ?>
+                </div>
+            </div>
+            
+            <div style="background: #f5f5f5; padding: 0.6rem; border-radius: 6px; font-size: 0.75rem; color: #666;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>🔑 Token: <code style="background: white; padding: 2px 6px; border-radius: 3px;"><?= substr($success_data['tte_token'], 0, 16) ?>...</code></span>
+                    <?php if ($success_data['file_type'] === 'PDF'): ?>
+                    <span>📑 Halaman: <strong><?= $success_data['target_page'] ?></strong></span>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    `,
+    width: '700px',
+    showDenyButton: true,
+    showCancelButton: true,
+    confirmButtonText: '<i class="fas fa-download"></i> Download',
+    denyButtonText: '<i class="fas fa-plus"></i> Upload Lagi',
+    cancelButtonText: '<i class="fas fa-times"></i> Tutup',
+    confirmButtonColor: '#28a745',
+    denyButtonColor: '#6777ef',
+    cancelButtonColor: '#6c757d'
+}).then((result) => {
+    if (result.isConfirmed) {
+        const link = document.createElement('a');
+        link.href = '<?= $success_data['web_path'] ?>';
+        link.download = '<?= $success_data['filename'] ?>';
+        link.click();
+        
+        Swal.fire({
+            icon: 'success',
+            title: 'Download Dimulai',
+            text: 'File sedang diunduh...',
+            timer: 2000,
+            showConfirmButton: false
+        }).then(() => {
+            location.reload();
+        });
+    } else if (result.isDenied) {
+        location.reload();
+    }
+});
+<?php endif; ?>
+
+<?php if ($error_message): ?>
+Swal.fire({
+    icon: 'error',
+    title: 'Terjadi Kesalahan',
+    text: '<?= addslashes($error_message) ?>',
+    confirmButtonText: 'OK'
+});
+<?php endif; ?>
+</script>
+
 </body>
 </html>
+
+
+
+
+
+
+

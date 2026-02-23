@@ -1,145 +1,188 @@
 <?php
-require_once "../conf/config.php";
-checkLogin();
+include 'security.php'; // sudah handle session_start + cek login + timeout
+include 'koneksi.php';
+date_default_timezone_set('Asia/Jakarta');
 
-// MenuName: Central Digital Archive
+$user_id = $_SESSION['user_id'];
 
-$user_id = $_SESSION['user_id'] ?? 0;
 
-// Lazy Load Table
-safe_query("CREATE TABLE IF NOT EXISTS arsip_digital (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    nama_dokumen VARCHAR(255),
-    kategori VARCHAR(100),
-    nomor_dokumen VARCHAR(100),
-    file_path VARCHAR(255),
-    keterangan TEXT,
-    tanggal_arsip DATETIME DEFAULT CURRENT_TIMESTAMP,
-    is_signed BOOLEAN DEFAULT FALSE,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-)");
+// Tambahkan sebelum HTML
+$data_kategori = mysqli_query($conn, "SELECT * FROM kategori_arsip ORDER BY nama_kategori ASC");
 
-// Categories
-$cats = ['SK Direktur', 'Surat Tugas', 'SOP Layanan', 'Dokumen Akreditasi', 'MoU / Kerjasama', 'Lainnya'];
 
-// Handle Search
-$search = isset($_GET['search']) ? "%" . $_GET['search'] . "%" : "%%";
-$active_cat = $_GET['cat'] ?? 'All';
+// Proses simpan arsip digital
+if (isset($_POST['simpan'])) {
+  $judul       = $_POST['judul'];
+  $deskripsi   = $_POST['deskripsi'];
+  $kategori    = $_POST['kategori'];
+  $file_arsip  = '';
 
-$where = "WHERE (nama_dokumen LIKE ? OR nomor_dokumen LIKE ?)";
-$params = [$search, $search];
+  if ($_FILES['file_arsip']['name']) {
+    $ext = pathinfo($_FILES['file_arsip']['name'], PATHINFO_EXTENSION);
+    $file_arsip = 'arsip_' . time() . '.' . $ext;
+    move_uploaded_file($_FILES['file_arsip']['tmp_name'], 'uploads/' . $file_arsip);
+  }
 
-if($active_cat != 'All') {
-    $where .= " AND kategori = ?";
-    $params[] = $active_cat;
+  mysqli_query($conn, "INSERT INTO arsip_digital (
+    judul, deskripsi, kategori, file_arsip, tgl_upload, user_input
+  ) VALUES (
+    '$judul', '$deskripsi', '$kategori', '$file_arsip', NOW(), '$user_id'
+  )");
+
+  header("Location: arsip_digital.php#data");
+  exit;
 }
 
-$docs = safe_query("SELECT arsip_digital.*, users.nama as pembuat_nama 
-                    FROM arsip_digital 
-                    JOIN users ON arsip_digital.user_id = users.id 
-                    $where ORDER BY tanggal_arsip DESC", $params);
+$data_arsip = mysqli_query($conn, "SELECT a.*, u.nama AS user_nama 
+  FROM arsip_digital a 
+  LEFT JOIN users u ON a.user_input = u.id 
+  ORDER BY a.id DESC");
 ?>
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Archive - BexMedia</title>
-    <link rel="stylesheet" href="../css/index.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        .archive-layout { display: grid; grid-template-columns: 280px 1fr; gap: 32px; margin-top: 24px; }
-        .sidebar-nav { background: rgba(255, 255, 255, 0.02); border-radius: 20px; padding: 24px; border: 1px solid rgba(255, 255, 255, 0.05); }
-        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; color: rgba(255,255,255,0.4); text-decoration: none; transition: 0.3s; margin-bottom: 4px; border: 1px solid transparent; }
-        .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
-        .nav-item.active { background: rgba(59, 130, 246, 0.1); color: var(--primary-color); border-color: rgba(59, 130, 246, 0.2); }
-        
-        .doc-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .doc-card {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 20px;
-            padding: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            position: relative;
-            transition: 0.3s;
-        }
-        .doc-card:hover { transform: translateY(-4px); background: rgba(255,255,255,0.05); border-color: var(--primary-color); }
-        .file-icon { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; background: rgba(255,255,255,0.05); color: var(--primary-color); margin-bottom: 16px; }
-        
-        .badge-tte { position: absolute; top: 12px; right: 12px; display: flex; align-items: center; gap: 4px; font-size: 0.6rem; font-weight: 800; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 4px; text-transform: uppercase; }
-    </style>
+    <link rel="icon" href="../images/logo_final.png">
+    
+  
+  <meta charset="UTF-8">
+  <title>Arsip Digital</title>
+  <link rel="stylesheet" href="assets/modules/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="assets/modules/fontawesome/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <style>
+    .table-responsive-custom {
+      width: 100%;
+      overflow-x: auto;
+    }
+    .table-arsip {
+      white-space: nowrap;
+      min-width: 1200px;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <?php include "sidebar.php"; ?>
-        
-        <main class="main-content">
-            <header class="header">
-                <div class="header-left">
-                    <h1>Digital Repository</h1>
-                    <p>Pusat arsip dokumen digital institusi yang terorganisir dan terenkripsi.</p>
-                </div>
-                <div class="header-right">
-                    <div style="display:flex; gap:12px;">
-                        <input type="text" id="archiveSearch" placeholder="Cari Surat / SK..." style="width:250px;">
-                        <button class="btn btn-primary"><i data-lucide="upload"></i> Upload</button>
-                    </div>
-                </div>
-            </header>
+<div id="app">
+  <div class="main-wrapper main-wrapper-1">
+    <?php include 'navbar.php'; ?>
+    <?php include 'sidebar.php'; ?>
 
-            <div class="archive-layout">
-                <aside class="sidebar-nav">
-                    <h5 style="margin-bottom:20px; opacity:0.3; text-transform:uppercase; font-size:0.7rem; letter-spacing:1px;">Collections</h5>
-                    <a href="arsip_digital.php?cat=All" class="nav-item <?= $active_cat == 'All' ? 'active' : '' ?>">
-                        <i data-lucide="layers"></i> Semua Dokumen
-                    </a>
-                    <?php foreach($cats as $c): ?>
-                    <a href="arsip_digital.php?cat=<?= urlencode($c) ?>" class="nav-item <?= $active_cat == $c ? 'active' : '' ?>">
-                        <i data-lucide="folder"></i> <?= $c ?>
-                    </a>
-                    <?php endforeach; ?>
-                </aside>
+    <div class="main-content">
+      <section class="section">
+        <div class="section-body">
 
-                <div class="doc-list">
-                    <?php if(mysqli_num_rows($docs) > 0): ?>
-                        <?php while($d = mysqli_fetch_assoc($docs)): ?>
-                        <div class="doc-card">
-                            <?php if($d['is_signed']): ?>
-                            <div class="badge-tte"><i data-lucide="shield-check" size="10"></i> Signed</div>
-                            <?php endif; ?>
-
-                            <div class="file-icon"><i data-lucide="file-text"></i></div>
-                            <h4 style="margin:0; font-size:0.95rem; line-height:1.4;"><?= h($d['nama_dokumen']) ?></h4>
-                            <p style="font-size:0.75rem; opacity:0.4; margin: 8px 0;"><?= h($d['nomor_dokumen']) ?></p>
-                            
-                            <div style="margin-top:20px; display:flex; justify-content: space-between; align-items:center;">
-                                <div style="display:flex; align-items:center; gap:8px;">
-                                    <div style="width:24px; height:24px; border-radius:50%; background:var(--primary-color); display:grid; place-items:center; font-size:0.6rem; font-weight:800;"><?= strtoupper(substr($d['pembuat_nama'], 0, 1)) ?></div>
-                                    <span style="font-size:0.75rem; opacity:0.6;"><?= date('d M Y', strtotime($d['tanggal_arsip'])) ?></span>
-                                </div>
-                                <div style="display:flex; gap:4px;">
-                                    <button class="btn btn-secondary" style="padding:6px;"><i data-lucide="eye" size="14"></i></button>
-                                    <button class="btn btn-secondary" style="padding:6px;"><i data-lucide="download" size="14"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                        <?php endwhile; ?>
-                    <?php else: ?>
-                        <div style="grid-column: 1 / -1; text-align:center; padding:100px 0; opacity:0.1;">
-                            <i data-lucide="folder-x" style="width:80px; height:80px; margin-bottom:20px;"></i>
-                            <h3>Repository Kosong</h3>
-                            <p>Belum ada dokumen di kategori ini.</p>
-                        </div>
-                    <?php endif; ?>
-                </div>
+          <div class="card">
+            <div class="card-header">
+              <h4>Manajemen Arsip Digital</h4>
             </div>
-        </main>
-    </div>
+            <div class="card-body">
 
-    <script>
-        lucide.createIcons();
-    </script>
+              <ul class="nav nav-tabs" id="arsipTab" role="tablist">
+                <li class="nav-item">
+                  <a class="nav-link active" id="form-tab" data-toggle="tab" href="#form" role="tab">Input Arsip</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" id="data-tab" data-toggle="tab" href="#data" role="tab">Data Arsip</a>
+                </li>
+              </ul>
+
+              <div class="tab-content mt-3" id="arsipTabContent">
+                <div class="tab-pane fade show active" id="form" role="tabpanel">
+                  <form method="POST" enctype="multipart/form-data">
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-group"><label>Judul Arsip</label><input name="judul" class="form-control" required></div>
+                       <!-- Di bagian <select name="kategori"> -->
+<select name="kategori" class="form-control" required>
+  <option value="">-- Pilih Kategori --</option>
+  <?php while ($k = mysqli_fetch_assoc($data_kategori)) : ?>
+    <option value="<?= htmlspecialchars($k['nama_kategori']) ?>"><?= htmlspecialchars($k['nama_kategori']) ?></option>
+  <?php endwhile; ?>
+</select>
+
+                      </div>
+                      <div class="col-md-6">
+                        <div class="form-group"><label>Deskripsi</label><textarea name="deskripsi" class="form-control" rows="3" required></textarea></div>
+                        <div class="form-group"><label>File Arsip (PDF)</label><input type="file" name="file_arsip" accept=".pdf" class="form-control"></div>
+                      </div>
+                    </div>
+                    <button type="submit" name="simpan" class="btn btn-primary"><i class="fas fa-save"></i> Simpan</button>
+                  </form>
+                </div>
+
+                <div class="tab-pane fade" id="data" role="tabpanel">
+                  <div class="table-responsive-custom">
+                    <table class="table table-bordered table-striped table-arsip">
+                      <thead>
+                        <tr>
+                          <th>No</th>
+                          <th>Judul</th>
+                          <th>Kategori</th>
+                          <th>Deskripsi</th>
+                          <th>File</th>
+                          <th>Tanggal Upload</th>
+                          <th>Petugas</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <?php $no = 1; while ($row = mysqli_fetch_assoc($data_arsip)) : ?>
+                          <tr>
+                            <td><?= $no++ ?></td>
+                            <td><?= htmlspecialchars($row['judul']) ?></td>
+                            <td><?= htmlspecialchars($row['kategori']) ?></td>
+                            <td><?= htmlspecialchars($row['deskripsi']) ?></td>
+                            <td>
+                              <?php if ($row['file_arsip']) : ?>
+                                <a href="uploads/<?= $row['file_arsip'] ?>" target="_blank" class="btn btn-sm btn-info">
+                                  <i class="fas fa-file-pdf"></i> Lihat
+                                </a>
+                              <?php else : ?>
+                                <span class="text-muted">-</span>
+                              <?php endif; ?>
+                            </td>
+                            <td><?= htmlspecialchars($row['tgl_upload']) ?></td>
+                            <td><?= htmlspecialchars($row['user_nama'] ?? '-') ?></td>
+                          </tr>
+                        <?php endwhile; ?>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+              </div> <!-- end tab content -->
+            </div>
+          </div>
+
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script src="assets/modules/jquery.min.js"></script>
+<script src="assets/modules/popper.js"></script>
+<script src="assets/modules/bootstrap/js/bootstrap.min.js"></script>
+<script src="assets/modules/nicescroll/jquery.nicescroll.min.js"></script>
+<script src="assets/modules/moment.min.js"></script>
+<script src="assets/js/stisla.js"></script>
+<script src="assets/js/scripts.js"></script>
+<script src="assets/js/custom.js"></script>
+<script>
+  $(document).ready(function () {
+    var hash = window.location.hash;
+    if (hash) {
+      $('.nav-tabs a[href="' + hash + '"]').tab('show');
+    }
+  });
+</script>
+
 </body>
 </html>
+
+
+
+
+
+
+

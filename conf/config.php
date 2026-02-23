@@ -1,11 +1,13 @@
 <?php
-// === KONFIGURASI KEAMANAN & DATABASE (ADAPTASI WEB_DOKTER V2.0) ===
-ini_set('session.cookie_httponly', 1);
-ini_set('session.use_only_cookies', 1);
-if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
-    ini_set('session.cookie_secure', 1);
+// --- SESSION HYGIENE & PROTECTION ---
+if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.cookie_httponly', 1);
+    ini_set('session.use_only_cookies', 1);
+    if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+        ini_set('session.cookie_secure', 1);
+    }
+    session_start();
 }
-session_start();
 date_default_timezone_set("Asia/Makassar");
 
 // --- SESSION HYGIENE & PROTECTION ---
@@ -55,7 +57,7 @@ $_SESSION['LAST_ACTIVITY'] = time();
 */
 
 // --- ERROR HANDLING (PRODUCTION MODE) ---
-error_reporting(E_ALL);
+error_reporting(0);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/../error.log');

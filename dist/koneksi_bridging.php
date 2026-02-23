@@ -1,133 +1,165 @@
 <?php
-require_once "../conf/config.php";
-checkLogin();
+include 'security.php';
+include 'koneksi.php';
+include 'send_wa.php'; // Fungsi sendWA()
+date_default_timezone_set('Asia/Jakarta');
 
-// MenuName: Bridging Service Monitor
+$user_id = $_SESSION['user_id'];
+$current_file = basename(__FILE__);
 
-$user_id = $_SESSION['user_id'] ?? 0;
-
-// Lazy Load Table
-safe_query("CREATE TABLE IF NOT EXISTS master_url (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nama_koneksi VARCHAR(100),
-    base_url VARCHAR(255),
-    status_last ENUM('online', 'offline') DEFAULT 'offline',
-    last_check DATETIME,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)");
-
-// Mock data if empty
-$check_empty = mysqli_fetch_assoc(safe_query("SELECT COUNT(*) as total FROM master_url"));
-if($check_empty['total'] == 0) {
-    safe_query("INSERT INTO master_url (nama_koneksi, base_url) VALUES 
-        ('BPJS V-Claim 2.0', 'https://apijkn.bpjs-kesehatan.go.id/vclaim-rest/'),
-        ('SatuSehat Platform', 'https://api-satusehat.kemkes.go.id/'),
-        ('Antrean Online (Mobile JKN)', 'https://apijkn.bpjs-kesehatan.go.id/antreanrs/'),
-        ('E-RM Local Gateway', 'http://192.168.1.10:5000/api/'),
-        ('SMS/WA Gateway Server', 'http://localhost:8000/status/')");
+// Cek akses user
+$query = "SELECT 1 FROM akses_menu 
+          JOIN menu ON akses_menu.menu_id = menu.id 
+          WHERE akses_menu.user_id = '$user_id' AND menu.file_menu = '$current_file'";
+$result = mysqli_query($conn, $query);
+if (mysqli_num_rows($result) == 0) {
+    echo "<script>alert('Anda tidak memiliki akses ke halaman ini.'); window.location.href='dashboard.php';</script>";
+    exit;
 }
 
-function checkLive($url) {
+// Fungsi cek koneksi URL
+function cekKoneksi($url) {
+    if (!preg_match('~^https?://~i', $url)) $url = "https://" . $url;
     $parsed = parse_url($url);
-    $host = $parsed['host'] ?? $url;
-    $scheme = $parsed['scheme'] ?? 'http';
-    $port = $parsed['port'] ?? ($scheme === 'https' ? 443 : 80);
-    
-    $fp = @fsockopen($host, $port, $errno, $errstr, 2);
-    if ($fp) {
-        fclose($fp);
-        return true;
-    }
+    $host = $parsed['host'];
+    $port = isset($parsed['scheme']) && $parsed['scheme'] === 'https' ? 443 : 80;
+    $fp = @fsockopen($host, $port, $errno, $errstr, 3);
+    if ($fp) { fclose($fp); return true; }
     return false;
 }
 
-$urls = safe_query("SELECT * FROM master_url ORDER BY nama_koneksi ASC");
+// Ambil ID grup WA
+$row_grup = mysqli_fetch_assoc(
+    mysqli_query($conn, "SELECT nilai FROM wa_setting WHERE nama='wa_group_it' LIMIT 1")
+);
+$id_grup = $row_grup['nilai'] ?? '';
+
+// Pencarian
+$keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
+$query_url = "SELECT * FROM master_url";
+if (!empty($keyword)) {
+    $keywordEscaped = mysqli_real_escape_string($conn, $keyword);
+    $query_url .= " WHERE nama_koneksi LIKE '%$keywordEscaped%' OR base_url LIKE '%$keywordEscaped%'";
+}
+$query_url .= " ORDER BY nama_koneksi ASC";
+$result_url = mysqli_query($conn, $query_url);
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bridging Monitor - BexMedia</title>
-    <link rel="stylesheet" href="../css/index.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        .monitor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 24px; margin-top: 24px; }
-        .service-card {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 20px;
-            padding: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            transition: 0.3s;
-        }
-        .service-card:hover { transform: translateY(-4px); background: rgba(255,255,255,0.05); }
-        .service-header { display: flex; justify-content: space-between; align-items: flex-start; }
-        .status-dot { width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
-        .dot-online { background: #10b981; box-shadow: 0 0 15px #10b981; }
-        .dot-offline { background: #ef4444; box-shadow: 0 0 15px #ef4444; }
-        
-        .indicator-box { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; padding: 4px 12px; border-radius: 50px; background: rgba(255,255,255,0.05); }
-        
-        .url-box { background: rgba(0,0,0,0.2); padding: 8px; border-radius: 8px; font-family: monospace; font-size: 0.75rem; color: rgba(255,255,255,0.4); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    </style>
+    <link rel="icon" href="../images/logo_final.png">
+    
+  
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Monitoring Koneksi Bridging</title>
+<link rel="stylesheet" href="assets/modules/bootstrap/css/bootstrap.min.css" />
+<link rel="stylesheet" href="assets/modules/fontawesome/css/all.min.css" />
+<link rel="stylesheet" href="assets/css/style.css" />
+<link rel="stylesheet" href="assets/css/components.css" />
 </head>
 <body>
-    <div class="container">
-        <?php include "sidebar.php"; ?>
-        
-        <main class="main-content">
-            <header class="header">
-                <div class="header-left">
-                    <h1>Integrated Bridging Monitor</h1>
-                    <p>Pemantauan real-time stabilitas koneksi API dan integrasi sistem eksternal.</p>
-                </div>
-                <div class="header-right">
-                    <button class="btn btn-secondary" onclick="location.reload()">
-                        <i data-lucide="refresh-cw"></i> Refresh Monitor
-                    </button>
-                </div>
-            </header>
+<div id="app">
+<div class="main-wrapper main-wrapper-1">
+<?php include 'navbar.php'; ?>
+<?php include 'sidebar.php'; ?>
+<div class="main-content">
+<section class="section">
+<div class="section-body">
+<div class="card">
+<div class="card-header d-flex justify-content-between align-items-center">
+<h4>Monitoring Koneksi Bridging</h4>
+<form method="GET" class="form-inline">
+<input type="text" name="keyword" value="<?= htmlspecialchars($keyword) ?>" class="form-control mr-2" placeholder="Cari URL / IP" />
+<button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-search"></i> Cari</button>
+</form>
+</div>
+<div class="card-body">
+<div class="table-responsive">
+<table class="table table-bordered table-sm table-hover">
+<thead class="thead-dark">
+<tr class="text-center">
+<th>No</th>
+<th>Nama Koneksi</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<?php
+$no = 1;
+if (mysqli_num_rows($result_url) > 0) {
+    while ($row = mysqli_fetch_assoc($result_url)) {
+        $statusOnline = cekKoneksi($row['base_url']);
+        $statusNow = $statusOnline ? 'online' : 'offline';
+        $statusLast = $row['status_last'] ?? '';
 
-            <div class="monitor-grid">
-                <?php while($row = mysqli_fetch_assoc($urls)): 
-                    $isOnline = checkLive($row['base_url']);
-                ?>
-                <div class="service-card">
-                    <div class="service-header">
-                        <div>
-                            <h3 style="margin:0; font-size:1.1rem;"><?= h($row['nama_koneksi']) ?></h3>
-                            <div class="url-box" style="margin-top:8px;" title="<?= h($row['base_url']) ?>"><?= h($row['base_url']) ?></div>
-                        </div>
-                        <div class="status-dot <?= $isOnline ? 'dot-online' : 'dot-offline' ?>"></div>
-                    </div>
-                    
-                    <div style="display:flex; justify-content: space-between; align-items:center;">
-                        <div class="indicator-box" style="<?= $isOnline ? 'color:#10b981;' : 'color:#ef4444;' ?>">
-                            <i data-lucide="<?= $isOnline ? 'zap' : 'zap-off' ?>" size="14"></i>
-                            <?= $isOnline ? 'Active' : 'Connection Timeout' ?>
-                        </div>
-                        <small style="opacity:0.3; font-size:0.7rem;">Checked: <?= date('H:i:s') ?></small>
-                    </div>
-                </div>
-                <?php endwhile; ?>
+        // Notifikasi WA jika status berubah
+        if ($statusLast !== $statusNow && !empty($id_grup)) {
+            $pesan_wa = "🔔 KONEKSI {$row['nama_koneksi']}\nStatus berubah: *$statusLast* → *$statusNow*\nURL: {$row['base_url']}\nWaktu: ".date('Y-m-d H:i:s');
+            $waResult = sendWA($id_grup, $pesan_wa);
+            if (!$waResult) {
+                error_log("Gagal kirim WA ke grup $id_grup untuk {$row['nama_koneksi']}");
+            }
+            // Update status_last di DB
+            mysqli_query($conn, "UPDATE master_url SET status_last='$statusNow' WHERE id={$row['id']}");
+        }
 
-                <!-- ADD NEW CARD -->
-                <div class="service-card" style="border: 2px dashed rgba(255,255,255,0.05); background:none; display:grid; place-items:center; cursor:pointer;" onclick="alert('Module Master URL : Segera Hadir')">
-                    <div style="text-align:center; opacity:0.3;">
-                        <i data-lucide="plus-circle" style="width:40px; height:40px; margin-bottom:12px;"></i>
-                        <p>Tambah Endpoint Baru</p>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
+        // Tampilkan tabel
+        echo "<tr>";
+        echo "<td class='text-center'>{$no}</td>";
+        echo "<td>{$row['nama_koneksi']}</td>";
+        echo "<td class='text-center'>";
+        if ($statusOnline) echo "<span class='badge badge-success'><i class='fas fa-check-circle'></i> Online</span>";
+        else echo "<span class='badge badge-danger'><i class='fas fa-times-circle'></i> Offline</span>";
+        echo "</td></tr>";
+        $no++;
+    }
+} else {
+    echo "<tr><td colspan='3' class='text-center'>Tidak ada data ditemukan.</td></tr>";
+}
+?>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+</div>
 
-    <script>
-        lucide.createIcons();
-    </script>
+<script src="assets/modules/jquery.min.js"></script>
+<script src="assets/modules/popper.js"></script>
+<script src="assets/modules/bootstrap/js/bootstrap.min.js"></script>
+<script src="assets/modules/nicescroll/jquery.nicescroll.min.js"></script>
+<script src="assets/modules/moment.min.js"></script>
+<script src="assets/js/stisla.js"></script>
+<script src="assets/js/scripts.js"></script>
+<script src="assets/js/custom.js"></script>
+<script>
+function refreshStatus(){
+    $.getJSON('cek_status_ajax.php', function(data){
+        data.forEach(function(row, i){
+            var badge = row.status==='online' ? 
+                "<span class='badge badge-success'><i class='fas fa-check-circle'></i> Online</span>" :
+                "<span class='badge badge-danger'><i class='fas fa-times-circle'></i> Offline</span>";
+            $("table tbody tr").eq(i).find("td").eq(2).html(badge);
+        });
+    });
+}
+
+// Refresh tiap 30 detik
+setInterval(refreshStatus, 30000);
+$(document).ready(refreshStatus);
+</script>
+
 </body>
 </html>
+
+
+
+
+
+
+

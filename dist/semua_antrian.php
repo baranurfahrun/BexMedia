@@ -1,229 +1,448 @@
 <?php
-require_once "../conf/config.php";
-checkLogin();
+include 'security.php'; 
+include 'koneksi.php';
+date_default_timezone_set('Asia/Jakarta');
 
-// MenuName: All Queuing Statistics
+$user_id = $_SESSION['user_id'];
+$current_file = basename(__FILE__);
 
-$user_id = $_SESSION['user_id'] ?? 0;
-
-// Lazy Load Tables
-safe_query("CREATE TABLE IF NOT EXISTS semua_antrian (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    bulan INT,
-    tahun INT,
-    jumlah_sep INT,
-    jumlah_antri INT,
-    jumlah_mjkn INT,
-    persen_all FLOAT,
-    persen_mjkn FLOAT,
-    petugas_id INT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)");
-
-// Handle Save
-if (isset($_POST['simpan'])) {
-    csrf_verify();
-    
-    $bulan = intval($_POST['bulan']);
-    $tahun = intval($_POST['tahun']);
-    $sep = intval($_POST['sep']);
-    $antri = intval($_POST['antri']);
-    $mjkn = intval($_POST['mjkn']);
-    
-    $persen_all = ($sep > 0) ? round(($antri / $sep) * 100, 2) : 0;
-    $persen_mjkn = ($sep > 0) ? round(($mjkn / $sep) * 100, 2) : 0;
-    
-    $res = safe_query("INSERT INTO semua_antrian (bulan, tahun, jumlah_sep, jumlah_antri, jumlah_mjkn, persen_all, persen_mjkn, petugas_id) 
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-                       [$bulan, $tahun, $sep, $antri, $mjkn, $persen_all, $persen_mjkn, $user_id]);
-    
-    if($res) {
-        write_log("ANTRIAN_ALL_INPUT", "Input data pemanfaatan antrian online periode $bulan/$tahun");
-        $_SESSION['flash_success'] = "Data utilisasi antrian periode $bulan/$tahun berhasil disimpan.";
-    }
-    header("Location: semua_antrian.php");
+// Cek akses user
+$query = "SELECT 1 FROM akses_menu 
+          JOIN menu ON akses_menu.menu_id = menu.id 
+          WHERE akses_menu.user_id = '$user_id' AND menu.file_menu = '$current_file'";
+$result = mysqli_query($conn, $query);
+if (mysqli_num_rows($result) == 0) {
+    echo "<script>alert('Anda tidak memiliki akses ke halaman ini.'); window.location.href='dashboard.php';</script>";
     exit;
 }
 
-$bulan_nama = [1=>"Jan", 2=>"Feb", 3=>"Mar", 4=>"Apr", 5=>"Mei", 6=>"Jun", 7=>"Jul", 8=>"Agu", 9=>"Sep", 10=>"Okt", 11=>"Nov", 12=>"Des"];
-$data_history = safe_query("SELECT * FROM semua_antrian ORDER BY tahun DESC, bulan DESC LIMIT 12");
+// Ambil nama user
+$userData = mysqli_fetch_assoc(mysqli_query($conn, "SELECT nama FROM users WHERE id = '$user_id'"));
+$user_nama = $userData['nama'] ?? 'unknown';
+$notif = '';
 
-$labels = []; $values_all = []; $values_mjkn = [];
-$temp_data = [];
-while($row = mysqli_fetch_assoc($data_history)) {
-    $temp_data[] = $row;
+// Ambil daftar faskes dari tabel perusahaan
+$perusahaan = mysqli_query($conn, "SELECT * FROM perusahaan ORDER BY nama_perusahaan ASC");
+
+// Daftar bulan dan tahun
+$bulan_list = [
+    1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',
+    7=>'Juli',8=>'Agustus',9=>'September',10=>'Oktober',11=>'November',12=>'Desember'
+];
+$tahun_list = range(2020, 2030);
+
+// Proses simpan data
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['simpan'])) {
+    $id_perusahaan  = (int) $_POST['id_perusahaan'];
+    $bulan          = (int) $_POST['bulan'];
+    $tahun          = (int) $_POST['tahun'];
+    $jumlah_sep     = (int) $_POST['jumlah_sep'];
+    $jumlah_antri   = (int) $_POST['jumlah_antri'];
+
+    if ($jumlah_sep <= 0) {
+        $notif = "Jumlah SEP harus lebih dari 0!";
+    } else {
+        $persen_all = round(($jumlah_antri / $jumlah_sep) * 100, 2);
+
+        $insert = mysqli_query($conn, "INSERT INTO semua_antrian 
+            (id_perusahaan, bulan, tahun, jumlah_sep, jumlah_antri, persen_all, petugas_input, tanggal_input) 
+            VALUES ($id_perusahaan, $bulan, $tahun, $jumlah_sep, $jumlah_antri, $persen_all, '$user_nama', NOW())");
+
+        if ($insert) {
+            $_SESSION['flash_message'] = "Data antrian berhasil disimpan.";
+            header("Location: semua_antrian.php");
+            exit;
+        } else {
+            $notif = "Gagal menyimpan data.";
+        }
+    }
 }
-$temp_data = array_reverse($temp_data);
-foreach($temp_data as $row) {
-    $labels[] = $bulan_nama[$row['bulan']] . " " . $row['tahun'];
-    $values_all[] = $row['persen_all'];
-    $values_mjkn[] = $row['persen_mjkn'];
+
+// Filter periode
+$filter_bulan = isset($_GET['bulan']) && $_GET['bulan'] !== '' ? (int)$_GET['bulan'] : '';
+$filter_tahun = isset($_GET['tahun']) && $_GET['tahun'] !== '' ? (int)$_GET['tahun'] : '';
+$where = [];
+if ($filter_bulan) $where[] = "sa.bulan = $filter_bulan";
+if ($filter_tahun) $where[] = "sa.tahun = $filter_tahun";
+$where_sql = count($where) > 0 ? 'WHERE ' . implode(' AND ', $where) : '';
+
+// Ambil data untuk tabel & chart
+$data_query = mysqli_query($conn, "SELECT 
+                                    sa.id_perusahaan,
+                                    p.nama_perusahaan,
+                                    sa.bulan,
+                                    sa.tahun,
+                                    SUM(sa.jumlah_sep) as jumlah_sep,
+                                    SUM(sa.jumlah_antri) as jumlah_antri,
+                                    ROUND(SUM(sa.jumlah_antri)/SUM(sa.jumlah_sep)*100,2) as persen_all
+                                  FROM semua_antrian sa
+                                  JOIN perusahaan p ON sa.id_perusahaan = p.id
+                                  $where_sql
+                                  GROUP BY sa.id_perusahaan, sa.bulan, sa.tahun
+                                  ORDER BY sa.tahun DESC, sa.bulan DESC");
+
+$chart_labels = [];
+$chart_all = [];
+$chart_rows = [];
+while($row = mysqli_fetch_assoc($data_query)){
+    $nama_bulan = $bulan_list[$row['bulan']] ?? '-';
+    $chart_labels[] = $row['nama_perusahaan'] . " " . $nama_bulan . " " . $row['tahun'];
+    $chart_all[] = $row['persen_all'];
+    $chart_rows[] = $row;
 }
 ?>
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>All Queuing Analytics - BexMedia</title>
-    <link rel="stylesheet" href="../css/index.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        .antrian-grid { display: grid; grid-template-columns: 1fr 400px; gap: 24px; margin-top: 24px; }
-        .premium-card {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 20px;
-            padding: 32px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .chart-container { height: 400px; position: relative; }
-        .form-row { margin-bottom: 20px; }
-        .data-table { width: 100%; border-collapse: collapse; margin-top: 24px; }
-        .data-table th, .data-table td { padding: 16px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .tag { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; }
-        .tag-blue { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
-        .tag-green { background: rgba(16, 185, 129, 0.2); color: #10b981; }
-    </style>
+    <link rel="icon" href="../images/logo_final.png">
+    
+  
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>All Pemanfaatan</title>
+<link rel="stylesheet" href="assets/modules/bootstrap/css/bootstrap.min.css">
+<link rel="stylesheet" href="assets/modules/fontawesome/css/all.min.css">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<style>
+.table thead th { background-color: #000 !important; color: #fff !important; }
+.card-body .form-row .form-group { margin-bottom: 1rem; }
+.table-responsive { overflow-x:auto; }
+</style>
 </head>
 <body>
-    <div class="container">
-        <?php include "sidebar.php"; ?>
-        
-        <main class="main-content">
-            <header class="header">
-                <div class="header-left">
-                    <h1>Antrian Online (Global)</h1>
-                    <p>Statistik pemanfaatan sistem antrian online lintas platform dibandingkan dengan total kunjungan pasien.</p>
-                </div>
-            </header>
+<div id="app">
+<div class="main-wrapper main-wrapper-1">
+<?php include 'navbar.php'; ?>
+<?php include 'sidebar.php'; ?>
 
-            <div class="antrian-grid">
-                <!-- CHART -->
-                <div class="premium-card">
-                    <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                        <h3>Utilisasi Bridging Antrian</h3>
-                        <div style="display:flex; gap: 16px;">
-                            <span style="display:flex; align-items:center; gap:8px; font-size:0.8rem; opacity:0.6;"><span style="width:12px; height:12px; background:#3b82f6; border-radius:3px;"></span> Semua Platform</span>
-                            <span style="display:flex; align-items:center; gap:8px; font-size:0.8rem; opacity:0.6;"><span style="width:12px; height:12px; background:#10b981; border-radius:3px;"></span> Mobile JKN Only</span>
-                        </div>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="antrianChart"></canvas>
-                    </div>
+<div class="main-content">
+<section class="section">
+<div class="section-body">
+<div class="card">
+<div class="card-header"><h4>Manajemen Semua Antrian (All Pemanfaatan)</h4></div>
+<div class="card-body">
 
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Periode</th>
-                                <th>Total SEP</th>
-                                <th>Antrian Sukses</th>
-                                <th>% Pemanfaatan</th>
-                                <th>Target</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach(array_reverse($temp_data) as $row): ?>
-                                <tr>
-                                    <td><?= $bulan_nama[$row['bulan']] ?> <?= $row['tahun'] ?></td>
-                                    <td><?= number_format($row['jumlah_sep']) ?></td>
-                                    <td><?= number_format($row['jumlah_antri']) ?></td>
-                                    <td><strong><?= $row['persen_all'] ?>%</strong></td>
-                                    <td><span class="tag <?= $row['persen_all'] >= 95 ? 'tag-green' : 'tag-blue' ?>"><?= $row['persen_all'] >= 95 ? 'Met' : 'Standard' ?></span></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
 
-                <!-- INPUT -->
-                <div class="premium-card">
-                    <h3 style="margin-bottom: 24px;">Input Data Capaian</h3>
-                    <form method="POST">
-                        <?= csrf_field(); ?>
-                        <div class="form-row">
-                            <label>Periode</label>
-                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-                                <select name="bulan" required>
-                                    <?php foreach($bulan_nama as $num => $nm) echo "<option value='$num' ".(date('n')==$num?'selected':'').">$nm</option>"; ?>
-                                </select>
-                                <select name="tahun" required>
-                                    <option value="<?= date('Y') ?>"><?= date('Y') ?></option>
-                                    <option value="<?= date('Y')-1 ?>"><?= date('Y')-1 ?></option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <label>Jumlah SEP (Rawat Jalan)</label>
-                            <input type="number" name="sep" placeholder="Total pasien BPJS" required>
-                        </div>
-                        <div class="form-row">
-                            <label>Antrian Online (Semua Platform)</label>
-                            <input type="number" name="antri" placeholder="Mobile JKN + Web + Kiosk" required>
-                        </div>
-                        <div class="form-row">
-                            <label>Khusus Mobile JKN</label>
-                            <input type="number" name="mjkn" placeholder="Hanya dari App Mobile JKN" required>
-                        </div>
-                        <button type="submit" name="simpan" class="btn btn-primary" style="width:100%; padding: 16px;">
-                            <i data-lucide="bar-chart"></i> Simpan Statistik
-                        </button>
-                    </form>
+<?php
+// Tentukan tab aktif berdasarkan kondisi
+$active_tab = 'input';
+if (!empty($_GET['bulan']) || !empty($_GET['tahun'])) {
+    $active_tab = 'data'; // Jika user klik filter, buka tab data tersimpan
+} elseif (!empty($_POST['simpan'])) {
+    $active_tab = 'input';
+}
+?>
 
-                    <div style="margin-top: 32px; padding: 24px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed rgba(255,255,255,0.1);">
-                        <h4 style="margin-bottom: 12px; font-size: 0.9rem;">Analisis Cepat</h4>
-                        <p style="font-size: 0.85rem; opacity: 0.6; line-height: 1.6;">Lakukan perbandingan antara utilisasi total dengan kontribusi Mobile JKN untuk mengevaluasi efektivitas kampanye aplikasi BPJS.</p>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
+<ul class="nav nav-tabs" id="antrianTab" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link <?= $active_tab == 'input' ? 'active' : '' ?>" id="input-tab" data-toggle="tab" href="#input" role="tab">
+            <i class="fas fa-edit"></i> Input Data
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link <?= $active_tab == 'data' ? 'active' : '' ?>" id="data-tab" data-toggle="tab" href="#data" role="tab">
+            <i class="fas fa-table"></i> Data Tersimpan
+        </a>
+    </li>
+</ul>
 
-    <script>
-        lucide.createIcons();
+<div class="tab-content mt-4">
+    <!-- Tab Input Data -->
+    <div class="tab-pane fade <?= $active_tab == 'input' ? 'show active' : '' ?>" id="input" role="tabpanel">
 
-        const ctx = document.getElementById('antrianChart').getContext('2d');
-        new Chart(ctx, {
+<?php if ($notif): ?><div class="alert alert-danger"><?= $notif ?></div><?php endif; ?>
+<?php if (isset($_SESSION['flash_message'])): ?>
+<div id="notif-toast" class="alert alert-success text-center">
+<?= $_SESSION['flash_message']; unset($_SESSION['flash_message']); ?>
+</div>
+<?php endif; ?>
+
+<form method="POST">
+<div class="form-row">
+<div class="form-group col-md-4">
+<label><i class="fas fa-hospital"></i> Faskes</label>
+<select name="id_perusahaan" class="form-control" required>
+<option value="">-- Pilih Faskes --</option>
+<?php while($row = mysqli_fetch_assoc($perusahaan)): ?>
+<option value="<?= $row['id'] ?>"><?= htmlspecialchars($row['nama_perusahaan']) ?></option>
+<?php endwhile; ?>
+</select>
+</div>
+<div class="form-group col-md-4">
+<label><i class="fas fa-calendar-alt"></i> Bulan</label>
+<select name="bulan" class="form-control" required>
+<option value="">-- Pilih Bulan --</option>
+<?php foreach($bulan_list as $num => $nama): ?>
+<option value="<?= $num ?>"><?= $nama ?></option>
+<?php endforeach; ?>
+</select>
+</div>
+<div class="form-group col-md-4">
+<label><i class="fas fa-calendar"></i> Tahun</label>
+<select name="tahun" class="form-control" required>
+<option value="">-- Pilih Tahun --</option>
+<?php foreach($tahun_list as $th): ?>
+<option value="<?= $th ?>"><?= $th ?></option>
+<?php endforeach; ?>
+</select>
+</div>
+</div>
+
+<div class="form-row">
+<div class="form-group col-md-6">
+<label><i class="fas fa-file-medical"></i> Jumlah SEP Rjtl</label>
+<input type="number" name="jumlah_sep" class="form-control" required>
+</div>
+<div class="form-group col-md-6">
+<label><i class="fas fa-users"></i> Jumlah Antrian</label>
+<input type="number" name="jumlah_antri" class="form-control" required>
+</div>
+</div>
+
+<div class="form-group">
+<label><i class="fas fa-user"></i> Petugas Input</label>
+<input type="text" class="form-control" value="<?= htmlspecialchars($user_nama) ?>" readonly>
+</div>
+
+<button type="submit" name="simpan" class="btn btn-success"><i class="fas fa-save"></i> Simpan</button>
+</form>
+</div>
+
+<!-- Tab Data Tersimpan -->
+<div class="tab-pane fade" id="data" role="tabpanel">
+<form class="form-inline mb-3" method="GET">
+<label class="mr-2"><i class="fas fa-calendar-alt"></i> Filter Bulan:</label>
+<select name="bulan" class="form-control mr-2">
+<option value="">-- Semua Bulan --</option>
+<?php foreach($bulan_list as $num => $nama): ?>
+<option value="<?= $num ?>" <?= $num==$filter_bulan?'selected':'' ?>><?= $nama ?></option>
+<?php endforeach; ?>
+</select>
+<label class="mr-2">Tahun:</label>
+<select name="tahun" class="form-control mr-2">
+<option value="">-- Semua Tahun --</option>
+<?php foreach($tahun_list as $th): ?>
+<option value="<?= $th ?>" <?= $th==$filter_tahun?'selected':'' ?>><?= $th ?></option>
+<?php endforeach; ?>
+</select>
+<button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Filter</button>
+
+<!-- Tombol buka modal -->
+<button type="button" class="btn btn-info ml-2" data-toggle="modal" data-target="#grafikModal">
+<i class="fas fa-chart-bar"></i> Lihat Grafik
+</button>
+</form>
+
+<div class="table-responsive">
+<table class="table table-striped table-bordered nowrap">
+<thead>
+<tr>
+<th>No</th>
+<th>Faskes</th>
+<th>Bulan</th>
+<th>Tahun</th>
+<th>Jumlah SEP</th>
+<th>Jumlah Antrian</th>
+<th>% All Pemanfaatan</th>
+</tr>
+</thead>
+<tbody>
+<?php
+$no = 1;
+foreach($chart_rows as $row){
+    $nama_bulan = $bulan_list[$row['bulan']] ?? '-';
+    echo "<tr>
+            <td>{$no}</td>
+            <td>".htmlspecialchars($row['nama_perusahaan'])."</td>
+            <td>{$nama_bulan}</td>
+            <td>{$row['tahun']}</td>
+            <td>{$row['jumlah_sep']}</td>
+            <td>{$row['jumlah_antri']}</td>
+            <td class='".($row['persen_all'] < 95 ? 'text-danger font-weight-bold' : '')."'>
+                {$row['persen_all']}%
+            </td>
+          </tr>";
+    $no++;
+}
+?>
+</tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+</div>
+
+<!-- Modal Grafik -->
+<div class="modal fade" id="grafikModal" tabindex="-1" role="dialog" aria-labelledby="grafikModalLabel" aria-hidden="true">
+<div class="modal-dialog modal-xl modal-dialog-centered" role="document" style="max-width:95%;">
+<div class="modal-content" style="height:90vh;">
+<div class="modal-header">
+<h5 class="modal-title" id="grafikModalLabel">Grafik Persentase Pemanfaatan</h5>
+<button type="button" class="close" data-dismiss="modal" aria-label="Tutup">
+<span aria-hidden="true">&times;</span>
+</button>
+</div>
+<div class="modal-body" style="height:calc(100% - 70px);">
+<canvas id="grafikModalChart" style="width:100%; height:100%;"></canvas>
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+</div>
+</div>
+</div>
+</div>
+
+<script src="assets/modules/jquery.min.js"></script>
+<script src="assets/modules/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="assets/modules/nicescroll/jquery.nicescroll.min.js"></script>
+<script src="assets/modules/moment.min.js"></script>
+<script src="assets/js/stisla.js"></script>
+<script src="assets/js/scripts.js"></script>
+<script src="assets/js/custom.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+$(document).ready(function () {
+    // === Simpan tab aktif ke localStorage ===
+    $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+        localStorage.setItem('activeTab', $(e.target).attr('href'));
+    });
+
+    // === Ambil kembali tab terakhir yang dibuka ===
+    var activeTab = localStorage.getItem('activeTab');
+    if (activeTab) {
+        $('#antrianTab a[href="' + activeTab + '"]').tab('show');
+    }
+
+    // Notifikasi hilang otomatis
+    $('#notif-toast').fadeIn(300).delay(2000).fadeOut(500);
+
+    let modalChart;
+
+    // Saat modal grafik ditampilkan
+    $('#grafikModal').on('shown.bs.modal', function () {
+        const ctx = document.getElementById('grafikModalChart').getContext('2d');
+        const labels = <?= json_encode($chart_labels) ?>;
+        const dataAll = <?= json_encode($chart_all) ?>;
+
+        // Jika data kosong
+        if (labels.length === 0) {
+            ctx.font = "16px Arial";
+            ctx.fillText("Tidak ada data untuk ditampilkan.", 20, 50);
+            return;
+        }
+
+        // Hapus chart lama jika ada
+        if (modalChart) {
+            modalChart.destroy();
+        }
+
+        // Buat chart baru
+        modalChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: <?= json_encode($labels) ?>,
+                labels: labels,
                 datasets: [{
-                    label: 'Total Pemanfaatan (%)',
-                    data: <?= json_encode($values_all) ?>,
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    fill: true,
-                    tension: 0.4,
-                    borderWidth: 3,
-                    pointRadius: 4
-                }, {
-                    label: 'Mobile JKN Only (%)',
-                    data: <?= json_encode($values_mjkn) ?>,
-                    borderColor: '#10b981',
-                    borderDash: [5, 5],
+                    label: '% All Pemanfaatan',
+                    data: dataAll,
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    backgroundColor: 'transparent',
+                    tension: 0,
                     fill: false,
-                    tension: 0.4,
                     borderWidth: 2,
-                    pointRadius: 4
+                    pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                    pointBorderColor: '#fff',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: {
-                        beginAtZero: false,
-                        min: 0,
-                        max: 100,
-                        grid: { color: 'rgba(255,255,255,0.05)' },
-                        ticks: { color: 'rgba(255,255,255,0.5)', callback: v => v + '%' }
+                animation: {
+                    duration: 800
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
                     },
-                    x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.5)' } }
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.parsed.y + '%';
+                            }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Grafik % All Pemanfaatan per Faskes'
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            autoSkip: false,
+                            maxRotation: 45,
+                            minRotation: 0,
+                            font: { size: 11 }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Faskes & Periode'
+                        },
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Persentase (%)'
+                        },
+                        grid: {
+                            color: 'rgba(0,0,0,0.05)'
+                        }
+                    }
                 }
             }
         });
-    </script>
+    });
+
+    // Hapus chart jika modal ditutup
+    $('#grafikModal').on('hidden.bs.modal', function () {
+        if (modalChart) {
+            modalChart.destroy();
+            modalChart = null;
+        }
+    });
+});
+</script>
+
+
+
 </body>
 </html>
+
+
+
+
+
+
+

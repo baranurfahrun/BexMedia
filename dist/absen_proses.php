@@ -5,121 +5,110 @@ date_default_timezone_set('Asia/Jakarta');
 
 header('Content-Type: application/json');
 
-// Get action from URL
-$action = $_GET['action'] ?? '';
+// Ambil input JSON
+$data = json_decode(file_get_contents("php://input"), true);
 
-// Master Coordinate (Office Location)
-// Note: Coordinate below is from FixPoint default. 
-// Can be customized via settings later.
-$office_lat = -5.148152;   // Example BexMedia Location
-$office_lng = 119.431206;  // Example BexMedia Location
-$radius     = 200;         // allowed radius in meters
+if(!isset($data['user_id'], $data['type'], $data['image'], $data['latitude'], $data['longitude'])){
+    echo json_encode(['success'=>false,'message'=>'Data tidak lengkap. Lokasi wajib dikirim.']);
+    exit;
+}
 
-// Haversine function to calculate distance in meters
-function getDistance($lat1, $lon1, $lat2, $lon2) {
-    if (!$lat1 || !$lon1 || !$lat2 || !$lon2) return 999999;
-    $earth_radius = 6371000;
+$user_id   = intval($data['user_id']);
+$type      = trim($data['type']);
+$image     = $data['image'];
+$latitude  = floatval($data['latitude']);
+$longitude = floatval($data['longitude']);
+
+// ========================
+// Lokasi Kantor (Tentukan di sini)
+// ========================
+$office_lat = -1.5218765296805112;   // latitude kantor
+$office_lng = 102.12508644110466;    // longitude kantor
+$radius     = 200; // meter, boleh diubah sesuai kebutuhan
+
+
+// Fungsi hitung jarak Haversine
+function distance($lat1, $lon1, $lat2, $lon2) {
+    $earth_radius = 6371000; // meter
     $dLat = deg2rad($lat2 - $lat1);
     $dLon = deg2rad($lon2 - $lon1);
     $a = sin($dLat/2) * sin($dLat/2) +
          cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
          sin($dLon/2) * sin($dLon/2);
     $c = 2 * atan2(sqrt($a), sqrt(1-$a));
-    return round($earth_radius * $c);
+    return $earth_radius * $c;
 }
 
-if ($action == 'check_geofence') {
-    $data = json_decode(file_get_contents("php://input"), true);
-    $lat = floatval($data['latitude'] ?? 0);
-    $lng = floatval($data['longitude'] ?? 0);
-    
-    $distance = getDistance($lat, $lng, $office_lat, $office_lng);
-    $success = ($distance <= $radius);
-    
+// Validasi lokasi
+$jarak = distance($latitude, $longitude, $office_lat, $office_lng);
+if($jarak > $radius){
     echo json_encode([
-        'success' => $success,
-        'distance' => $distance,
-        'radius' => $radius
+        'success'=>false,
+        'message'=>"Anda di luar area absensi (Jarak: ".round($jarak)." m, Maksimal: {$radius} m)"
     ]);
     exit;
 }
 
-if ($action == 'submit') {
-    $data = json_decode(file_get_contents("php://input"), true);
-    $user_id = intval($_SESSION['user_id'] ?? 0);
-    $type = trim($data['type'] ?? '');
-    $image = $data['image'] ?? '';
-    $lat = floatval($data['latitude'] ?? 0);
-    $lng = floatval($data['longitude'] ?? 0);
-
-    if (!$user_id || !$type || !$image) {
-        echo json_encode(['success' => false, 'message' => 'Data tidak lengkap.']);
-        exit;
-    }
-
-    // Geofence check on server
-    $distance = getDistance($lat, $lng, $office_lat, $office_lng);
-    if ($distance > $radius) {
-        echo json_encode(['success' => false, 'message' => "Anda berada di luar radius ($distance m)."]);
-        exit;
-    }
-
-    // Save Image
-    $upload_dir = "absen_foto/";
-    if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
-
-    $file_name = $user_id . '_' . $type . '_' . date('Ymd_His') . '.jpg';
-    $file_path = $upload_dir . $file_name;
-    
-    $image_parts = explode(";base64,", $image);
-    $image_base64 = base64_decode($image_parts[1]);
-    
-    if (!file_put_contents($file_path, $image_base64)) {
-        echo json_encode(['success' => false, 'message' => 'Gagal menyimpan foto.']);
-        exit;
-    }
-
-    $tanggal = date('Y-m-d');
-    $jam = date('H:i:s');
-
-    // Mapping field for jam
-    $jam_field = 'jam_masuk';
-    if ($type == 'keluar') $jam_field = 'jam_keluar';
-    if ($type == 'istirahat_masuk') $jam_field = 'istirahat_masuk';
-    if ($type == 'istirahat_keluar') $jam_field = 'istirahat_keluar';
-
-    // Insert into DB
-    // Assuming table structure: id, user_id, tanggal, jam_masuk, jam_keluar, istirahat_masuk, istirahat_keluar, status, foto, latitude, longitude
-    $sql = "INSERT INTO absensi (user_id, tanggal, $jam_field, status, foto, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?)";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("issssdd", $user_id, $tanggal, $jam, $type, $file_name, $lat, $lng);
-
-    if ($stmt->execute()) {
-        echo json_encode(['success' => true]);
-    } else {
-        echo json_encode(['success' => false, 'message' => $conn->error]);
-    }
+// ========================
+// Validasi tipe absen
+// ========================
+$valid_types = ['masuk','keluar','istirahat_masuk','istirahat_keluar'];
+if(!in_array($type, $valid_types)){
+    echo json_encode(['success'=>false,'message'=>'Tipe absensi tidak valid.']);
     exit;
 }
 
-if ($action == 'history') {
-    $user_id = intval($_SESSION['user_id'] ?? 0);
-    $tanggal = date('Y-m-d');
-    
-    $sql = "SELECT COALESCE(jam_masuk, jam_keluar, istirahat_masuk, istirahat_keluar) as jam, status, foto, latitude, longitude 
-            FROM absensi 
-            WHERE user_id = ? AND tanggal = ? 
-            ORDER BY id DESC";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("is", $user_id, $tanggal);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    
-    $history = [];
-    while ($row = $res->fetch_assoc()) {
-        $history[] = $row;
-    }
-    echo json_encode($history);
+// Folder penyimpanan foto
+$upload_dir = "absen_foto/";
+if(!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
+
+// Simpan foto
+$foto_name = $user_id . '_' . $type . '_' . date('Ymd_His') . '.jpg';
+$foto_path = $upload_dir . $foto_name;
+$image_base64 = preg_replace('#^data:image/\w+;base64,#i', '', $image);
+$image_base64 = str_replace(' ', '+', $image_base64);
+if(!file_put_contents($foto_path, base64_decode($image_base64))){
+    echo json_encode(['success'=>false,'message'=>'Gagal menyimpan foto.']);
     exit;
 }
-?>
+
+// Tentukan kolom jam sesuai tipe
+$jam_field_map = [
+    'masuk'           => 'jam_masuk',
+    'keluar'          => 'jam_keluar',
+    'istirahat_masuk' => 'istirahat_masuk',
+    'istirahat_keluar'=> 'istirahat_keluar'
+];
+$jam_field = $jam_field_map[$type];
+$current_time = date('H:i:s');
+$tanggal = date('Y-m-d');
+
+// Cek apakah sudah absen tipe ini hari ini
+$query_check = "SELECT id FROM absensi WHERE user_id=? AND tanggal=? AND status=?";
+$stmt_check = $conn->prepare($query_check);
+$stmt_check->bind_param('iss', $user_id, $tanggal, $type);
+$stmt_check->execute();
+$stmt_check->store_result();
+if($stmt_check->num_rows > 0){
+    echo json_encode(['success'=>false,'message'=>'Anda sudah melakukan absensi '.$type.' hari ini.']);
+    exit;
+}
+
+// Insert data absensi
+$insert_sql = "INSERT INTO absensi (user_id, tanggal, $jam_field, status, foto, latitude, longitude) 
+               VALUES (?, ?, ?, ?, ?, ?, ?)";
+$stmt = $conn->prepare($insert_sql);
+$stmt->bind_param('issssdd', $user_id, $tanggal, $current_time, $type, $foto_name, $latitude, $longitude);
+
+if($stmt->execute()){
+    echo json_encode(['success'=>true,'message'=>'Absensi '.$type.' berhasil dicatat.']);
+} else {
+    echo json_encode(['success'=>false,'message'=>'Gagal menyimpan absensi.']);
+}
+
+
+
+
+
+
+
