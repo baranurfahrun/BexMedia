@@ -140,7 +140,12 @@ $active_tab = (isset($_GET['bulan']) || isset($_GET['tahun']) || isset($_GET['en
 <?php include 'navbar.php'; ?>
 <?php include 'sidebar.php'; ?>
 
-<div class="main-content">
+
+    <div class="main-content">
+      <?php 
+      $breadcrumb = "Insight & Analytics / <strong>Satu Sehat</strong>";
+      include "topbar.php"; 
+      ?>
 <section class="section">
 <div class="section-body">
 

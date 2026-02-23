@@ -68,7 +68,12 @@ if (mysqli_num_rows($result) == 0) {
     <?php include 'navbar.php'; ?>
     <?php include 'sidebar.php'; ?>
 
+    
     <div class="main-content">
+      <?php 
+      $breadcrumb = "Employee Hub / <strong>Absensi</strong>";
+      include "topbar.php"; 
+      ?>
       <section class="section">
         <div class="section-header">
         <div class="section-body">

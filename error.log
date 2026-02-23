@@ -762,3 +762,39 @@
 [23-Feb-2026 11:59:30 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\get_online_users.php on line 15
 [23-Feb-2026 11:59:33 Asia/Makassar] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\get_online_users.php on line 15
 [23-Feb-2026 12:03:38 Asia/Makassar] PHPMailer Error: Invalid address:  (From): 
+[23-Feb-2026 14:09:42 Asia/Jakarta] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in C:\xampp\htdocs\BexMedia\dist\data_karyawan.php:54
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\BexMedia\dist\data_karyawan.php on line 54
+[23-Feb-2026 14:09:45 Asia/Jakarta] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in C:\xampp\htdocs\BexMedia\dist\data_karyawan.php:54
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\BexMedia\dist\data_karyawan.php on line 54
+[23-Feb-2026 14:09:46 Asia/Jakarta] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in C:\xampp\htdocs\BexMedia\dist\data_karyawan.php:54
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\BexMedia\dist\data_karyawan.php on line 54
+[23-Feb-2026 14:09:53 Asia/Jakarta] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in C:\xampp\htdocs\BexMedia\dist\data_karyawan.php:54
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\BexMedia\dist\data_karyawan.php on line 54
+[23-Feb-2026 14:09:54 Asia/Jakarta] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in C:\xampp\htdocs\BexMedia\dist\data_karyawan.php:54
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\BexMedia\dist\data_karyawan.php on line 54
+[23-Feb-2026 14:10:31 Asia/Jakarta] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in C:\xampp\htdocs\BexMedia\dist\data_karyawan.php:54
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\BexMedia\dist\data_karyawan.php on line 54
+[23-Feb-2026 14:14:47 Asia/Jakarta] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in C:\xampp\htdocs\BexMedia\dist\data_karyawan.php:54
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\BexMedia\dist\data_karyawan.php on line 54
+[23-Feb-2026 14:18:18 Asia/Jakarta] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in C:\xampp\htdocs\BexMedia\dist\data_karyawan.php:54
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\BexMedia\dist\data_karyawan.php on line 54
+[23-Feb-2026 14:21:02 Asia/Jakarta] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in C:\xampp\htdocs\BexMedia\dist\data_karyawan.php:54
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\BexMedia\dist\data_karyawan.php on line 54

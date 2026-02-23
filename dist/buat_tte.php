@@ -252,7 +252,12 @@ $userData = $qUserData->get_result()->fetch_assoc();
 <?php include 'navbar.php'; ?>
 <?php include 'sidebar.php'; ?>
 
-<div class="main-content">
+
+    <div class="main-content">
+      <?php 
+      $breadcrumb = "Digital Archive & TTE / <strong>Buat Tte</strong>";
+      include "topbar.php"; 
+      ?>
 <section class="section">
 <div class="section-header">
     <h1><i class="fas fa-signature"></i> Tanda Tangan Elektronik (TTE) Saya</h1>

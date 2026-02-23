@@ -62,7 +62,12 @@ $userData = mysqli_fetch_assoc($queryUser);
     <?php include 'navbar.php'; ?>
     <?php include 'sidebar.php'; ?>
 
+    
     <div class="main-content">
+      <?php 
+      $breadcrumb = "Audit & Security / <strong>Laporan Tahunan</strong>";
+      include "topbar.php"; 
+      ?>
       <section class="section">
         <div class="section-body">
           <div class="card">

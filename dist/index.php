@@ -1,12 +1,6 @@
 <?php
-require_once "../conf/config.php";
-checkLogin();
+include 'security.php';
 // MenuName: Dashboard Admin
-
-if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
-    header("Location: ../login.php");
-    exit;
-}
 
 // === KODE VERIFIKASI KEAMANAN PROJEK ===
 $private_key = "KODE_RAHASIA_BARA";
@@ -57,32 +51,8 @@ if (!file_exists($logo_path) || md5_file($logo_path) !== $hash_content) {
 
         <!-- Main Content Area -->
         <main>
-            <header>
-                <div class="search-bar">
-                    <i data-lucide="search" size="18" style="color: var(--text-muted)"></i>
-                    <input type="text" placeholder="Search...">
-                </div>
+            <?php include "topbar.php"; ?>
 
-                <div class="header-actions">
-                    <button class="btn-create">+ Create New Campaign</button>
-                    <div style="position: relative; color: var(--text-muted)">
-                        <i data-lucide="bell"></i>
-                        <span
-                            style="position: absolute; top: 0; right: 0; width: 8px; height: 8px; background: red; border-radius: 50%; border: 2px solid white"></span>
-                    </div>
-                    <div class="user-profile">
-                        <span style="font-size: 0.85rem; font-weight: 600"><?php echo h($_SESSION['username']); ?></span>
-                        <?php 
-                            $avatar_url = "https://ui-avatars.com/api/?name=" . urlencode($_SESSION['username']) . "&background=3B82F6&color=fff";
-                            if (isset($_SESSION['user_photo']) && !empty($_SESSION['user_photo'])) {
-                                $avatar_url = "../images/" . $_SESSION['user_photo'];
-                            }
-                        ?>
-                        <div class="avatar"
-                             style="background-image: url('<?php echo $avatar_url; ?>'); background-size: cover; background-position: center;"></div>
-                    </div>
-                </div>
-            </header>
 
             <div class="dashboard-content">
                 <div class="dashboard-header">

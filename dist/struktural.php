@@ -58,7 +58,12 @@ $data = mysqli_query($conn, "SELECT * FROM struktural ORDER BY id DESC");
     <?php include 'navbar.php'; ?>
     <?php include 'sidebar.php'; ?>
 
+    
     <div class="main-content">
+      <?php 
+      $breadcrumb = "Employee Hub / <strong>Struktural</strong>";
+      include "topbar.php"; 
+      ?>
       <section class="section">
         <div class="section-body">
           <div class="card">

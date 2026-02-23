@@ -385,21 +385,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bubuhkan_tte'])) {
 </head>
 <body>
 <div id="app">
-<div class="main-wrapper main-wrapper-1">
-<?php include 'navbar.php'; ?>
-<?php include 'sidebar.php'; ?>
+  <div class="main-wrapper main-wrapper-1">
+    <?php include 'navbar.php'; ?>
+    <?php include 'sidebar.php'; ?>
 
-<div class="main-content">
-<section class="section">
-<div class="section-header">
-    <h1><i class="fas fa-stamp"></i> Bubuhkan TTE - Drag & Drop</h1>
-</div>
+    <div class="main-content">
+      <?php 
+      $breadcrumb = "Digital Archive & TTE / <strong>Digital Signature (TTE)</strong>";
+      include "topbar.php"; 
+      ?>
+      <section class="section">
+        <div class="section-body">
+          <div class="row">
+            <div class="col-lg-8">
+              <div class="card card-modern">
+                <div class="card-header card-header-modern">
 
-<div class="section-body">
-<div class="row">
-    <div class="col-lg-8">
-        <div class="card card-modern">
-            <div class="card-header card-header-modern">
                 <h4><i class="fas fa-mouse-pointer"></i> Posisi TTE Fleksibel</h4>
             </div>
             <div class="card-body p-4">

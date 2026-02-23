@@ -134,7 +134,12 @@ $data_izin = $qIzin->get_result();
   <div class="main-wrapper main-wrapper-1">
     <?php include 'navbar.php'; ?>
     <?php include 'sidebar.php'; ?>
+    
     <div class="main-content">
+      <?php 
+      $breadcrumb = "Employee Hub / <strong>Acc Keluar Atasan</strong>";
+      include "topbar.php"; 
+      ?>
       <section class="section">
         <div class="section-body">
 

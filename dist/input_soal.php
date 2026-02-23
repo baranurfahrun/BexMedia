@@ -94,7 +94,12 @@ $filter_judul = isset($_GET['judul_filter']) ? (int)$_GET['judul_filter'] : 0;
     <?php include 'navbar.php'; ?>
     <?php include 'sidebar.php'; ?>
 
+    
     <div class="main-content">
+      <?php 
+      $breadcrumb = "Quality Assurance / <strong>Input Soal</strong>";
+      include "topbar.php"; 
+      ?>
       <section class="section">
         <div class="section-body">
           <div class="card">

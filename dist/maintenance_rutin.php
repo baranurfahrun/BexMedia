@@ -226,6 +226,10 @@ $activeTab = $_GET['tab'] ?? 'form';
     <?php include 'sidebar.php'; ?>
 
     <div class="main-content">
+      <?php 
+      $breadcrumb = "Technical Support / <strong>Maintenance Rutin IT</strong>";
+      include "topbar.php"; 
+      ?>
       <section class="section">
         <div class="section-body">
 
@@ -233,6 +237,7 @@ $activeTab = $_GET['tab'] ?? 'form';
               $flashType = $_SESSION['flash_type'] ?? 'info';
           ?>
             <div class="alert alert-<?= $flashType ?> flash-center" id="flashMsg">
+
               <i class="fas fa-<?= $flashType=='success'?'check-circle':($flashType=='danger'?'exclamation-circle':'info-circle') ?>"></i>
               <?= htmlspecialchars($_SESSION['flash_message']); 
                   unset($_SESSION['flash_message']); 

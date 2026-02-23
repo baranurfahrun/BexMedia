@@ -85,7 +85,12 @@ $dataCuti = mysqli_query($conn, "SELECT * FROM master_cuti ORDER BY id DESC");
     <?php include 'navbar.php'; ?>
     <?php include 'sidebar.php'; ?>
 
+    
     <div class="main-content">
+      <?php 
+      $breadcrumb = "Employee Hub / <strong>Master Cuti</strong>";
+      include "topbar.php"; 
+      ?>
       <section class="section">
         <div class="section-body">
 

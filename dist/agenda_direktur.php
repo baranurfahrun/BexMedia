@@ -146,7 +146,12 @@ $bulanIndo = [
         <?php include 'navbar.php'; ?>
         <?php include 'sidebar.php'; ?>
 
-        <div class="main-content">
+        
+    <div class="main-content">
+      <?php 
+      $breadcrumb = "Digital Archive & TTE / <strong>Agenda Direktur</strong>";
+      include "topbar.php"; 
+      ?>
             <section class="section">
                 <div class="section-body">
                     <div class="card">

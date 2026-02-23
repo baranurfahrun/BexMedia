@@ -933,7 +933,12 @@ if (isset($_POST['ajax']) && $_POST['ajax'] == '1') {
   </div>
 </div>
 
-<div class="main-content">
+
+    <div class="main-content">
+      <?php 
+      $breadcrumb = "Digital Archive & TTE / <strong>Cek Tte</strong>";
+      include "topbar.php"; 
+      ?>
 <section class="section">
 <div class="section-header">
     <h1><i class="fas fa-shield-check"></i> Verifikasi Tanda Tangan Elektronik (TTE)</h1>

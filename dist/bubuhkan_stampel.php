@@ -384,7 +384,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bubuhkan_stampel'])) 
 <?php include 'navbar.php'; ?>
 <?php include 'sidebar.php'; ?>
 
-<div class="main-content">
+
+    <div class="main-content">
+      <?php 
+      $breadcrumb = "Digital Archive & TTE / <strong>Bubuhkan Stampel</strong>";
+      include "topbar.php"; 
+      ?>
 <section class="section">
 <div class="section-header">
     <h1><i class="fas fa-stamp"></i> Bubuhkan E-Stampel</h1>

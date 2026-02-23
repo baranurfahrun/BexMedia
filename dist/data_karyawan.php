@@ -1,362 +1,591 @@
 <?php
-session_start();
+include 'security.php';
 include 'koneksi.php';
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 date_default_timezone_set('Asia/Jakarta');
 
-// Cek login
-$user_id = $_SESSION['user_id'] ?? 0;
-if ($user_id == 0) {
-    echo "<script>alert('Anda belum login.'); window.location.href='login.php';</script>";
-    exit;
+// user_id and common data already handled by security.php
+$user_id = $user_id_logged;
+if (!$user_id) {
+    header("Location: ../login.php"); exit;
 }
 
-$current_file = basename(__FILE__);
 
-// Cek akses menu
-$query = "SELECT 1 FROM akses_menu 
-          JOIN menu ON akses_menu.menu_id = menu.id 
-          WHERE akses_menu.user_id = ? AND menu.file_menu = ?";
-$stmt = $conn->prepare($query);
-$stmt->bind_param("is", $user_id, $current_file);
-$stmt->execute();
-$result = $stmt->get_result();
-if (!$result || $result->num_rows == 0) {
-    echo "<script>alert('Anda tidak memiliki akses ke halaman ini.'); window.location.href='dashboard.php';</script>";
-    exit;
+
+// Auto-create supporting tables if not exist
+mysqli_query($conn, "CREATE TABLE IF NOT EXISTS informasi_pribadi (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  user_id int(11) NOT NULL,
+  jenis_kelamin enum('L','P') DEFAULT NULL,
+  tempat_lahir varchar(100) DEFAULT NULL,
+  tanggal_lahir date DEFAULT NULL,
+  alamat text DEFAULT NULL,
+  kota varchar(100) DEFAULT NULL,
+  no_ktp varchar(20) DEFAULT NULL,
+  no_hp varchar(20) DEFAULT NULL,
+  agama varchar(30) DEFAULT NULL,
+  status_pernikahan varchar(30) DEFAULT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY user_id (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+mysqli_query($conn, "CREATE TABLE IF NOT EXISTS riwayat_pekerjaan (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  user_id int(11) NOT NULL,
+  nama_perusahaan varchar(150) DEFAULT NULL,
+  posisi varchar(100) DEFAULT NULL,
+  tanggal_mulai date DEFAULT NULL,
+  tanggal_selesai date DEFAULT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+mysqli_query($conn, "CREATE TABLE IF NOT EXISTS riwayat_pendidikan (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  user_id int(11) NOT NULL,
+  pendidikan_terakhir varchar(50) DEFAULT NULL,
+  jurusan varchar(100) DEFAULT NULL,
+  kampus varchar(150) DEFAULT NULL,
+  tgl_lulus year(4) DEFAULT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+mysqli_query($conn, "CREATE TABLE IF NOT EXISTS riwayat_kesehatan (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  user_id int(11) NOT NULL,
+  gol_darah varchar(5) DEFAULT NULL,
+  status_vaksinasi varchar(50) DEFAULT NULL,
+  no_bpjs_kesehatan varchar(30) DEFAULT NULL,
+  no_bpjs_kerja varchar(30) DEFAULT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+mysqli_query($conn, "CREATE TABLE IF NOT EXISTS dokumen_pendukung (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  user_id int(11) NOT NULL,
+  file_ktp varchar(255) DEFAULT NULL,
+  file_ijazah varchar(255) DEFAULT NULL,
+  file_foto varchar(255) DEFAULT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+// Search & Pagination
+$search  = trim($_GET['search'] ?? '');
+$limit   = 15;
+$page    = max(1, (int)($_GET['page'] ?? 1));
+$offset  = ($page - 1) * $limit;
+
+$where = '';
+$params = [];
+$types  = '';
+if ($search !== '') {
+    $where = "WHERE (u.nama_lengkap LIKE ? OR u.nik LIKE ? OR u.jabatan LIKE ? OR u.unit_kerja LIKE ? OR u.email LIKE ?)";
+    $s = "%$search%";
+    $params = [$s,$s,$s,$s,$s];
+    $types  = 'sssss';
 }
 
-// ==========================
-// PAGINATION
-// ==========================
-$limit = 10;
-$page  = isset($_GET['page']) && is_numeric($_GET['page']) ? intval($_GET['page']) : 1;
-if ($page < 1) $page = 1;
+// Count total
+$cntSql = "SELECT COUNT(*) AS total FROM users u $where";
+$cntStmt = $conn->prepare($cntSql);
+if ($types) $cntStmt->bind_param($types, ...$params);
+$cntStmt->execute();
+$totalData  = $cntStmt->get_result()->fetch_assoc()['total'];
+$totalPages = max(1, ceil($totalData / $limit));
+if ($page > $totalPages) $page = $totalPages;
 $offset = ($page - 1) * $limit;
 
-// Hitung total data
-$totalResult = $conn->query("SELECT COUNT(*) AS total FROM users");
-$totalData   = $totalResult->fetch_assoc()['total'];
-$totalPages  = ceil($totalData / $limit);
+// Fetch users
+$sql = "SELECT u.id, u.nik, u.nama_lengkap AS nama, u.jabatan, u.unit_kerja, u.email, u.status,
+               ip.jenis_kelamin, ip.tempat_lahir, ip.tanggal_lahir, ip.alamat, ip.kota, ip.no_ktp, ip.no_hp
+        FROM users u
+        LEFT JOIN informasi_pribadi ip ON ip.user_id = u.id
+        $where
+        ORDER BY u.nama_lengkap ASC
+        LIMIT ? OFFSET ?";
+$usrStmt = $conn->prepare($sql);
+if (!$usrStmt) {
+    // Jika prepare gagal (misal tabel tidak ada), fallback query sederhana
+    $fbSql = "SELECT id, nik, nama_lengkap AS nama, jabatan, unit_kerja, email, status,
+               NULL AS jenis_kelamin, NULL AS tempat_lahir, NULL AS tanggal_lahir,
+               NULL AS alamat, NULL AS kota, NULL AS no_ktp, NULL AS no_hp
+               FROM users ORDER BY nama_lengkap ASC LIMIT $limit OFFSET $offset";
+    $users = [];
+    $fbRes = mysqli_query($conn, $fbSql);
+    if ($fbRes) while ($row = mysqli_fetch_assoc($fbRes)) $users[] = $row;
+} else {
+    if ($types) {
+        $allTypes = $types . 'ii';
+        $allParams = array_merge($params, [$limit, $offset]);
+        $usrStmt->bind_param($allTypes, ...$allParams);
+    } else {
+        $usrStmt->bind_param("ii", $limit, $offset);
+    }
+    $usrStmt->execute();
+    $users = $usrStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
 
-// Ambil data user sesuai halaman
-$stmtUsers = $conn->prepare("SELECT * FROM users ORDER BY id ASC LIMIT ? OFFSET ?");
-$stmtUsers->bind_param("ii", $limit, $offset);
-$stmtUsers->execute();
-$users = $stmtUsers->get_result()->fetch_all(MYSQLI_ASSOC);
-
+$flash = $_SESSION['flash_message'] ?? null;
+unset($_SESSION['flash_message']);
 ?>
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <link rel="icon" href="../images/logo_final.png">
-    
-  
-<meta charset="UTF-8">
-<title>Data Karyawan Lengkap</title>
-<link rel="stylesheet" href="assets/modules/bootstrap/css/bootstrap.min.css">
-<link rel="stylesheet" href="assets/modules/fontawesome/css/all.min.css">
-<link rel="stylesheet" href="assets/css/style.css">
-<link rel="stylesheet" href="assets/css/components.css">
-<style>
-.table-responsive { margin-top:20px; overflow-x:auto; white-space:nowrap; }
-.flash-center { position:fixed; top:20%; left:50%; transform:translate(-50%,-50%); z-index:1050; min-width:300px; max-width:90%; text-align:center; padding:15px; border-radius:8px; font-weight:500; box-shadow:0 5px 15px rgba(0,0,0,0.3);}
-.table td, .table th { vertical-align: middle !important; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Karyawan | BexMedia</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="../css/index.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #3B82F6; }
 
-/* Modal full width */
-.modal-dialog.modal-xl {
-    max-width: 95%;
-    width: 95%;
-}
-</style>
+        .dk-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+            padding: 28px 32px;
+        }
+
+        /* Search bar */
+        .search-wrap { display:flex; align-items:center; gap:12px; flex-wrap:nowrap; }
+        .search-input-wrap {
+            position: relative;
+            flex: 1 1 0;
+            min-width: 0;
+        }
+        .search-input-wrap input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px 16px 10px 42px;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            background: #F8FAFC;
+            outline: none;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+            color: #1E293B;
+            display: block;
+        }
+        .search-input-wrap input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+        .search-icon {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            color: #94A3B8; pointer-events: none;
+        }
+
+        /* Table */
+        .dk-table-wrap { overflow-x: auto; border-radius: 12px; margin-top: 20px; }
+        .dk-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+        .dk-table thead th {
+            background: #F8FAFC;
+            color: #64748B;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 12px 14px;
+            border-bottom: 2px solid #E2E8F0;
+            white-space: nowrap;
+            text-align: left;
+        }
+        .dk-table thead th.center { text-align: center; }
+        .dk-table tbody td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #F1F5F9;
+            color: #1E293B;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+        .dk-table tbody tr:hover td { background: #F8FAFC; }
+        .dk-table tbody tr:last-child td { border-bottom: none; }
+        .dk-table td.center { text-align: center; }
+
+        /* Badges */
+        .badge-aktif  { background:#D1FAE5; color:#065F46; padding:4px 10px; border-radius:20px; font-size:0.72rem; font-weight:700; }
+        .badge-nonaktif { background:#FEE2E2; color:#991B1B; padding:4px 10px; border-radius:20px; font-size:0.72rem; font-weight:700; }
+        .badge-pending  { background:#FEF3C7; color:#92400E; padding:4px 10px; border-radius:20px; font-size:0.72rem; font-weight:700; }
+        .badge-unit   { background:#EFF6FF; color:#1D4ED8; padding:3px 9px; border-radius:6px; font-size:0.72rem; font-weight:600; }
+
+        /* Action buttons */
+        .act-btn {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .act-view  { background:#EFF6FF; color:var(--primary); }
+        .act-view:hover  { background:var(--primary); color:white; }
+        .act-print { background:#F0FDF4; color:#16A34A; }
+        .act-print:hover { background:#16A34A; color:white; }
+
+        /* Pagination */
+        .pagination-wrap { display:flex; align-items:center; justify-content:space-between; margin-top:20px; flex-wrap:wrap; gap:12px; }
+        .pagination-info { font-size:0.83rem; color:#64748B; }
+        .pages { display:flex; gap:6px; }
+        .page-btn {
+            width:34px; height:34px;
+            border-radius:8px;
+            border: 1.5px solid #E2E8F0;
+            background: white;
+            color: #475569;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .page-btn:hover { border-color:var(--primary); color:var(--primary); background:#EFF6FF; }
+        .page-btn.active { background:var(--primary); border-color:var(--primary); color:white; }
+        .page-btn.disabled { opacity:0.4; pointer-events:none; }
+
+        /* Empty state */
+        .empty-state { text-align:center; padding:60px 20px; color:#94A3B8; }
+
+        /* Buttons */
+        .btn-prim {
+            background:var(--primary); color:white; border:none;
+            padding:10px 20px; border-radius:12px; font-weight:700; font-size:0.88rem;
+            cursor:pointer; display:inline-flex; align-items:center; gap:8px;
+            font-family:'Outfit',sans-serif; transition:all 0.2s;
+            text-decoration:none;
+        }
+        .btn-prim:hover { background:#2563EB; transform:translateY(-1px); }
+        .btn-ghost  {
+            background:#F1F5F9; color:#475569; border:none;
+            padding:10px 18px; border-radius:12px; font-weight:600; font-size:0.88rem;
+            cursor:pointer; display:inline-flex; align-items:center; gap:8px;
+            font-family:'Outfit',sans-serif; transition:all 0.2s; text-decoration:none;
+        }
+        .btn-ghost:hover { background:#E2E8F0; }
+
+        /* Detail Modal */
+        .modal-overlay {
+            display:none; position:fixed; inset:0;
+            background:rgba(15,23,42,0.5); backdrop-filter:blur(6px);
+            z-index:9999; align-items:center; justify-content:center;
+        }
+        .modal-overlay.open { display:flex; }
+        .modal-box {
+            background:white; border-radius:24px;
+            box-shadow:0 32px 80px rgba(0,0,0,0.2);
+            padding:32px; width:90%; max-width:720px;
+            max-height:88vh; overflow-y:auto;
+            animation:modalIn 0.25s ease;
+        }
+        @keyframes modalIn { from{transform:scale(0.92);opacity:0} to{transform:scale(1);opacity:1} }
+        .modal-header-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
+        .modal-title { font-family:'Outfit',sans-serif; font-weight:800; font-size:1.15rem; color:#1E293B; }
+        .modal-close {
+            width:36px; height:36px; border-radius:10px; border:1.5px solid #E2E8F0;
+            background:white; color:#64748B; cursor:pointer;
+            display:flex; align-items:center; justify-content:center;
+        }
+        .modal-close:hover { background:#F1F5F9; }
+
+        .info-section { margin-bottom:24px; }
+        .info-section h4 { font-family:'Outfit',sans-serif; font-weight:700; font-size:0.85rem; color:var(--primary); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:12px; }
+        .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px 20px; }
+        .info-row { display:flex; flex-direction:column; gap:2px; }
+        .info-label { font-size:0.72rem; color:#94A3B8; font-weight:600; text-transform:uppercase; }
+        .info-val { font-size:0.88rem; color:#1E293B; font-weight:500; }
+
+        /* Flash */
+        .flash-toast {
+            position:fixed; top:20px; right:20px; z-index:99999;
+            background:#10B981; color:white; padding:14px 22px;
+            border-radius:14px; font-weight:600; font-size:0.9rem;
+            display:flex; align-items:center; gap:10px;
+            box-shadow:0 8px 30px rgba(16,185,129,0.3);
+            animation:slideInR 0.3s ease;
+        }
+        @keyframes slideInR { from{opacity:0;transform:translateX(30px)} to{opacity:1;transform:translateX(0)} }
+
+        @media print {
+            .no-print { display:none!important; }
+        }
+    </style>
 </head>
 <body>
-<div id="app">
-<div class="main-wrapper main-wrapper-1">
-<?php include 'navbar.php'; ?>
-<?php include 'sidebar.php'; ?>
-
-<div class="main-content">
-<section class="section">
-<div class="section-body">
-
-<?php if(isset($_SESSION['flash_message'])): ?>
-<div class="alert alert-info flash-center" id="flashMsg">
-<?= htmlspecialchars($_SESSION['flash_message']) ?>
-</div>
-<?php unset($_SESSION['flash_message']); endif; ?>
-
-<div class="card">
-<div class="card-header"><h4>Data Karyawan Lengkap</h4></div>
-<div class="card-body table-responsive">
-<table class="table table-bordered table-striped table-sm">
-<thead>
-<tr>
-<th>No</th>
-
-<th>Aksi</th>
-<th>NIK</th>
-<th>Nama</th>
-<th>Jabatan</th>
-<th>Unit Kerja</th>
-<th>Email</th>
-<th>No HP</th>
-<th>Status</th>
-<th>Jenis Kelamin</th>
-<th>Tempat Lahir</th>
-<th>Tanggal Lahir</th>
-<th>Alamat</th>
-<th>Kota</th>
-<th>No. KTP</th>
-<th>Hubungan Keluarga</th>
-<th>Riwayat Pekerjaan</th>
-<th>Riwayat Pendidikan</th>
-<th>Gol Darah</th>
-<th>Riwayat Penyakit</th>
-<th>Status Vaksinasi</th>
-<th>BPJS Kesehatan</th>
-<th>BPJS Ketenagakerjaan</th>
-<th>Asuransi Tambahan</th>
-<th>Dokumen Pendukung</th>
-</tr>
-</thead>
-<tbody>
-<?php
-$no = $offset + 1;
-
-foreach($users as $user){
-    $userId = $user['id'];
-
-    // Informasi pribadi
-    $stmt = $conn->prepare("SELECT * FROM informasi_pribadi WHERE user_id = ? LIMIT 1");
-    $stmt->bind_param("i", $userId); $stmt->execute();
-    $info_pribadi = $stmt->get_result()->fetch_assoc() ?? [];
-
-    // Riwayat pekerjaan
-    $stmt = $conn->prepare("SELECT * FROM riwayat_pekerjaan WHERE user_id = ? ORDER BY tanggal_mulai DESC");
-    $stmt->bind_param("i", $userId); $stmt->execute();
-    $pekerjaan_res = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    $pekerjaan_str = implode(" | ", array_map(fn($p)=>($p['nama_perusahaan']??'-')." ({$p['posisi']}, {$p['tanggal_mulai']} s/d {$p['tanggal_selesai']})", $pekerjaan_res));
-
-    // Riwayat pendidikan
-    $stmt = $conn->prepare("SELECT * FROM riwayat_pendidikan WHERE user_id = ? ORDER BY tgl_lulus DESC");
-    $stmt->bind_param("i", $userId); $stmt->execute();
-    $pendidikan_res = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    $pendidikan_str = implode(" | ", array_map(fn($pd)=>($pd['pendidikan_terakhir']??'-')." {$pd['jurusan']} ({$pd['kampus']}, {$pd['tgl_lulus']})", $pendidikan_res));
-
-    // Riwayat kesehatan
-    $stmt = $conn->prepare("SELECT * FROM riwayat_kesehatan WHERE user_id = ?");
-    $stmt->bind_param("i", $userId); $stmt->execute();
-    $kesehatan = $stmt->get_result()->fetch_assoc() ?? [];
-
-    // Dokumen pendukung
-    $stmt = $conn->prepare("SELECT * FROM dokumen_pendukung WHERE user_id = ?");
-    $stmt->bind_param("i", $userId); $stmt->execute();
-    $dokumen = $stmt->get_result()->fetch_assoc() ?? [];
-    $dok_fields = ['ktp','ijazah','str','sip','vaksin','pelatihan','surat_kerja','pas_foto'];
-    $dokumen_str = implode(" ", array_map(fn($f)=>!empty($dokumen[$f]) ? "<a href='uploads/{$dokumen[$f]}' target='_blank' title='".strtoupper($f)."'><i class='fas fa-file-pdf'></i></a>" : '', $dok_fields));
-
-    // JSON untuk modal
-    $full_data = htmlspecialchars(json_encode([
-        'user'=>$user,
-        'info_pribadi'=>$info_pribadi,
-        'pekerjaan'=>$pekerjaan_res,
-        'pendidikan'=>$pendidikan_res,
-        'kesehatan'=>$kesehatan,
-        'dokumen'=>$dokumen
-    ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP));
-
-   echo "<tr>
-    <td>{$no}</td>
-    <td class='text-center'>
-    <a href='cetak_karyawan.php?id={$userId}' target='_blank' title='Cetak' class='btn btn-success btn-sm mx-1'>
-        <i class='fas fa-print'></i>
-    </a>
-    <button class='btn btn-info btn-sm mx-1' onclick='lihatData({$full_data})' title='Lihat'>
-        <i class='fas fa-eye'></i>
-    </button>
-</td>
-    <td>".htmlspecialchars($user['nik'])."</td>
-    <td>".htmlspecialchars($user['nama'])."</td>
-    <td>".htmlspecialchars($user['jabatan'])."</td>
-    <td>".htmlspecialchars($user['unit_kerja'])."</td>
-    <td>".htmlspecialchars($user['email'])."</td>
-    <td>".htmlspecialchars($user['no_hp'])."</td>
-    <td>".htmlspecialchars($user['status'])."</td>
-    <td>".htmlspecialchars($info_pribadi['jenis_kelamin']??'-')."</td>
-    <td>".htmlspecialchars($info_pribadi['tempat_lahir']??'-')."</td>
-    <td>".(!empty($info_pribadi['tanggal_lahir']) ? date('d-m-Y', strtotime($info_pribadi['tanggal_lahir'])) : '-')."</td>
-    <td>".htmlspecialchars($info_pribadi['alamat']??'-')."</td>
-    <td>".htmlspecialchars($info_pribadi['kota']??'-')."</td>
-    <td>".htmlspecialchars($info_pribadi['no_ktp']??'-')."</td>
-    <td>".htmlspecialchars($info_pribadi['hubungan_keluarga']??'-')."</td>
-    <td>".htmlspecialchars($pekerjaan_str)."</td>
-    <td>".htmlspecialchars($pendidikan_str)."</td>
-    <td>".htmlspecialchars($kesehatan['gol_darah']??'-')."</td>
-    <td>".htmlspecialchars($kesehatan['riwayat_penyakit']??'-')."</td>
-    <td>".htmlspecialchars($kesehatan['status_vaksinasi']??'-')."</td>
-    <td>".htmlspecialchars($kesehatan['no_bpjs_kesehatan']??'-')."</td>
-    <td>".htmlspecialchars($kesehatan['no_bpjs_kerja']??'-')."</td>
-    <td>".htmlspecialchars($kesehatan['asuransi_tambahan']??'-')."</td>
-    <td class='text-center'>{$dokumen_str}</td>
-  
-
-</tr>";
-
-    $no++;
-}
-?>
-</tbody>
-</table>
-</div>
-</div>
-
-<?php if ($totalPages > 1): ?>
-<nav>
-  <ul class="pagination justify-content-center mt-3">
-
-    <!-- Previous -->
-    <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
-      <a class="page-link" href="?page=<?= $page-1 ?>">&laquo;</a>
-    </li>
-
-    <?php
-    $startPage = max(1, $page - 2);
-    $endPage   = min($totalPages, $page + 2);
-
-    if ($startPage > 1) {
-        echo '<li class="page-item"><a class="page-link" href="?page=1">1</a></li>';
-        if ($startPage > 2) {
-            echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
-        }
-    }
-
-    for ($i = $startPage; $i <= $endPage; $i++):
-    ?>
-      <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
-        <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
-      </li>
-    <?php endfor; ?>
-
-    <?php
-    if ($endPage < $totalPages) {
-        if ($endPage < $totalPages - 1) {
-            echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
-        }
-        echo '<li class="page-item"><a class="page-link" href="?page='.$totalPages.'">'.$totalPages.'</a></li>';
-    }
-    ?>
-
-    <!-- Next -->
-    <li class="page-item <?= ($page >= $totalPages) ? 'disabled' : '' ?>">
-      <a class="page-link" href="?page=<?= $page+1 ?>">&raquo;</a>
-    </li>
-
-  </ul>
-</nav>
-<?php endif; ?>
+<div style="display:flex;height:100vh;overflow:hidden;">
+    <?php include 'sidebar.php'; ?>
+    <main style="flex:1;display:flex;flex-direction:column;min-width:0;height:100%;overflow:hidden;">
+        <?php 
+        $breadcrumb = "Employee Hub / <strong>Database Karyawan</strong>";
+        include "topbar.php"; 
+        ?>
 
 
-</div>
-</section>
+        <div style="padding:20px 32px;overflow-y:auto;flex:1;background:rgba(255,255,255,0.3);backdrop-filter:blur(20px);">
+
+            <?php if($flash): ?>
+            <div class="flash-toast no-print" id="flashToast"><i data-lucide="check-circle" size="18"></i><?= htmlspecialchars($flash) ?></div>
+            <?php endif; ?>
+
+            <!-- Header -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+                <div>
+                    <h1 style="font-family:'Outfit',sans-serif;font-weight:800;font-size:1.6rem;color:#1E293B;margin:0 0 2px;">Data Karyawan</h1>
+                    <p style="color:#64748B;font-size:0.85rem;margin:0;">Total <strong><?= $totalData ?></strong> karyawan terdaftar</p>
+                </div>
+                <div class="no-print" style="display:flex;gap:10px;">
+                    <a href="tambah_karyawan.php" class="btn-prim">
+                        <i data-lucide="user-plus" size="16"></i> Tambah Karyawan
+                    </a>
+                </div>
+            </div>
+
+            <div class="dk-card">
+                <!-- Search & Filter -->
+                <form method="GET" class="search-wrap no-print">
+                    <div class="search-input-wrap">
+                        <i data-lucide="search" size="16" class="search-icon"></i>
+                        <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Cari nama, NIK, jabatan, unit kerja...">
+                    </div>
+                    <button type="submit" class="btn-prim"><i data-lucide="search" size="16"></i> Cari</button>
+                    <?php if($search): ?>
+                    <a href="data_karyawan.php" class="btn-ghost"><i data-lucide="x" size="16"></i> Reset</a>
+                    <?php endif; ?>
+                </form>
+
+                <!-- Table -->
+                <?php if (empty($users)): ?>
+                <div class="empty-state">
+                    <i data-lucide="users" size="48" style="opacity:0.2;display:block;margin:0 auto 12px;"></i>
+                    <p style="font-weight:600;margin:0 0 4px;"><?= $search ? "Tidak ada hasil untuk \"$search\"" : "Belum ada data karyawan" ?></p>
+                    <p style="font-size:0.85rem;margin:0;">Tambahkan karyawan baru untuk memulai.</p>
+                </div>
+                <?php else: ?>
+                <div class="dk-table-wrap">
+                    <table class="dk-table">
+                        <thead>
+                            <tr>
+                                <th class="center" style="width:44px;">No</th>
+                                <th class="center no-print" style="width:80px;">Aksi</th>
+                                <th>NIK</th>
+                                <th>Nama</th>
+                                <th>Jabatan</th>
+                                <th>Unit Kerja</th>
+                                <th>Email</th>
+                                <th>No HP</th>
+                                <th>Jenis Kel.</th>
+                                <th>Tgl. Lahir</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <?php $no = $offset + 1; foreach ($users as $u): ?>
+                        <tr>
+                            <td class="center" style="color:#94A3B8;font-weight:600;"><?= $no++ ?></td>
+                            <td class="center no-print">
+                                <div style="display:flex;gap:6px;justify-content:center;">
+                                    <button class="act-btn act-view" onclick="showDetail(<?= $u['id'] ?>)" title="Lihat Detail">
+                                        <i data-lucide="eye" size="14"></i>
+                                    </button>
+                                    <a href="cetak_karyawan.php?id=<?= $u['id'] ?>" target="_blank" class="act-btn act-print" title="Cetak">
+                                        <i data-lucide="printer" size="14"></i>
+                                    </a>
+                                </div>
+                            </td>
+                            <td style="color:#64748B;font-family:monospace;"><?= htmlspecialchars($u['nik'] ?? '-') ?></td>
+                            <td>
+                                <div style="display:flex;align-items:center;gap:6px;">
+                                    <strong><?= htmlspecialchars($u['nama'] ?? '-') ?></strong>
+                                    <?php if (!empty($u['khanza_id'])): ?>
+                                    <span title="Data dari SIMRS Khanza" style="background:#F0FDF4;color:#166534;padding:1px 6px;border-radius:5px;font-size:0.62rem;font-weight:700;border:1px solid #BBF7D0;flex-shrink:0;">SIK</span>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                            <td style="color:#475569;"><?= htmlspecialchars(!empty($u['jabatan']) ? $u['jabatan'] : '-') ?></td>
+                            <td>
+                                <?php $uk = trim($u['unit_kerja'] ?? ''); ?>
+                                <?php if ($uk && $uk !== '-'): ?>
+                                <span class="badge-unit"><?= htmlspecialchars($uk) ?></span>
+                                <?php else: ?><span style="color:#CBD5E1;">-</span><?php endif; ?>
+                            </td>
+                            <td style="color:#64748B;"><?= htmlspecialchars(!empty($u['email']) ? $u['email'] : '-') ?></td>
+                            <td style="color:#64748B;"><?= htmlspecialchars(!empty($u['no_hp']) ? $u['no_hp'] : '-') ?></td>
+                            <td style="color:#64748B;">
+                                <?php $jk = $u['jenis_kelamin'] ?? '';
+                                echo $jk === 'L' ? 'Laki-laki' : ($jk === 'P' ? 'Perempuan' : '<span style="color:#CBD5E1;">-</span>'); ?>
+                            </td>
+                            <td style="color:#64748B;"><?= !empty($u['tanggal_lahir']) ? date('d/m/Y', strtotime($u['tanggal_lahir'])) : '<span style="color:#CBD5E1;">-</span>' ?></td>
+                            <td>
+                                <?php
+                                $st = strtolower($u['status'] ?? '');
+                                $badgeClass = 'badge-nonaktif'; $stLabel = 'Nonaktif';
+                                if ($st === 'active')  { $badgeClass = 'badge-aktif';    $stLabel = 'Aktif'; }
+                                elseif ($st === 'pending') { $badgeClass = 'badge-pending'; $stLabel = 'Pending'; }
+                                ?>
+                                <span class="<?= $badgeClass ?>"><?= $stLabel ?></span>
+                            </td>
+                        </tr>
+
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <?php if ($totalPages > 1): ?>
+                <div class="pagination-wrap no-print">
+                    <div class="pagination-info">
+                        Menampilkan <?= $offset+1 ?>–<?= min($offset+$limit, $totalData) ?> dari <?= $totalData ?> karyawan
+                    </div>
+                    <div class="pages">
+                        <a href="?page=<?= $page-1 ?>&search=<?= urlencode($search) ?>" class="page-btn <?= $page<=1?'disabled':'' ?>">
+                            <i data-lucide="chevron-left" size="14"></i>
+                        </a>
+                        <?php
+                        $s = max(1,$page-2); $e = min($totalPages,$page+2);
+                        if($s>1) echo '<a href="?page=1&search='.urlencode($search).'" class="page-btn">1</a>';
+                        if($s>2) echo '<span class="page-btn disabled">…</span>';
+                        for($i=$s;$i<=$e;$i++) echo '<a href="?page='.$i.'&search='.urlencode($search).'" class="page-btn '.($i==$page?'active':'').'">'.$i.'</a>';
+                        if($e<$totalPages-1) echo '<span class="page-btn disabled">…</span>';
+                        if($e<$totalPages) echo '<a href="?page='.$totalPages.'&search='.urlencode($search).'" class="page-btn">'.$totalPages.'</a>';
+                        ?>
+                        <a href="?page=<?= $page+1 ?>&search=<?= urlencode($search) ?>" class="page-btn <?= $page>=$totalPages?'disabled':'' ?>">
+                            <i data-lucide="chevron-right" size="14"></i>
+                        </a>
+                    </div>
+                </div>
+                <?php endif; ?>
+                <?php endif; ?>
+            </div>
+        </div>
+    </main>
 </div>
 
-<!-- Modal Detail -->
-<div class="modal fade" id="modalLihat" tabindex="-1" role="dialog" aria-labelledby="modalLihatLabel" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="modalLihatLabel">Detail Karyawan</h5>
-       
-      </div>
-      <div class="modal-body" id="modalBody"></div>
-      <div class="modal-footer">
-      
-      </div>
+<!-- Detail Modal -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box" id="modalBox">
+        <div class="modal-header-row">
+            <div class="modal-title" id="modalKaryawanName">Detail Karyawan</div>
+            <button class="modal-close" onclick="closeModal()"><i data-lucide="x" size="16"></i></button>
+        </div>
+        <div id="modalContent">
+            <div style="text-align:center;padding:40px;color:#94A3B8;">
+                <i data-lucide="loader" size="32" style="animation:spin 1s linear infinite;display:inline-block;"></i>
+                <p style="margin-top:10px;">Memuat data...</p>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
-<script src="assets/modules/jquery.min.js"></script>
-<script src="assets/modules/popper.js"></script>
-<script src="assets/modules/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="assets/modules/nicescroll/jquery.nicescroll.min.js"></script>
-<script src="assets/modules/moment.min.js"></script>
-<script src="assets/js/stisla.js"></script>
-<script src="assets/js/scripts.js"></script>
-<script src="assets/js/custom.js"></script>
+<style>@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}</style>
+
 <script>
-$(document).ready(function(){
-    setTimeout(()=>$("#flashMsg").fadeOut("slow"),3000);
-});
+lucide.createIcons();
 
-function lihatData(data){
-    let html = '<h5>Informasi Pribadi</h5><table class="table table-sm table-bordered">';
-    const info = data.info_pribadi || {};
-    const user = data.user || {};
-    html += `<tr><th>NIK</th><td>${user.nik||'-'}</td><th>Nama</th><td>${user.nama||'-'}</td></tr>`;
-    html += `<tr><th>Jenis Kelamin</th><td>${info.jenis_kelamin||'-'}</td><th>Tempat Lahir</th><td>${info.tempat_lahir||'-'}</td></tr>`;
-    html += `<tr><th>Tanggal Lahir</th><td>${info.tanggal_lahir||'-'}</td><th>Alamat</th><td>${info.alamat||'-'}</td></tr>`;
-    html += `<tr><th>Kota</th><td>${info.kota||'-'}</td><th>No. KTP</th><td>${info.no_ktp||'-'}</td></tr>`;
-    html += `<tr><th>Hubungan Keluarga</th><td colspan="3">${info.hubungan_keluarga||'-'}</td></tr>`;
-    html += '</table>';
+// Flash hide
+var ft = document.getElementById('flashToast');
+if(ft) setTimeout(()=>ft.style.opacity='0', 3500);
 
-    // Riwayat Pekerjaan
-    html += '<h5>Riwayat Pekerjaan</h5><table class="table table-sm table-bordered"><tr><th>No</th><th>Perusahaan</th><th>Posisi</th><th>Periode</th><th>Alasan Keluar</th></tr>';
-    data.pekerjaan.forEach((p,i)=>{
-        html += `<tr>
-            <td>${i+1}</td>
-            <td>${p.nama_perusahaan||'-'}</td>
-            <td>${p.posisi||'-'}</td>
-            <td>${p.tanggal_mulai||'-'} s/d ${p.tanggal_selesai||'-'}</td>
-            <td>${p.alasan_keluar||'-'}</td>
-        </tr>`;
-    });
-    html += '</table>';
+// Modal
+function showDetail(uid) {
+    document.getElementById('modalOverlay').classList.add('open');
+    document.getElementById('modalContent').innerHTML = `<div style="text-align:center;padding:40px;color:#94A3B8;"><div style="width:32px;height:32px;border:3px solid #E2E8F0;border-top-color:#3B82F6;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px;"></div>Memuat data...</div>`;
+    lucide.createIcons();
 
-    // Riwayat Pendidikan
-    html += '<h5>Riwayat Pendidikan</h5><table class="table table-sm table-bordered"><tr><th>No</th><th>Pendidikan</th><th>Jurusan</th><th>Kampus</th><th>Tanggal Lulus</th><th>No Ijazah</th></tr>';
-    data.pendidikan.forEach((pd,i)=>{
-        html += `<tr>
-            <td>${i+1}</td>
-            <td>${pd.pendidikan_terakhir||'-'}</td>
-            <td>${pd.jurusan||'-'}</td>
-            <td>${pd.kampus||'-'}</td>
-            <td>${pd.tgl_lulus||'-'}</td>
-            <td>${pd.no_ijazah||'-'}</td>
-        </tr>`;
-    });
-    html += '</table>';
-
-    // Riwayat Kesehatan
-    const k = data.kesehatan || {};
-    html += '<h5>Riwayat Kesehatan</h5><table class="table table-sm table-bordered">';
-    html += `<tr><th>Gol Darah</th><td>${k.gol_darah||'-'}</td><th>Riwayat Penyakit</th><td>${k.riwayat_penyakit||'-'}</td></tr>`;
-    html += `<tr><th>Status Vaksinasi</th><td>${k.status_vaksinasi||'-'}</td><th>BPJS Kesehatan</th><td>${k.no_bpjs_kesehatan||'-'}</td></tr>`;
-    html += `<tr><th>BPJS Kerja</th><td>${k.no_bpjs_kerja||'-'}</td><th>Asuransi Tambahan</th><td>${k.asuransi_tambahan||'-'}</td></tr>`;
-    html += '</table>';
-
-    // Dokumen Pendukung (hapus ID dan USER_ID)
-    html += '<h5>Dokumen Pendukung</h5><ul>';
-    const d = data.dokumen || {};
-    for(let key in d){
-        if(d[key] && key !== 'id' && key !== 'user_id'){  // <- Hapus kolom ID & USER_ID
-            html += `<li>${key.toUpperCase()}: <a href="uploads/${d[key]}" target="_blank">Lihat</a></li>`;
-        }
-    }
-    html += '</ul>';
-
-    $('#modalBody').html(html);
-    new bootstrap.Modal(document.getElementById('modalLihat')).show();
+    fetch('ajax_get_karyawan.php?id='+uid)
+        .then(r=>r.json())
+        .then(data => renderModal(data))
+        .catch(()=>{
+            // Fallback: render from PHP via inline fetch workaround
+            document.getElementById('modalContent').innerHTML = '<p style="color:#EF4444;text-align:center;">Gagal memuat data. Pastikan file ajax_get_karyawan.php tersedia.</p>';
+        });
 }
-    
+
+function renderModal(d) {
+    const u = d.user || {};
+    const ip = d.info_pribadi || {};
+    const k = d.kesehatan || {};
+
+    document.getElementById('modalKaryawanName').textContent = u.nama || 'Detail Karyawan';
+
+    let html = `
+    <div class="info-section">
+        <h4>Informasi Dasar</h4>
+        <div class="info-grid">
+            <div class="info-row"><span class="info-label">NIK</span><span class="info-val">${u.nik||'-'}</span></div>
+            <div class="info-row"><span class="info-label">Jabatan</span><span class="info-val">${u.jabatan||'-'}</span></div>
+            <div class="info-row"><span class="info-label">Unit Kerja</span><span class="info-val">${u.unit_kerja||'-'}</span></div>
+            <div class="info-row"><span class="info-label">Email</span><span class="info-val">${u.email||'-'}</span></div>
+            <div class="info-row"><span class="info-label">No. HP</span><span class="info-val">${u.no_hp||'-'}</span></div>
+            <div class="info-row"><span class="info-label">Status</span><span class="info-val">${u.status||'-'}</span></div>
+        </div>
+    </div>
+    <div class="info-section">
+        <h4>Data Pribadi</h4>
+        <div class="info-grid">
+            <div class="info-row"><span class="info-label">Jenis Kelamin</span><span class="info-val">${ip.jenis_kelamin||'-'}</span></div>
+            <div class="info-row"><span class="info-label">Tempat Lahir</span><span class="info-val">${ip.tempat_lahir||'-'}</span></div>
+            <div class="info-row"><span class="info-label">Tanggal Lahir</span><span class="info-val">${ip.tanggal_lahir||'-'}</span></div>
+            <div class="info-row"><span class="info-label">No. KTP</span><span class="info-val">${ip.no_ktp||'-'}</span></div>
+            <div class="info-row"><span class="info-label">Kota</span><span class="info-val">${ip.kota||'-'}</span></div>
+            <div class="info-row"><span class="info-label">Alamat</span><span class="info-val">${ip.alamat||'-'}</span></div>
+        </div>
+    </div>`;
+
+    if (k && Object.keys(k).length > 1) {
+        html += `<div class="info-section">
+        <h4>Data Kesehatan</h4>
+        <div class="info-grid">
+            <div class="info-row"><span class="info-label">Golongan Darah</span><span class="info-val">${k.gol_darah||'-'}</span></div>
+            <div class="info-row"><span class="info-label">Status Vaksinasi</span><span class="info-val">${k.status_vaksinasi||'-'}</span></div>
+            <div class="info-row"><span class="info-label">BPJS Kesehatan</span><span class="info-val">${k.no_bpjs_kesehatan||'-'}</span></div>
+            <div class="info-row"><span class="info-label">BPJS Ketenagakerjaan</span><span class="info-val">${k.no_bpjs_kerja||'-'}</span></div>
+        </div>
+        </div>`;
+    }
+
+    if (d.pekerjaan && d.pekerjaan.length) {
+        html += `<div class="info-section"><h4>Riwayat Pekerjaan</h4>`;
+        d.pekerjaan.forEach((p,i)=>{
+            html += `<div style="background:#F8FAFC;border-radius:10px;padding:12px 14px;margin-bottom:8px;font-size:0.85rem;">
+                <strong>${p.nama_perusahaan||'-'}</strong> — ${p.posisi||'-'}<br>
+                <span style="color:#64748B;">${p.tanggal_mulai||''} s/d ${p.tanggal_selesai||''}</span>
+            </div>`;
+        });
+        html += `</div>`;
+    }
+
+    if (d.pendidikan && d.pendidikan.length) {
+        html += `<div class="info-section"><h4>Riwayat Pendidikan</h4>`;
+        d.pendidikan.forEach((pd)=>{
+            html += `<div style="background:#F8FAFC;border-radius:10px;padding:12px 14px;margin-bottom:8px;font-size:0.85rem;">
+                <strong>${pd.pendidikan_terakhir||'-'}</strong> — ${pd.jurusan||''}<br>
+                <span style="color:#64748B;">${pd.kampus||''}, lulus ${pd.tgl_lulus||''}</span>
+            </div>`;
+        });
+        html += `</div>`;
+    }
+
+    html += `<div style="text-align:right;margin-top:16px;">
+        <a href="cetak_karyawan.php?id=${u.id}" target="_blank" class="btn-prim" style="font-size:0.85rem;padding:9px 18px;">
+            <i data-lucide="printer" size="14"></i> Cetak Biodata
+        </a>
+    </div>`;
+
+    document.getElementById('modalContent').innerHTML = html;
+    lucide.createIcons();
+}
+
+function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+}
+document.getElementById('modalOverlay').addEventListener('click', e => {
+    if(e.target === document.getElementById('modalOverlay')) closeModal();
+});
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
 </script>
 </body>
 </html>
-
-
-
-
-
-
-

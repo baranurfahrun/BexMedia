@@ -321,7 +321,12 @@ $list_pejabat = mysqli_query($conn, "
     <?php include 'navbar.php'; ?>
     <?php include 'sidebar.php'; ?>
 
+    
     <div class="main-content">
+      <?php 
+      $breadcrumb = "Digital Archive & TTE / <strong>Pemberitahuan</strong>";
+      include "topbar.php"; 
+      ?>
       <section class="section">
         <div class="section-header">
           <h1><i class="fas fa-bullhorn"></i> Surat Pemberitahuan</h1>

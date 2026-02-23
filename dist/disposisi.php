@@ -252,7 +252,12 @@ while($s = mysqli_fetch_assoc($data_surat)) {
 <?php include 'navbar.php'; ?>
 <?php include 'sidebar.php'; ?>
 
-<div class="main-content">
+
+    <div class="main-content">
+      <?php 
+      $breadcrumb = "Digital Archive & TTE / <strong>Disposisi</strong>";
+      include "topbar.php"; 
+      ?>
 <section class="section">
 
 <?php if(isset($_SESSION['flash_message'])): ?>

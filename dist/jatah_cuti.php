@@ -77,19 +77,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan'])) {
 
 // Ambil Data Jatah Cuti untuk Tabel (tampilkan sisa_hari)
 $dataJatah = mysqli_query($conn, "SELECT jatah_cuti.*, users.nama, master_cuti.nama_cuti
-                                  FROM jatah_cuti
-                                  JOIN users ON jatah_cuti.karyawan_id = users.id
-                                  JOIN master_cuti ON jatah_cuti.cuti_id = master_cuti.id
-                                  ORDER BY jatah_cuti.id DESC");
+                                   FROM jatah_cuti
+                                   JOIN users ON jatah_cuti.karyawan_id = users.id
+                                   JOIN master_cuti ON jatah_cuti.cuti_id = master_cuti.id
+                                   ORDER BY jatah_cuti.id DESC");
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <link rel="icon" href="../images/logo_final.png">
-    
-  
   <meta charset="UTF-8">
-  <title>BexMedia Dashboard</title>
+  <title>Jatah Cuti Karyawan | BexMedia</title>
   <link rel="stylesheet" href="assets/modules/bootstrap/css/bootstrap.min.css">
   <link rel="stylesheet" href="assets/modules/fontawesome/css/all.min.css">
   <link rel="stylesheet" href="assets/css/style.css">
@@ -112,6 +110,10 @@ $dataJatah = mysqli_query($conn, "SELECT jatah_cuti.*, users.nama, master_cuti.n
     <?php include 'sidebar.php'; ?>
 
     <div class="main-content">
+      <?php 
+      $breadcrumb = "Employee Hub / <strong>Jatah Cuti Karyawan</strong>";
+      include "topbar.php"; 
+      ?>
       <section class="section">
         <div class="section-body">
 
@@ -245,13 +247,5 @@ $dataJatah = mysqli_query($conn, "SELECT jatah_cuti.*, users.nama, master_cuti.n
     });
   });
 </script>
-
 </body>
 </html>
-
-
-
-
-
-
-

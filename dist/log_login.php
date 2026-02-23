@@ -159,7 +159,12 @@ $top_ips = mysqli_query($conn, $top_ips_sql);
     <?php include 'navbar.php'; ?>
     <?php include 'sidebar.php'; ?>
 
+    
     <div class="main-content">
+      <?php 
+      $breadcrumb = "Audit & Security / <strong>Log Login</strong>";
+      include "topbar.php"; 
+      ?>
       <section class="section">
         <div class="section-body">
 

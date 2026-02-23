@@ -136,7 +136,12 @@ $data_surat = mysqli_query($conn, "SELECT sk.*, sm.no_surat AS no_masuk, u.nama 
     <?php include 'navbar.php'; ?>
     <?php include 'sidebar.php'; ?>
 
+    
     <div class="main-content">
+      <?php 
+      $breadcrumb = "Digital Archive & TTE / <strong>Surat Keluar</strong>";
+      include "topbar.php"; 
+      ?>
       <section class="section">
         <div class="section-body">
 

@@ -231,7 +231,12 @@ while ($row = mysqli_fetch_assoc($qStampel)) {
 <?php include 'navbar.php'; ?>
 <?php include 'sidebar.php'; ?>
 
-<div class="main-content">
+
+    <div class="main-content">
+      <?php 
+      $breadcrumb = "Digital Archive & TTE / <strong>Buat Stampel</strong>";
+      include "topbar.php"; 
+      ?>
 <section class="section">
 <div class="section-header">
     <h1><i class="fas fa-stamp"></i> E-Stampel (Stempel Elektronik)</h1>

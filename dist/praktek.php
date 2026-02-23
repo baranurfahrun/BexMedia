@@ -122,7 +122,12 @@ if(!$result) die("Query data praktek gagal: ".mysqli_error($conn));
   <div class="main-wrapper main-wrapper-1">
     <?php include 'navbar.php'; ?>
     <?php include 'sidebar.php'; ?>
+    
     <div class="main-content">
+      <?php 
+      $breadcrumb = "Quality Assurance / <strong>Praktek</strong>";
+      include "topbar.php"; 
+      ?>
       <section class="section">
         <div class="section-body">
           <div class="card">

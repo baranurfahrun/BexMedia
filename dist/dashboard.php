@@ -203,18 +203,17 @@ if ($stmtLB) {
     <?php include 'navbar.php'; ?>
     <?php include 'sidebar.php'; ?>
 
-  <div class="main-content">
-  <section class="section">
-    <div class="section-header">
-      <h1>Dashboard</h1>
-    </div>
+    <div class="main-content">
+      <?php 
+      $breadcrumb = "Dashboard / <strong>Main Overview</strong>";
+      include "topbar.php"; 
+      ?>
+      <section class="section">
+        <div class="row">
+          <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+            <div class="card card-statistic-1" data-toggle="modal" data-target="#modalHRD">
+              <div class="card-icon bg-info"><i class="fas fa-users-cog"></i></div>
 
-    <!-- Baris Pertama -->
-    <div class="row">
-      <!-- HRD -->
-      <div class="col-lg-3 col-md-6 col-sm-6 col-12">
-        <div class="card card-statistic-1" data-toggle="modal" data-target="#modalHRD">
-          <div class="card-icon bg-info"><i class="fas fa-users-cog"></i></div>
           <div class="card-wrap">
             <div class="card-header"><h4>HRD / SDM</h4></div>
             <div class="card-body">Info Cuti</div>

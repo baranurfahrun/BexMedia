@@ -146,7 +146,12 @@ while ($row = mysqli_fetch_assoc($result_pph)) {
     <?php include 'navbar.php'; ?>
     <?php include 'sidebar.php'; ?>
 
+    
     <div class="main-content">
+      <?php 
+      $breadcrumb = "Employee Hub / <strong>Input Gaji</strong>";
+      include "topbar.php"; 
+      ?>
       <section class="section">
         <div class="section-body">
           <div class="card">

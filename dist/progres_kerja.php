@@ -91,7 +91,12 @@ if (!empty($_GET['bulan']) || !empty($_GET['tahun'])) {
 <?php include 'navbar.php'; ?>
 <?php include 'sidebar.php'; ?>
 
-<div class="main-content">
+
+    <div class="main-content">
+      <?php 
+      $breadcrumb = "Insight & Analytics / <strong>Progres Kerja</strong>";
+      include "topbar.php"; 
+      ?>
 <section class="section">
 <div class="section-body">
 

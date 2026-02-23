@@ -180,7 +180,12 @@ $data_sifat = mysqli_query($conn, "
       <?php include 'navbar.php'; ?>
       <?php include 'sidebar.php'; ?>
 
-      <div class="main-content">
+      
+    <div class="main-content">
+      <?php 
+      $breadcrumb = "Digital Archive & TTE / <strong>Surat Masuk</strong>";
+      include "topbar.php"; 
+      ?>
         <section class="section">
           <div class="section-body">
 

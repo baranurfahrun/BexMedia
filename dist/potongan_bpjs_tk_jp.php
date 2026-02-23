@@ -59,7 +59,12 @@ $data = mysqli_query($conn, "SELECT * FROM potongan_bpjs_tk_jp ORDER BY id DESC"
     <?php include 'navbar.php'; ?>
     <?php include 'sidebar.php'; ?>
 
+    
     <div class="main-content">
+      <?php 
+      $breadcrumb = "Employee Hub / <strong>Potongan Bpjs Tk Jp</strong>";
+      include "topbar.php"; 
+      ?>
       <section class="section">
         <div class="section-body">
           <div class="card">

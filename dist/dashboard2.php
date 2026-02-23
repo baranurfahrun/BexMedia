@@ -238,7 +238,12 @@ if ($resultLB) {
     <?php include 'navbar.php'; ?>
     <?php include 'sidebar.php'; ?>
 
-  <div class="main-content">
+  
+    <div class="main-content">
+      <?php 
+      $breadcrumb = "Insight & Analytics / <strong>Dashboard2</strong>";
+      include "topbar.php"; 
+      ?>
   <section class="section">
     <div class="section-header">
       <h1>Dashboard Direktur</h1>

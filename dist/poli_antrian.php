@@ -132,7 +132,12 @@ while($row = mysqli_fetch_assoc($data_query)){
 <?php include 'navbar.php'; ?>
 <?php include 'sidebar.php'; ?>
 
-<div class="main-content">
+
+    <div class="main-content">
+      <?php 
+      $breadcrumb = "Insight & Analytics / <strong>Poli Antrian</strong>";
+      include "topbar.php"; 
+      ?>
 <section class="section">
 <div class="section-body">
 <div class="card">

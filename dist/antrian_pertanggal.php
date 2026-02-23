@@ -108,7 +108,12 @@ mysqli_data_seek($data, 0); // reset pointer
   <div class="main-wrapper main-wrapper-1">
     <?php include 'navbar.php'; ?>
     <?php include 'sidebar.php'; ?>
+    
     <div class="main-content">
+      <?php 
+      $breadcrumb = "Insight & Analytics / <strong>Antrian Pertanggal</strong>";
+      include "topbar.php"; 
+      ?>
       <section class="section">
         <div class="section-body">
           <div class="card">

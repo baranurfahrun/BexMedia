@@ -392,7 +392,12 @@ if (isset($_POST['ajax']) && $_POST['ajax'] == '1') {
 <?php include 'navbar.php'; ?>
 <?php include 'sidebar.php'; ?>
 
-<div class="main-content">
+
+    <div class="main-content">
+      <?php 
+      $breadcrumb = "Digital Archive & TTE / <strong>Cek Stampel</strong>";
+      include "topbar.php"; 
+      ?>
 <section class="section">
 <div class="section-header">
     <h1><i class="fas fa-search"></i> Cek Keabsahan E-Stampel</h1>

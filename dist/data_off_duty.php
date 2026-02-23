@@ -71,7 +71,12 @@ $tgl_sampai  = $_GET['tgl_sampai'] ?? '';
     <div class="main-wrapper main-wrapper-1">
       <?php include 'navbar.php'; ?>
       <?php include 'sidebar.php'; ?>
-      <div class="main-content">
+      
+    <div class="main-content">
+      <?php 
+      $breadcrumb = "Technical Support / <strong>Data Off Duty</strong>";
+      include "topbar.php"; 
+      ?>
         <section class="section">
           <div class="section-body">
             <div class="card">

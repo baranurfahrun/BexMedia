@@ -73,7 +73,12 @@ $keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
     <?php include 'navbar.php'; ?>
     <?php include 'sidebar.php'; ?>
 
+    
     <div class="main-content">
+      <?php 
+      $breadcrumb = "Technical Support / <strong>Off Duty</strong>";
+      include "topbar.php"; 
+      ?>
       <section class="section">
         <div class="section-body">
           <div class="card">

@@ -186,19 +186,30 @@ date_default_timezone_set('Asia/Jakarta'); // WIB
 
   <ul class="navbar-nav navbar-right">
     <li class="nav-item d-flex align-items-center mr-3">
-      <i class="fas fa-user-circle text-white mr-2" style="font-size: 20px;"></i>
-      <span class="text-white font-weight-bold" style="font-size: 15px;">
-        <?= isset($_SESSION['nama']) ? htmlspecialchars($_SESSION['nama']) : 'Pengguna' ?>
-      </span>
+      <?php 
+      // Fallback for pages not including security.php
+      $disp_nama = $_SESSION['nama_user'] ?? $_SESSION['nama'] ?? 'Pengguna';
+      $disp_foto = $_SESSION['foto_user'] ?? '';
+      ?>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span class="text-white font-weight-bold" style="font-size: 14px;">
+          <?= htmlspecialchars($disp_nama) ?>
+        </span>
+        <?php if (!empty($disp_foto) && file_exists("../".$disp_foto)): ?>
+          <div style="width: 32px; height: 32px; border-radius: 50%; background-image: url('../<?= htmlspecialchars($disp_foto) ?>'); background-size: cover; background-position: center; border: 1px solid rgba(255,255,255,0.2);"></div>
+        <?php else: ?>
+          <i class="fas fa-user-circle text-white" style="font-size: 24px;"></i>
+        <?php endif; ?>
+      </div>
     </li>
 
     <li class="nav-item">
-      <a href="logout.php" class="btn btn-danger btn-sm font-weight-bold" style="display: flex; align-items: center;">
-        <i class="fas fa-sign-out-alt mr-1 text-white"></i> 
-        <span class="text-white">Keluar</span>
+      <a href="logout.php" class="btn btn-outline-light btn-sm font-weight-bold" style="border-radius: 20px;">
+        <i class="fas fa-sign-out-alt mr-1"></i> Keluar
       </a>
     </li>
   </ul>
+
 </nav>
 
 <!-- Modal Menu Desktop -->

@@ -1,6 +1,5 @@
 <?php
-require_once "../conf/config.php";
-checkLogin();
+include 'security.php';
 // MenuName: Manajemen Klien
 
 $brand_name = get_setting('app_name', 'BexMedia');
@@ -37,14 +36,11 @@ if (mysqli_num_rows($check_empty) == 0) {
     ('Lab Klinik Prodia', 'Laboratorium', 'active', 'dr. Linda', '081344556677', 'palopo@prodia.co.id', '2026-01-20'),
     ('Apotek Kimia Farma', 'Pharmacy', 'inactive', 'Apoteker Rani', '082199887766', 'kf.palopo@kimiafarma.com', '2025-11-15')");
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <link rel="icon" href="../images/logo_final.png">
-    
-  
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clients Management | <?php echo h($brand_name); ?></title>
@@ -217,25 +213,13 @@ if (mysqli_num_rows($check_empty) == 0) {
 </head>
 <body>
     <div class="app-container">
-        <!-- Sidebar -->
         <?php include "sidebar.php"; ?>
 
         <main>
-            <header>
-                <div class="breadcrumb" style="color: var(--text-muted); font-size: 0.9rem">
-                    Pages / <strong>Clients</strong>
-                </div>
-                <div class="user-profile">
-                    <span><?php echo h($_SESSION['username']); ?></span>
-                    <?php 
-                        $avatar_url = "https://ui-avatars.com/api/?name=" . urlencode($_SESSION['username']) . "&background=3B82F6&color=fff";
-                        if (isset($_SESSION['user_photo']) && !empty($_SESSION['user_photo'])) {
-                            $avatar_url = "../images/" . $_SESSION['user_photo'];
-                        }
-                    ?>
-                    <div class="avatar" style="background-image: url('<?php echo $avatar_url; ?>'); background-size: cover; background-position: center;"></div>
-                </div>
-            </header>
+            <?php 
+            $breadcrumb = "Business Operations / <strong>Partners & Clients</strong>";
+            include "topbar.php"; 
+            ?>
 
             <div class="dashboard-content">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
@@ -313,12 +297,6 @@ if (mysqli_num_rows($check_empty) == 0) {
 
     <!-- Dynamic Footer (Marquee & Copyright) -->
     <?php include "footer.php"; ?>
+    <script>lucide.createIcons();</script>
 </body>
 </html>
-
-
-
-
-
-
-

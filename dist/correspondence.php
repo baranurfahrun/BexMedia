@@ -1,7 +1,5 @@
 <?php
-require_once "../conf/config.php";
-checkLogin();
-
+include 'security.php';
 // MenuName: Institutional Correspondence
 
 $user_id = $_SESSION['user_id'] ?? 0;
@@ -47,8 +45,6 @@ $total_keluar = mysqli_fetch_assoc(safe_query("SELECT COUNT(*) as total FROM sur
 <html lang="en">
 <head>
     <link rel="icon" href="../images/logo_final.png">
-    
-  
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Correspondence - BexMedia</title>
@@ -73,19 +69,14 @@ $total_keluar = mysqli_fetch_assoc(safe_query("SELECT COUNT(*) as total FROM sur
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="app-container">
         <?php include "sidebar.php"; ?>
         
         <main class="main-content">
-            <header class="header">
-                <div class="header-left">
-                    <h1>Correspondence Center</h1>
-                    <p>Pemantauan alur persuratan resmi institusi secara terstruktur.</p>
-                </div>
-                <div class="header-right">
-                    <button class="btn btn-primary"><i data-lucide="plus"></i> Registrasi Surat</button>
-                </div>
-            </header>
+            <?php 
+            $breadcrumb = "Institution / <strong>Correspondence Center</strong>";
+            include "topbar.php"; 
+            ?>
 
             <div class="mail-layout">
                 <nav class="mail-nav">
@@ -144,10 +135,3 @@ $total_keluar = mysqli_fetch_assoc(safe_query("SELECT COUNT(*) as total FROM sur
     </script>
 </body>
 </html>
-
-
-
-
-
-
-

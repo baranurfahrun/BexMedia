@@ -143,21 +143,15 @@ $activities = $conn->query($sql);
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="app-container">
         <?php include 'sidebar.php'; ?>
         
         <main class="main-content">
-            <header class="header">
-                <div class="header-left">
-                    <h1>Universal Activity Log</h1>
-                    <p>Audit trail transparant untuk seluruh aktivitas sistem.</p>
-                </div>
-                <div class="header-right">
-                    <button class="btn btn-outline" onclick="location.reload()">
-                        <i data-lucide="refresh-cw"></i> Refresh
-                    </button>
-                </div>
-            </header>
+            <?php 
+            $breadcrumb = "Audit & Security / <strong>Universal Activity Log</strong>";
+            $header_extra = '<button class="btn-secondary" onclick="location.reload()"><i data-lucide="refresh-cw" size="14"></i> Refresh</button>';
+            include "topbar.php"; 
+            ?>
 
             <div class="log-grid">
                 <!-- Filters -->
@@ -167,6 +161,7 @@ $activities = $conn->query($sql);
                             <label><small>Nama User</small></label>
                             <input type="text" name="user" value="<?= htmlspecialchars($filter_user) ?>" placeholder="Cari user...">
                         </div>
+
                         <div class="input-group">
                             <label><small>Jenis Aksi</small></label>
                             <select name="action_type">

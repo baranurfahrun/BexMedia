@@ -241,7 +241,12 @@ $rekap_kondisi = mysqli_query($conn, "
     <?php include 'navbar.php'; ?>
     <?php include 'sidebar.php'; ?>
 
+    
     <div class="main-content">
+      <?php 
+      $breadcrumb = "Technical Support / <strong>Data Barang It</strong>";
+      include "topbar.php"; 
+      ?>
       <section class="section">
         <div class="section-body">
 

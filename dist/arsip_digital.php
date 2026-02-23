@@ -68,7 +68,12 @@ $data_arsip = mysqli_query($conn, "SELECT a.*, u.nama AS user_nama
     <?php include 'navbar.php'; ?>
     <?php include 'sidebar.php'; ?>
 
+    
     <div class="main-content">
+      <?php 
+      $breadcrumb = "Digital Archive & TTE / <strong>Arsip Digital</strong>";
+      include "topbar.php"; 
+      ?>
       <section class="section">
         <div class="section-body">
 

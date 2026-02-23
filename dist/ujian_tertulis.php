@@ -90,7 +90,12 @@ if(isset($_POST['jawaban'])){
 <?php include 'navbar.php'; ?>
 <?php include 'sidebar.php'; ?>
 
-<div class="main-content">
+
+    <div class="main-content">
+      <?php 
+      $breadcrumb = "Quality Assurance / <strong>Ujian Tertulis</strong>";
+      include "topbar.php"; 
+      ?>
 <section class="section">
 <div class="section-header">
 <h1><i class="fas fa-pen-nib"></i> Ujian Tertulis</h1>

@@ -436,21 +436,11 @@ if (($_SESSION['login_source'] ?? 'BEXMEDIA') === 'BEXMEDIA') {
             <?php include "sidebar.php"; ?>
 
             <main>
-            <header>
-                <div class="breadcrumb" style="color: var(--text-muted); font-size: 0.9rem">
-                    Pages / <strong>Settings</strong>
-                </div>
-                <div class="user-profile">
-                    <span><?php echo h($_SESSION['username']); ?></span>
-                    <?php 
-                        $avatar_url = "https://ui-avatars.com/api/?name=" . urlencode($_SESSION['username']) . "&background=3B82F6&color=fff";
-                        if (!empty($user_photo)) {
-                            $avatar_url = "../images/" . $user_photo;
-                        }
-                    ?>
-                    <div class="avatar" style="background-image: url('<?php echo $avatar_url; ?>'); background-size: cover; background-position: center;"></div>
-                </div>
-            </header>
+            <?php 
+            $breadcrumb = "System / <strong>Settings</strong>";
+            include "topbar.php"; 
+            ?>
+
 
             <div class="dashboard-content">
                 <div class="dashboard-header">

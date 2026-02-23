@@ -44,16 +44,14 @@ function calcDuration($start, $end) {
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="app-container">
         <?php include "sidebar.php"; ?>
         
         <main class="main-content">
-            <header class="header">
-                <div class="header-left">
-                    <h1>Performance Analytics</h1>
-                    <p>Analisis durasi penanganan tiket dukungan IT untuk optimasi Service Level Agreement (SLA).</p>
-                </div>
-            </header>
+            <?php 
+            $breadcrumb = "Technical Support / <strong>IT Handling Performance</strong>";
+            include "topbar.php"; 
+            ?>
 
             <div class="analytics-card">
                 <nav class="tab-nav">
@@ -63,6 +61,7 @@ function calcDuration($start, $end) {
 
                 <table class="data-table">
                     <thead>
+
                         <tr>
                             <th>Tiket / Kategori</th>
                             <th>Timeline Penanganan</th>

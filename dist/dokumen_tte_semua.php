@@ -464,7 +464,12 @@ $qAllUsers = $conn->query("SELECT DISTINCT u.id, u.nama FROM users u JOIN tte_do
 <?php include 'navbar.php'; ?>
 <?php include 'sidebar.php'; ?>
 
-<div class="main-content">
+
+    <div class="main-content">
+      <?php 
+      $breadcrumb = "Digital Archive & TTE / <strong>Dokumen Tte Semua</strong>";
+      include "topbar.php"; 
+      ?>
 <section class="section">
 <div class="section-header">
     <h1><i class="fas fa-folder-open"></i> Semua Dokumen TTE</h1>

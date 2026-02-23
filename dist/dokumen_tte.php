@@ -412,7 +412,12 @@ $qUsers = $conn->query("SELECT id, nama, email FROM users WHERE email IS NOT NUL
 <?php include 'navbar.php'; ?>
 <?php include 'sidebar.php'; ?>
 
-<div class="main-content">
+
+    <div class="main-content">
+      <?php 
+      $breadcrumb = "Digital Archive & TTE / <strong>Dokumen Tte</strong>";
+      include "topbar.php"; 
+      ?>
 <section class="section">
 <div class="section-header">
     <h1><i class="fas fa-file-signature"></i> Dokumen TTE Saya</h1>

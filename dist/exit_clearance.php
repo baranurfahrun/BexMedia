@@ -101,7 +101,12 @@ $dataExit = mysqli_query($conn, "SELECT * FROM exit_clearance ORDER BY created_a
     <?php include 'navbar.php'; ?>
     <?php include 'sidebar.php'; ?>
 
+    
     <div class="main-content">
+      <?php 
+      $breadcrumb = "Employee Hub / <strong>Exit Clearance</strong>";
+      include "topbar.php"; 
+      ?>
       <section class="section">
         <div class="section-body">
           <div class="card">

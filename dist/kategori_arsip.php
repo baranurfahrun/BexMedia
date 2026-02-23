@@ -56,7 +56,12 @@ $data_kategori = mysqli_query($conn, "SELECT * FROM kategori_arsip ORDER BY nama
     <?php include 'navbar.php'; ?>
     <?php include 'sidebar.php'; ?>
 
+    
     <div class="main-content">
+      <?php 
+      $breadcrumb = "Digital Archive & TTE / <strong>Kategori Arsip</strong>";
+      include "topbar.php"; 
+      ?>
       <section class="section">
 
         <div class="section-body">
