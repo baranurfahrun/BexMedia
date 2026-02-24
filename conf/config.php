@@ -214,7 +214,12 @@ $default_settings = [
     'app_version'        => 'V. 1. - .20.02.2026',
     'telegram_bot_token' => '',
     'telegram_chat_id'   => '',
-    'wa_gateway_url'     => ''
+    'wa_gateway_url'     => '',
+    'running_text'       => 'Selamat Datang di Portal BexMedia - Executive Mission Control Dashboard',
+    'rt_speed'           => '10',
+    'rt_font_size'       => '16',
+    'rt_font_family'     => "'Inter', sans-serif",
+    'rt_color'           => '#1e3a8a'
 ];
 
 foreach ($default_settings as $key => $val) {

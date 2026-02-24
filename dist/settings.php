@@ -1,6 +1,5 @@
 <?php
-require_once "../conf/config.php";
-checkLogin();
+include 'security.php';
 syncMenus(); 
 // MenuName: Pengaturan Sistem
 
@@ -60,7 +59,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_mail']) && $_POST
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_settings'])) {
     csrf_verify();
     
-    $settings_fields = ['app_name', 'host_khanza', 'name_khanza', 'user_khanza', 'pass_khanza', 'host_bex', 'name_bex', 'user_bex', 'pass_bex'];
+    $settings_fields = [
+        'app_name', 'host_khanza', 'name_khanza', 'user_khanza', 'pass_khanza', 
+        'host_bex', 'name_bex', 'user_bex', 'pass_bex',
+        'running_text', 'rt_speed', 'rt_font_size', 'rt_font_family', 'rt_color'
+    ];
     $updated_count = 0;
     $saved_keys = [];
     foreach ($settings_fields as $key) {
@@ -164,17 +167,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_access'])) {
 
 // Ambil Data Profil
 $current_user = $_SESSION['username'];
-$user_full_name = "User " . $current_user;
-$user_photo = "";
-
-if (($_SESSION['login_source'] ?? 'BEXMEDIA') === 'BEXMEDIA') {
-    $res_u = safe_query("SELECT nama_lengkap, photo FROM users WHERE username = AES_ENCRYPT(?, 'bex')", [$current_user]);
-    if ($row_u = mysqli_fetch_assoc($res_u)) {
-        $user_full_name = $row_u['nama_lengkap'];
-        $user_photo = $row_u['photo'];
-        $_SESSION['user_photo'] = $user_photo;
-    }
-}
+$user_full_name = $nama_user;
+$user_photo = !empty($foto_user) ? str_replace('images/', '', $foto_user) : '';
+if (!empty($user_photo)) $_SESSION['user_photo'] = $user_photo;
 
 // --- PART 5: DATABASE PRE-CHECK ---
 $khanza_status = 'offline';
@@ -324,18 +319,30 @@ if (isset($conn) && $conn !== false) {
             margin-bottom: 8px;
         }
 
-        .form-group input {
+        .form-group input, .form-group select {
             width: 100%;
+            height: 48px; /* Fixed height for all */
             padding: 12px 16px;
             border: 1px solid #E2E8F0;
             border-radius: 12px;
             font-family: inherit;
-            transition: border-color 0.3s;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            transition: all 0.3s;
+            background: white;
+            box-sizing: border-box;
         }
 
-        .form-group input:focus {
+        .form-group input[type="color"] {
+            padding: 4px;
+            height: 48px;
+            cursor: pointer;
+        }
+
+        .form-group input:focus, .form-group select:focus {
             outline: none;
             border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
         }
 
         .btn-save {
@@ -586,10 +593,60 @@ if (isset($conn) && $conn !== false) {
                         <!-- TAB: GENERAL -->
                         <div id="general" class="tab-content">
                             <div class="form-section">
-                                <h3>Application Info</h3>
-                                <div class="form-group">
+                                <div class="form-group" style="margin-top:20px">
                                     <label>Application Name (Brand)</label>
                                     <input type="text" name="app_name" value="<?php echo h(get_setting('app_name', 'BexMedia')); ?>">
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <h3>Running Text Configuration</h3>
+                                <div class="form-group">
+                                    <label>Teks Berjalan (Marquee Text)</label>
+                                    <input type="text" name="running_text" value="<?php echo h(get_setting('running_text')); ?>" placeholder="Masukkan teks pengumuman/selamat datang...">
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Kecepatan (1-50, semakin besar semakin cepat)</label>
+                                        <input type="number" name="rt_speed" value="<?php echo h(get_setting('rt_speed', '10')); ?>" min="1" max="50">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Ukuran Font (Pixel)</label>
+                                        <input type="number" name="rt_font_size" value="<?php echo h(get_setting('rt_font_size', '16')); ?>" min="8" max="72">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Jenis Font (Font Family)</label>
+                                        <select name="rt_font_family">
+                                            <?php 
+                                            $current_font = get_setting('rt_font_family', "'Inter', sans-serif");
+                                            $fonts = [
+                                                "'Inter', sans-serif" => "Inter (Standard)",
+                                                "'Outfit', sans-serif" => "Outfit (Premium)",
+                                                "'Montserrat', sans-serif" => "Montserrat (Modern)",
+                                                "'Poppins', sans-serif" => "Poppins (Clean)",
+                                                "'Playfair Display', serif" => "Playfair (Elegant)",
+                                                "'Ubuntu', sans-serif" => "Ubuntu (Style)",
+                                                "'Open Sans', sans-serif" => "Open Sans (Readable)",
+                                                "'Roboto', sans-serif" => "Roboto",
+                                                "Arial, sans-serif" => "Arial",
+                                                "'Courier New', monospace" => "Monospace"
+                                            ];
+                                            foreach ($fonts as $val => $label) {
+                                                $sel = ($current_font == $val) ? "selected" : "";
+                                                echo "<option value=\"$val\" $sel>$label</option>";
+                                            }
+                                            ?>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Warna Font</label>
+                                        <div style="display:flex; gap:12px; align-items:center;">
+                                            <input type="color" name="rt_color" value="<?php echo h(get_setting('rt_color', '#1e3a8a')); ?>">
+                                            <span style="font-family:monospace; color:#64748B; font-weight:600;"><?php echo h(get_setting('rt_color', '#1e3a8a')); ?></span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
