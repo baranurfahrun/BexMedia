@@ -66,6 +66,11 @@ if ($isAdmin || $unitLogin === '') {
 $userList = [];
 while ($u = mysqli_fetch_assoc($userResult)) $userList[] = $u;
 
+// Ambil daftar unit untuk filter generator (Modal)
+$unitOptionsResult = mysqli_query($conn, "SELECT nama_unit FROM unit_kerja ORDER BY nama_unit ASC");
+$unitOptions = [];
+while ($uo = mysqli_fetch_assoc($unitOptionsResult)) $unitOptions[] = $uo['nama_unit'];
+
 // Ambil daftar jam kerja
 $jamResult = mysqli_query($conn, "SELECT * FROM jam_kerja ORDER BY jam_mulai");
 $jamList     = [];
@@ -166,6 +171,7 @@ if ($nm > 12) { $nm = 1; $ny++; }
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jadwal Dinas | BexMedia</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="../css/index.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -352,6 +358,9 @@ if ($nm > 12) { $nm = 1; $ny++; }
             font-size: 0.85rem; color: #0369A1; margin-bottom: 16px;
         }
 
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
         @media print {
             .no-print { display: none !important; }
             .jd-card { box-shadow: none; border: 1px solid #ddd; }
@@ -384,6 +393,9 @@ if ($nm > 12) { $nm = 1; $ny++; }
                 </div>
                 <div class="no-print" style="display:flex;gap:10px;">
                     <a href="jam_kerja.php" class="btn-ghost"><i data-lucide="clock" size="15"></i> Kelola Shift</a>
+                    <button type="button" class="btn-ghost" onclick="openMagicGenerator()" style="background:#F0F9FF;color:#0369A1;border-color:#BAE6FD;">
+                        <i data-lucide="sparkles" size="15"></i> Generate Otomatis
+                    </button>
                     <a href="cetak_jadwal_dinas.php?bulan=<?= $selected_bulan ?>&tahun=<?= $selected_tahun ?>" target="_blank" class="btn-dark">
                         <i data-lucide="printer" size="15"></i> Cetak
                     </a>
@@ -574,7 +586,72 @@ if ($nm > 12) { $nm = 1; $ny++; }
     </main>
 </div>
 
-<!-- Picker Modal -->
+<!-- Magic Generator Modal -->
+<div class="picker-overlay" id="magicOverlay" onclick="if(event.target===this)closeMagicGenerator()">
+    <div class="picker-box" style="max-width:500px; width:95%; overflow:hidden; display:flex; flex-direction:column; max-height:90vh;">
+        <div class="picker-title"><i data-lucide="sparkles" size="18"></i> Magic Schedule Generator</div>
+        <div style="padding:15px; max-height:70vh; overflow-y:auto;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:15px;">
+                <div class="jd-group">
+                    <label class="jd-label">Target Bulan</label>
+                    <select id="genBulan" class="jd-select" style="width:100%;">
+                        <?php for ($m=1;$m<=12;$m++): ?>
+                        <option value="<?= $m ?>" <?= $m==$selected_bulan?'selected':'' ?>><?= $bulanIndo[$m] ?></option>
+                        <?php endfor; ?>
+                    </select>
+                </div>
+                <div class="jd-group">
+                    <label class="jd-label">Target Tahun</label>
+                    <select id="genTahun" class="jd-select" style="width:100%;">
+                        <?php for ($y=date('Y');$y<=date('Y')+1;$y++): ?>
+                        <option value="<?= $y ?>" <?= $y==$selected_tahun?'selected':'' ?>><?= $y ?></option>
+                        <?php endfor; ?>
+                    </select>
+                </div>
+            </div>
+
+            <div class="jd-group" style="margin-bottom:15px;">
+                <label class="jd-label">Unit Kerja</label>
+                <select id="genUnit" class="jd-select" style="width:100%;" onchange="loadEmployeesByUnit(this.value)">
+                    <option value="">— Pilih Unit Kerja —</option>
+                    <?php if ($isAdmin): ?>
+                        <?php foreach ($unitOptions as $uo): ?>
+                        <option value="<?= h($uo) ?>" <?= $uo == $unitLogin ? 'selected' : '' ?>><?= h($uo) ?></option>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <option value="<?= h($unitLogin) ?>" selected><?= h($unitLogin) ?></option>
+                    <?php endif; ?>
+                </select>
+            </div>
+
+            <!-- Removed PILIH MINGGU as requested -->
+
+            <div class="jd-label" style="margin-bottom:10px;">Quota per Shift (Orang)</div>
+            <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; margin-bottom:20px;">
+                <?php foreach($jamList as $sid => $jdata): 
+                    if($jdata['kode'] == 'LIBUR') continue;
+                ?>
+                <div class="jd-group" style="border:1px solid #E2E8F0; padding:8px; border-radius:8px;">
+                    <label style="font-size:0.75rem; font-weight:700; color:<?= $jdata['warna'] ?>;"><?= h($jdata['nama_jam']) ?></label>
+                    <input type="number" class="gen-quota jd-select" data-id="<?= $sid ?>" value="0" min="0" style="width:100%; height:32px;">
+                </div>
+                <?php endforeach; ?>
+            </div>
+
+            <div class="jd-label" style="margin-bottom:10px;">Matriks Pengecualian (Pegawai Libur Per Pekan)</div>
+            <div id="excludeListWrap" style="background:white; border:1px solid #E2E8F0; border-radius:12px; overflow:auto; max-height:350px; min-height:60px; margin-bottom:10px;">
+                <!-- Pegawai dipopulasi lewat JS Matrix Table -->
+                <div style="text-align:center; color:#94A3B8; font-size:12px; padding:20px;">Pilih unit untuk melihat daftar pegawai.</div>
+            </div>
+        </div>
+        <div style="padding:15px; border-top:1px solid #E2E8F0; display:flex; gap:10px;">
+            <button class="btn-prim" style="flex:1;" onclick="processGeneration()">
+                <i data-lucide="zap" size="15"></i> Jalankan Pengacakan
+            </button>
+            <button class="btn-ghost" onclick="closeMagicGenerator()">Batal</button>
+        </div>
+    </div>
+</div>
 <div class="picker-overlay" id="pickerOverlay" onclick="if(event.target===this)closePicker()">
     <div class="picker-box">
         <div class="picker-title">Pilih Shift — <span id="pickerDayLabel"></span></div>
@@ -597,6 +674,117 @@ if ($nm > 12) { $nm = 1; $ny++; }
 
 <script>
 lucide.createIcons();
+
+function openMagicGenerator() {
+    document.getElementById('magicOverlay').classList.add('open');
+    // Load awal jika sudah ada unit terpilih
+    let unit = document.getElementById('genUnit').value;
+    if(unit) loadEmployeesByUnit(unit);
+}
+
+function loadEmployeesByUnit(unit) {
+    console.log("Loading employees for unit: " + unit);
+    if(!unit) {
+        document.getElementById('excludeListWrap').innerHTML = '<div style="text-align:center; color:#94A3B8; font-size:12px; padding:20px;">Pilih unit untuk melihat daftar pegawai.</div>';
+        return;
+    }
+    document.getElementById('excludeListWrap').innerHTML = '<div style="text-align:center; padding:20px; color:#64748B;"><i data-lucide="loader-2" class="spin" style="margin-right:8px;"></i> Memuat daftar pegawai...</div>';
+    lucide.createIcons();
+    
+    $.ajax({
+        url: 'ajax_get_employees_by_unit.php',
+        method: 'POST',
+        data: { unit: unit },
+        success: function(html) {
+            console.log("AJAX Success");
+            document.getElementById('excludeListWrap').innerHTML = html;
+        },
+        error: function(xhr, status, error) {
+            console.error("AJAX Error: " + status + " " + error);
+            document.getElementById('excludeListWrap').innerHTML = '<div style="color:#EF4444; font-size:12px; padding:20px; text-align:center;">Gagal memuat pegawai. Terjadi kesalahan pada server.</div>';
+        }
+    });
+}
+
+// Matrix Logic Functions
+function toggleMatrixCol(week, cb) {
+    document.querySelectorAll('.gen-exclude[data-week="'+week+'"]').forEach(c => c.checked = cb.checked);
+}
+function toggleMatrixRow(uid, cb) {
+    document.querySelectorAll('.gen-exclude[data-uid="'+uid+'"]').forEach(c => c.checked = cb.checked);
+}
+function toggleMatrixAll(cb) {
+    document.querySelectorAll('.gen-exclude').forEach(c => c.checked = cb.checked);
+    document.querySelectorAll('.row-trigger').forEach(c => c.checked = cb.checked);
+}
+function closeMagicGenerator() {
+    document.getElementById('magicOverlay').classList.remove('open');
+}
+
+function processGeneration() {
+    let quota = {};
+    document.querySelectorAll('.gen-quota').forEach(input => {
+        let val = parseInt(input.value);
+        if (val > 0) quota[input.dataset.id] = val;
+    });
+
+    let unit = document.getElementById('genUnit').value;
+
+    if(!unit) {
+        alert("Silakan pilih Unit Kerja terlebih dahulu!");
+        return;
+    }
+
+    if (Object.keys(quota).length === 0) {
+        alert("Silakan isi quota minimal untuk satu shift!");
+        return;
+    }
+
+    if (confirm("Sistem akan mengacak jadwal untuk SELURUH BULAN (Pekan 1-5) berdasarkan matriks pengecualian. Lanjutkan?")) {
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Memproses...';
+
+        // Fungsi rekursif atau loop untuk memproses semua pekan
+        async function runFullMonth() {
+            let genBulan = document.getElementById('genBulan').value;
+            let genTahun = document.getElementById('genTahun').value;
+            let successMsgs = [];
+            
+            for (let m = 1; m <= 5; m++) {
+                let exclude = [];
+                document.querySelectorAll('.gen-exclude[data-week="'+m+'"]:checked').forEach(cb => {
+                    exclude.push(cb.value);
+                });
+
+                try {
+                    const res = await $.ajax({
+                        url: 'ajax_generate_jadwal.php',
+                        method: 'POST',
+                        data: {
+                            unit: unit,
+                            bulan: genBulan,
+                            tahun: genTahun,
+                            minggu: m,
+                            quota: quota,
+                            exclude_ids: exclude
+                        }
+                    });
+                    if (res.success) successMsgs.push("Pekan " + m + ": Berhasil");
+                    else console.warn("Pekan " + m + " gagal: " + res.message);
+                } catch (e) {
+                    console.error("Pekan " + m + " error", e);
+                }
+            }
+            alert("Selesai! Jadwal untuk " + document.getElementById('genBulan').options[document.getElementById('genBulan').selectedIndex].text + " " + genTahun + " telah diperbarui.");
+            // Redirect ke bulan yang baru saja di-generate agar user bisa melihat hasilnya
+            location.href = "jadwal_dinas.php?bulan=" + genBulan + "&tahun=" + genTahun;
+        }
+
+        runFullMonth();
+    }
+}
 
 var curDay = 0;
 var shiftState = {}; // day -> {id, warna, nama}

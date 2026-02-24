@@ -48,5 +48,10 @@ Hasil analisis sistem **FixPoint** (v1.0 Source) untuk referensi pengembangan:
 ## 💡 Aturan Pengembangan (Dev Rules)
 Setiap pembuatan menu/file baru di dalam folder `dist` wajib menyertakan pengecekan hak akses di bagian paling atas file (setelah koneksi). Gunakan logika verifikasi berdasarkan `user_id` dan `basename(__FILE__)` terhadap tabel `akses_menu` untuk memastikan keamanan akses halaman per user.
 
+## ⚠️ Golden Rules for Feature Updates
+1.  **High-Precision Coding:** Mengingat projek ini memiliki **banyak sekali menu**, setiap penambahan atau perbaikan fitur wajib dilakukan dengan tingkat ketelitian tinggi.
+2.  **Regression Check:** Dilarang keras merusak fitur/menu yang sudah berjalan normal saat mengerjakan fitur baru. Lakukan simulasi dampak setiap kali mengubah file inti (seperti `config.php` atau `topbar.php`).
+3.  **One-Shot Reliability:** Karena proses pengujian seringkali terbatas (sekali jalan), pastikan kode sudah matang dan teruji secara mandiri sebelum dianggap selesai. Jangan sampai fitur yang sudah jadi kembali menjadi error.
+
 ---
 *Last Updated: 20 Februari 2026 - Antigravity Dev Team (Bara N. Fahrun)*

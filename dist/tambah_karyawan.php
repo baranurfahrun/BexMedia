@@ -22,7 +22,17 @@ mysqli_query($conn, "CREATE TABLE IF NOT EXISTS informasi_pribadi (
 $khanzaList = [];
 $khanzaError = '';
 if ($conn_sik) {
-    $res = mysqli_query($conn_sik, "SELECT id, nik, nama, jbtn FROM pegawai WHERE stts_aktif='AKTIF' ORDER BY nama ASC");
+    // Query Khanza: Ambil data pegawai lengkap + no_telp dari tabel petugas/dokter
+    $res = mysqli_query($conn_sik, "
+        SELECT p.id, p.nik, p.nama, p.jk, p.jbtn, p.bidang, p.tmp_lahir, p.tgl_lahir, p.alamat, p.kota, 
+               COALESCE(pt.no_telp, dr.no_telp) as no_telp 
+        FROM pegawai p 
+        LEFT JOIN petugas pt ON p.nik = pt.nip
+        LEFT JOIN dokter dr ON p.nik = dr.kd_dokter
+        WHERE p.stts_aktif='AKTIF' 
+        GROUP BY p.nik 
+        ORDER BY p.nama ASC
+    ");
     if ($res) {
         while ($row = mysqli_fetch_assoc($res)) $khanzaList[] = $row;
     } else {
@@ -31,6 +41,11 @@ if ($conn_sik) {
 } else {
     $khanzaError = 'Koneksi ke SIMRS Khanza tidak tersedia. Data diisi manual.';
 }
+
+// Ambil daftar unit kerja
+$unitResult = mysqli_query($conn, "SELECT id, nama_unit FROM unit_kerja ORDER BY nama_unit ASC");
+$unitList = [];
+while ($u = mysqli_fetch_assoc($unitResult)) $unitList[] = $u;
 
 // ============ SIMPAN KARYAWAN ============
 $errors = [];
@@ -135,17 +150,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['simpan'])) {
             font-family:'Outfit',sans-serif; transition:all 0.2s; color:#1E293B;
         }
         .khanza-search-input:focus { border-color:var(--primary); background:white; box-shadow:0 0 0 3px rgba(59,130,246,0.1); }
-        .khanza-list { max-height:280px; overflow-y:auto; border:1.5px solid #E2E8F0; border-radius:12px; background:white; }
-        .khanza-item {
-            padding:10px 16px; cursor:pointer; display:flex;
-            align-items:center; justify-content:space-between;
-            border-bottom:1px solid #F1F5F9; transition:all 0.15s;
-            font-size:0.88rem;
-        }
+        .khanza-list { max-height:300px; overflow-y:auto; border:1.5px solid #E2E8F0; border-radius:12px; background:white; position:relative; }
         .khanza-item:last-child { border-bottom:none; }
         .khanza-item:hover { background:#EFF6FF; }
         .khanza-item.selected { background:#EFF6FF; border-left:3px solid var(--primary); }
-        .khanza-badge { background:#EFF6FF; color:#1D4ED8; padding:2px 8px; border-radius:6px; font-size:0.72rem; font-weight:700; }
+        .khanza-badge { background:#EFF6FF; color:#1D4ED8; padding:2px 8px; border-radius:6px; font-size:0.72rem; font-weight:700; white-space:nowrap; }
+
+        /* Khanza Column Grid */
+        .khanza-header {
+            background:#F8FAFC; border-bottom:1.5px solid #E2E8F0;
+            padding:10px 16px; display:grid; grid-template-columns: 2fr 1.5fr 1.5fr 1.5fr 100px;
+            gap:12px; font-size:0.72rem; font-weight:800; color:#64748B; text-transform:uppercase;
+            position:sticky; top:0; z-index:10;
+        }
+        .khanza-item {
+            padding:12px 16px; cursor:pointer; display:grid;
+            grid-template-columns: 2fr 1.5fr 1.5fr 1.5fr 100px;
+            gap:12px; align-items:center;
+            border-bottom:1px solid #F1F5F9; transition:all 0.15s;
+            font-size:0.85rem;
+        }
+        .khanza-col-main { font-weight:700; color:#1E293B; }
+        .khanza-col-sub { color:#64748B; font-size:0.75rem; }
 
         /* Form */
         .form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
@@ -271,18 +297,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['simpan'])) {
 
                         <!-- List -->
                         <div class="khanza-list" id="khanzaList">
+                            <div class="khanza-header">
+                                <span>Nama Lengkap</span>
+                                <span>Jabatan</span>
+                                <span>Unit / Bidang</span>
+                                <span>TTL & Kontak</span>
+                                <span style="text-align:right;">NIK / ID</span>
+                            </div>
                             <?php foreach ($khanzaList as $k): ?>
                             <div class="khanza-item"
                                  data-id="<?= $k['id'] ?>"
                                  data-nama="<?= h($k['nama']) ?>"
                                  data-jbtn="<?= h($k['jbtn']) ?>"
                                  data-nik="<?= h($k['nik'] ?? '') ?>"
+                                 data-unit="<?= h($k['bidang'] ?? '') ?>"
+                                 data-jk="<?= $k['jk'] == 'Pria' || $k['jk'] == 'L' ? 'L' : ($k['jk'] == 'Wanita' || $k['jk'] == 'P' ? 'P' : '') ?>"
+                                 data-tmp="<?= h($k['tmp_lahir'] ?? '') ?>"
+                                 data-tgl="<?= h($k['tgl_lahir'] ?? '') ?>"
+                                 data-alamat="<?= h($k['alamat'] ?? '') ?>"
+                                 data-kota="<?= h($k['kota'] ?? '') ?>"
+                                 data-hp="<?= h($k['no_telp'] ?? '') ?>"
                                  onclick="selectKhanza(this)">
-                                <div>
-                                    <div style="font-weight:600;"><?= h($k['nama']) ?></div>
-                                    <div style="font-size:0.78rem;color:#64748B;"><?= h($k['jbtn']) ?></div>
+                                <div class="khanza-col-main"><?= h($k['nama']) ?></div>
+                                <div class="khanza-col-sub"><?= h($k['jbtn'] ?: '-') ?></div>
+                                <div class="khanza-col-sub"><?= h($k['bidang'] ?: '-') ?></div>
+                                <div style="font-size:0.7rem;color:#94A3B8;">
+                                    <?= h($k['tmp_lahir']) ?>, <?= h($k['tgl_lahir']) ?><br>
+                                    <span style="color:#64748B;">HP: <?= h($k['no_telp'] ?: '-') ?></span>
                                 </div>
-                                <span class="khanza-badge">ID #<?= $k['id'] ?></span>
+                                <div style="text-align:right;">
+                                    <div style="font-size:0.75rem;font-weight:700;color:#64748B;"><?= h($k['nik']) ?></div>
+                                    <span class="khanza-badge">ID #<?= $k['id'] ?></span>
+                                </div>
                             </div>
                             <?php endforeach; ?>
 
@@ -325,9 +371,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['simpan'])) {
                                    value="<?= h($_POST['jabatan'] ?? '') ?>" placeholder="Jabatan/posisi" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Unit Kerja</label>
-                            <input type="text" name="unit_kerja" id="fUnit" class="form-input"
-                                   value="<?= h($_POST['unit_kerja'] ?? '') ?>" placeholder="Departemen/unit">
+                            <label class="form-label" style="display:flex;justify-content:space-between;align-items:center;">
+                                Unit Kerja
+                                <button type="button" onclick="openAddUnitModal()" style="background:none;border:none;color:var(--primary);font-size:0.7rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:3px;">
+                                    <i data-lucide="plus-circle" size="12"></i> TAMBAH UNIT
+                                </button>
+                            </label>
+                            <select name="unit_kerja" id="fUnit" class="form-select">
+                                <option value="">— Pilih Unit Kerja —</option>
+                                <?php foreach ($unitList as $u): ?>
+                                <option value="<?= h($u['nama_unit']) ?>" <?= ($_POST['unit_kerja']??'')==$u['nama_unit']?'selected':'' ?>>
+                                    <?= h($u['nama_unit']) ?>
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                     </div>
                     <div class="form-row">
@@ -338,7 +395,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['simpan'])) {
                         </div>
                         <div class="form-group">
                             <label class="form-label">No. HP</label>
-                            <input type="text" name="no_hp" class="form-input"
+                            <input type="text" name="no_hp" id="fNoHP" class="form-input"
                                    value="<?= h($_POST['no_hp'] ?? '') ?>" placeholder="08xx-xxxx-xxxx">
                         </div>
                     </div>
@@ -366,23 +423,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['simpan'])) {
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Tempat Lahir</label>
-                            <input type="text" name="tempat_lahir" class="form-input" value="<?= h($_POST['tempat_lahir']??'') ?>" placeholder="Kota lahir">
+                            <input type="text" name="tempat_lahir" id="fTmp" class="form-input" value="<?= h($_POST['tempat_lahir']??'') ?>" placeholder="Kota lahir">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Tanggal Lahir</label>
-                            <input type="date" name="tanggal_lahir" class="form-input" value="<?= h($_POST['tanggal_lahir']??'') ?>">
+                            <input type="date" name="tanggal_lahir" id="fTgl" class="form-input" value="<?= h($_POST['tanggal_lahir']??'') ?>">
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Kota</label>
-                            <input type="text" name="kota" class="form-input" value="<?= h($_POST['kota']??'') ?>" placeholder="Kota domisili">
+                            <input type="text" name="kota" id="fKota" class="form-input" value="<?= h($_POST['kota']??'') ?>" placeholder="Kota domisili">
                         </div>
                     </div>
                     <div class="form-row single">
                         <div class="form-group">
                             <label class="form-label">Alamat</label>
-                            <input type="text" name="alamat" class="form-input" value="<?= h($_POST['alamat']??'') ?>" placeholder="Alamat lengkap">
+                            <input type="text" name="alamat" id="fAlamat" class="form-input" value="<?= h($_POST['alamat']??'') ?>" placeholder="Alamat lengkap">
                         </div>
                     </div>
                 </div>
@@ -397,7 +454,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['simpan'])) {
     </main>
 </div>
 
+<!-- Modal Tambah Unit -->
+<div class="modal-overlay" id="unitModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+    <div style="background:white;padding:24px;border-radius:20px;width:90%;max-width:400px;box-shadow:0 10px 40px rgba(0,0,0,0.2);">
+        <h3 style="font-family:'Outfit',sans-serif;font-weight:800;font-size:1.1rem;margin-bottom:15px;display:flex;align-items:center;gap:10px;">
+            <i data-lucide="plus-circle" style="color:var(--primary)"></i> Tambah Unit Kerja Baru
+        </h3>
+        <input type="text" id="newUnitName" class="form-input" style="width:100%; margin-bottom:20px; box-sizing:border-box;" placeholder="Nama Unit (Contoh: Anyelir)">
+        <div style="display:flex;gap:10px;">
+            <button type="button" class="btn-prim" style="flex:1;" onclick="submitNewUnit()">Simpan Unit</button>
+            <button type="button" class="btn-ghost" onclick="closeAddUnitModal()">Batal</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+function openAddUnitModal() {
+    document.getElementById('unitModal').style.display = 'flex';
+}
+function closeAddUnitModal() {
+    document.getElementById('unitModal').style.display = 'none';
+}
+function submitNewUnit() {
+    let name = document.getElementById('newUnitName').value.trim();
+    if(!name) return alert("Nama unit tidak boleh kosong!");
+
+    $.ajax({
+        url: 'ajax_add_unit.php',
+        method: 'POST',
+        data: { nama_unit: name },
+        success: function(res) {
+            if(res.success) {
+                let sel = document.getElementById('fUnit');
+                let opt = document.createElement('option');
+                opt.value = res.nama;
+                opt.textContent = res.nama;
+                opt.selected = true;
+                sel.appendChild(opt);
+                closeAddUnitModal();
+                document.getElementById('newUnitName').value = '';
+                lucide.createIcons();
+            } else {
+                alert(res.message || "Gagal menambah unit.");
+            }
+        },
+        error: function() { alert("Terjadi kesalahan sistem."); }
+    });
+}
+
+
 lucide.createIcons();
 
 var selectedKhanzaId = null;
@@ -425,14 +531,22 @@ function selectKhanza(el) {
     var nik  = el.dataset.nik;
 
     // Fill form
-    document.getElementById('fNama').value    = nama;
-    document.getElementById('fJabatan').value = jbtn;
-    document.getElementById('fNik').value     = nik;
+    document.getElementById('fNama').value     = nama;
+    document.getElementById('fJabatan').value  = jbtn;
+    document.getElementById('fNik').value      = nik;
+    document.getElementById('fUnit').value     = el.dataset.unit || '';
+    document.getElementById('fJK').value       = el.dataset.jk || '';
+    document.getElementById('fNoHP').value     = el.dataset.hp || '';
+    document.getElementById('fTmp').value      = el.dataset.tmp || '';
+    document.getElementById('fTgl').value      = el.dataset.tgl || '';
+    document.getElementById('fAlamat').value   = el.dataset.alamat || '';
+    document.getElementById('fKota').value     = el.dataset.kota || '';
+    
     document.getElementById('hKhanzaId').value = id;
     selectedKhanzaId = id;
 
     // Mark as autofilled
-    ['fNama','fJabatan','fNik'].forEach(f => {
+    ['fNama','fJabatan','fNik','fUnit','fJK','fNoHP','fTmp','fTgl','fAlamat','fKota'].forEach(f => {
         var el2 = document.getElementById(f);
         if (el2) el2.classList.add('autofilled');
     });

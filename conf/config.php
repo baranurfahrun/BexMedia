@@ -112,10 +112,29 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true && isset($con
 if (!$conn) die("Gagal koneksi ke DB INTERNAL BEXMEDIA!");
 mysqli_query($conn, "SET NAMES 'latin1'");
 
-// --- KONEKSI KHANZA ---
-$conn_sik = mysqli_connect($host_khanza, $user_khanza, $pass_khanza, $name_khanza);
-if ($conn_sik) {
-    mysqli_query($conn_sik, "SET NAMES 'latin1'");
+// --- KONEKSI KHANZA (REMOTE SERVER) ---
+// Logika skip cerdas: jika pernah gagal, jangan coba lagi selama 5 menit agar tidak lemot
+$is_settings_page = (strpos($_SERVER['SCRIPT_NAME'], 'settings.php') !== false);
+$khanza_down_time = $_SESSION['khanza_down_until'] ?? 0;
+
+if (!$is_settings_page && time() < $khanza_down_time) {
+    // Skip koneksi karena sedang masa hukuman (down)
+    $conn_sik = false;
+} else {
+    $conn_sik = mysqli_init();
+    mysqli_options($conn_sik, MYSQLI_OPT_CONNECT_TIMEOUT, 2); 
+    $sik_connected = @mysqli_real_connect($conn_sik, $host_khanza, $user_khanza, $pass_khanza, $name_khanza);
+
+    if ($sik_connected) {
+        mysqli_query($conn_sik, "SET NAMES 'latin1'");
+        unset($_SESSION['khanza_down_until']); // Reset jika sukses
+    } else {
+        $conn_sik = false;
+        // Jika gagal, jangan coba lagi selama 5 menit (kecuali di halaman settings)
+        if (!$is_settings_page) {
+            $_SESSION['khanza_down_until'] = time() + 300; 
+        }
+    }
 }
 
 // Migrasi Tabel
@@ -181,23 +200,25 @@ mysqli_query($conn, "CREATE TABLE IF NOT EXISTS web_settings (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 )");
 
-// Cek & Isi Setting Default jika kosong
-$check_settings = mysqli_query($conn, "SELECT setting_key FROM web_settings");
-if (mysqli_num_rows($check_settings) == 0) {
-    mysqli_query($conn, "INSERT INTO web_settings (setting_key, setting_value) VALUES 
-        ('app_name', 'BexMedia'),
-        ('host_khanza', '192.20.20.253'),
-        ('user_khanza', 'root'),
-        ('pass_khanza', 'root'),
-        ('name_khanza', 'sik'),
-        ('host_bex', 'localhost'),
-        ('user_bex', 'root'),
-        ('pass_bex', ''),
-        ('name_bex', 'bexmedia'),
-        ('app_version', 'V. 1. - .20.02.2026'),
-        ('telegram_bot_token', ''),
-        ('telegram_chat_id', ''),
-        ('wa_gateway_url', '')");
+// Cek & Isi Setting Default satu-persatu (Robust Initialization)
+$default_settings = [
+    'app_name'           => 'BexMedia',
+    'host_khanza'        => '192.20.20.253',
+    'user_khanza'        => 'root',
+    'pass_khanza'        => 'root',
+    'name_khanza'        => 'sik',
+    'host_bex'           => 'localhost',
+    'user_bex'           => 'root',
+    'pass_bex'           => '',
+    'name_bex'           => 'bexmedia',
+    'app_version'        => 'V. 1. - .20.02.2026',
+    'telegram_bot_token' => '',
+    'telegram_chat_id'   => '',
+    'wa_gateway_url'     => ''
+];
+
+foreach ($default_settings as $key => $val) {
+    mysqli_query($conn, "INSERT IGNORE INTO web_settings (setting_key, setting_value) VALUES ('$key', '$val')");
 }
 
 // --- HELPER KEAMANAN ---

@@ -33,7 +33,7 @@ if (!file_exists($logo_path) || md5_file($logo_path) !== $hash_content) {
 $status_msg = "";
 
 // --- MAIL SETTINGS SAVE ---
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_mail'])) {
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_mail']) && $_POST['save_mail'] == '1') {
     csrf_verify();
     $mid              = intval($_POST['mail_id'] ?? 0);
     $mail_host        = mysqli_real_escape_string($conn, $_POST['mail_host'] ?? '');
@@ -60,15 +60,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_mail'])) {
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_settings'])) {
     csrf_verify();
     
-    // --- PART 1: UPDATE GENERAL & DATABASE SETTINGS ---
     $settings_fields = ['app_name', 'host_khanza', 'name_khanza', 'user_khanza', 'pass_khanza', 'host_bex', 'name_bex', 'user_bex', 'pass_bex'];
-    foreach ($_POST as $key => $value) {
-        if (in_array($key, $settings_fields)) {
-            $safe_val = mysqli_real_escape_string($conn, $value);
-            mysqli_query($conn, "UPDATE web_settings SET setting_value = '$safe_val' WHERE setting_key = '$key'");
+    $updated_count = 0;
+    $saved_keys = [];
+    foreach ($settings_fields as $key) {
+        if (isset($_POST[$key])) {
+            $val = $_POST[$key];
+            $safe_val = mysqli_real_escape_string($conn, $val);
+            // Paksa Update langsung
+            $res = mysqli_query($conn, "UPDATE web_settings SET setting_value = '$safe_val' WHERE setting_key = '$key'");
+            if ($res && mysqli_affected_rows($conn) > 0) {
+                $updated_count++;
+                $saved_keys[] = $key;
+            }
         }
     }
-    write_log("UPDATE_SETTINGS", "User " . $_SESSION['username'] . " memperbarui pengaturan sistem.");
+    write_log("UPDATE_SETTINGS", "User " . $_SESSION['username'] . " [DEBUG] Masuk: " . count($saved_keys) . " field (" . implode(",", $saved_keys) . ")");
+
+    $active_tab = "general";
+    if (isset($_POST['host_khanza'])) $active_tab = "connection";
 
     // --- PART 2: UPDATE USER PROFILE (IF FIELDS PRESENT) ---
     if (isset($_POST['nama_lengkap'])) {
@@ -118,7 +128,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_settings'])) {
         }
     }
     
-    $status_msg = "Seluruh perubahan berhasil disimpan!";
+    if (isset($_POST['nama_lengkap'])) $active_tab = "profile";
+
+    header("Location: settings.php?tab=$active_tab&saved=1");
+    exit;
 }
 
 // --- PART 3: ACTIVATE PENDING USER ---
@@ -162,6 +175,27 @@ if (($_SESSION['login_source'] ?? 'BEXMEDIA') === 'BEXMEDIA') {
         $_SESSION['user_photo'] = $user_photo;
     }
 }
+
+// --- PART 5: DATABASE PRE-CHECK ---
+$khanza_status = 'offline';
+$bex_status = 'offline';
+
+// Check Khanza
+if (isset($conn_sik) && $conn_sik !== false) {
+    $khanza_status = 'online';
+} else {
+    $test_sik = mysqli_init();
+    mysqli_options($test_sik, MYSQLI_OPT_CONNECT_TIMEOUT, 1);
+    if (@mysqli_real_connect($test_sik, get_setting('host_khanza'), get_setting('user_khanza'), get_setting('pass_khanza'), get_setting('name_khanza'))) {
+        $khanza_status = 'online';
+        mysqli_close($test_sik);
+    }
+}
+
+// Check Bex (Local)
+if (isset($conn) && $conn !== false) {
+    $bex_status = 'online';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -172,6 +206,7 @@ if (($_SESSION['login_source'] ?? 'BEXMEDIA') === 'BEXMEDIA') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Settings | <?php echo h($brand_name); ?></title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="../css/index.css">
@@ -428,6 +463,8 @@ if (($_SESSION['login_source'] ?? 'BEXMEDIA') === 'BEXMEDIA') {
         }
         .menu-check-item:hover { background: #F1F5F9; }
         .menu-check-item input { width: 18px; height: 18px; cursor: pointer; }
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -448,10 +485,14 @@ if (($_SESSION['login_source'] ?? 'BEXMEDIA') === 'BEXMEDIA') {
                     <p>Configure your hybrid server and application parameters.</p>
                 </div>
 
-                <?php if ($status_msg): ?>
+                <?php 
+                $msg = $status_msg;
+                if (isset($_GET['saved'])) $msg = "Pengaturan berhasil disimpan!";
+                if ($msg): 
+                ?>
                     <div class="status-toast" id="statusToast">
                         <i data-lucide="check-circle" size="18" style="vertical-align: middle; margin-right: 8px"></i>
-                        <?php echo $status_msg; ?>
+                        <?php echo $msg; ?>
                     </div>
                 <?php endif; ?>
 
@@ -556,50 +597,82 @@ if (($_SESSION['login_source'] ?? 'BEXMEDIA') === 'BEXMEDIA') {
                         <!-- TAB: CONNECTION -->
                         <div id="connection" class="tab-content">
                             <div class="form-section">
-                                <h3>Database Khanza (Remote Server)</h3>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #EEE; padding-bottom: 10px;">
+                                    <h3 style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">Database Khanza (Remote Server)</h3>
+                                    <?php if ($khanza_status === 'online'): ?>
+                                        <span id="khanzaStatusBadge" class="badge badge-success" style="transition: all 0.3s;"><i data-lucide="check" size="12" style="vertical-align:middle; margin-right:4px"></i> Connected</span>
+                                    <?php else: ?>
+                                        <span id="khanzaStatusBadge" class="badge badge-warn" style="background:#FEE2E2; color:#B91C1C; transition: all 0.3s;"><i data-lucide="x" size="12" style="vertical-align:middle; margin-right:4px"></i> Disconnected</span>
+                                    <?php endif; ?>
+                                </div>
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label>Hostname / IP</label>
-                                        <input type="text" name="host_khanza" value="<?php echo h(get_setting('host_khanza')); ?>">
+                                        <input type="text" name="host_khanza" id="host_khanza" value="<?php echo h(get_setting('host_khanza')); ?>">
                                     </div>
                                     <div class="form-group">
                                         <label>Database Name</label>
-                                        <input type="text" name="name_khanza" value="<?php echo h(get_setting('name_khanza')); ?>">
+                                        <input type="text" name="name_khanza" id="name_khanza" value="<?php echo h(get_setting('name_khanza')); ?>">
                                     </div>
                                 </div>
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label>Username</label>
-                                        <input type="text" name="user_khanza" value="<?php echo h(get_setting('user_khanza')); ?>">
+                                        <input type="text" name="user_khanza" id="user_khanza" value="<?php echo h(get_setting('user_khanza')); ?>">
                                     </div>
                                     <div class="form-group">
                                         <label>Password</label>
-                                        <input type="password" name="pass_khanza" value="<?php echo h(get_setting('pass_khanza')); ?>">
+                                        <input type="password" name="pass_khanza" id="pass_khanza" value="<?php echo h(get_setting('pass_khanza')); ?>">
                                     </div>
+                                </div>
+                                <div style="margin-top:-10px; margin-bottom:20px; display: flex; gap: 10px;">
+                                    <button type="button" id="btnTestKhanza" class="btn-save" style="background:#F1F5F9; color:#475569; padding:10px 18px; font-size:0.8rem; border:1px solid #E2E8F0; display:flex; align-items:center;" onclick="testKhanzaConnection()">
+                                        <i data-lucide="refresh-cw" size="14" style="margin-right:6px"></i> Tes Koneksi Remote
+                                    </button>
+                                    <span id="khanzaDot" style="display:inline-block; width:10px; height:10px; border-radius:50%; background:<?php echo ($khanza_status === 'online' ? '#10B981' : '#EF4444'); ?>; margin-left:5px; transition: background 0.3s;" title="Status Koneksi"></span>
+                                    <button type="submit" name="save_settings" class="btn-save" style="padding:10px 18px; font-size:0.8rem;">
+                                        <i data-lucide="save" size="14" style="vertical-align:middle; margin-right:6px"></i> Simpan Konfigurasi Remote
+                                    </button>
                                 </div>
                             </div>
 
                             <div class="form-section">
-                                <h3>Database BexMedia (Local Server)</h3>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #EEE; padding-bottom: 10px;">
+                                    <h3 style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">Database BexMedia (Local Server)</h3>
+                                    <?php if ($bex_status === 'online'): ?>
+                                        <span id="bexStatusBadge" class="badge badge-success" style="transition: all 0.3s;"><i data-lucide="check" size="12" style="vertical-align:middle; margin-right:4px"></i> Connected</span>
+                                    <?php else: ?>
+                                        <span id="bexStatusBadge" class="badge badge-warn" style="background:#FEE2E2; color:#B91C1C; transition: all 0.3s;"><i data-lucide="x" size="12" style="vertical-align:middle; margin-right:4px"></i> Disconnected</span>
+                                    <?php endif; ?>
+                                </div>
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label>Hostname</label>
-                                        <input type="text" name="host_bex" value="<?php echo h(get_setting('host_bex')); ?>">
+                                        <input type="text" name="host_bex" id="host_bex" value="<?php echo h(get_setting('host_bex')); ?>">
                                     </div>
                                     <div class="form-group">
                                         <label>Database Name</label>
-                                        <input type="text" name="name_bex" value="<?php echo h(get_setting('name_bex')); ?>">
+                                        <input type="text" name="name_bex" id="name_bex" value="<?php echo h(get_setting('name_bex')); ?>">
                                     </div>
                                 </div>
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label>Username</label>
-                                        <input type="text" name="user_bex" value="<?php echo h(get_setting('user_bex')); ?>">
+                                        <input type="text" name="user_bex" id="user_bex" value="<?php echo h(get_setting('user_bex')); ?>">
                                     </div>
                                     <div class="form-group">
                                         <label>Password</label>
-                                        <input type="password" name="pass_bex" value="<?php echo h(get_setting('pass_bex')); ?>">
+                                        <input type="password" name="pass_bex" id="pass_bex" value="<?php echo h(get_setting('pass_bex')); ?>">
                                     </div>
+                                </div>
+                                <div style="margin-top:-10px; margin-bottom:20px; display: flex; gap: 10px;">
+                                    <button type="button" id="btnTestBex" class="btn-save" style="background:#F1F5F9; color:#475569; padding:10px 18px; font-size:0.8rem; border:1px solid #E2E8F0; display:flex; align-items:center;" onclick="testBexConnection()">
+                                        <i data-lucide="refresh-cw" size="14" style="margin-right:6px"></i> Tes Koneksi Lokal
+                                    </button>
+                                    <span id="bexDot" style="display:inline-block; width:10px; height:10px; border-radius:50%; background:<?php echo ($bex_status === 'online' ? '#10B981' : '#EF4444'); ?>; margin-left:5px; transition: background 0.3s;" title="Status Koneksi"></span>
+                                    <button type="submit" name="save_settings" class="btn-save" style="padding:10px 18px; font-size:0.8rem;">
+                                        <i data-lucide="save" size="14" style="vertical-align:middle; margin-right:6px"></i> Simpan Konfigurasi Lokal
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -930,7 +1003,7 @@ if (($_SESSION['login_source'] ?? 'BEXMEDIA') === 'BEXMEDIA') {
             const el = document.getElementById(activeTab);
             if (el) el.classList.add('active');
             document.getElementById('saveContainer').style.display = 
-                ['logs','confirm','access','userlist','integrity','email'].includes(activeTab) ? 'none' : 'block';
+                ['logs','confirm','access','userlist','integrity','email', 'connection'].includes(activeTab) ? 'none' : 'block';
         }
 
         function showTab(tabId) {
@@ -948,7 +1021,7 @@ if (($_SESSION['login_source'] ?? 'BEXMEDIA') === 'BEXMEDIA') {
 
             // Save button visibility
             const saveBtn = document.getElementById('saveContainer');
-            if (tabId === 'logs' || tabId === 'confirm' || tabId === 'access' || tabId === 'userlist' || tabId === 'integrity' || tabId === 'email') {
+            if (tabId === 'logs' || tabId === 'confirm' || tabId === 'access' || tabId === 'userlist' || tabId === 'integrity' || tabId === 'email' || tabId === 'connection') {
                 saveBtn.style.display = 'none';
             } else {
                 saveBtn.style.display = 'block';
@@ -1038,6 +1111,114 @@ if (($_SESSION['login_source'] ?? 'BEXMEDIA') === 'BEXMEDIA') {
 
         function closeAccessModal() {
             document.getElementById('accessModal').classList.remove('active');
+        }
+
+        function testKhanzaConnection() {
+            const host = document.getElementById('host_khanza').value;
+            const name = document.getElementById('name_khanza').value;
+            const user = document.getElementById('user_khanza').value;
+            const pass = document.getElementById('pass_khanza').value;
+            
+            const btn = document.getElementById('btnTestKhanza');
+            const originalHTML = btn.innerHTML;
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="spin" size="14" style="vertical-align:middle; margin-right:6px"></i> Menghubungkan...';
+            lucide.createIcons();
+            
+            $.ajax({
+                url: 'ajax_test_db.php',
+                method: 'POST',
+                data: { host: host, name: name, user: user, pass: pass },
+                success: function(res) {
+                    const badge = document.getElementById('khanzaStatusBadge');
+                    const dot = document.getElementById('khanzaDot');
+                    if (badge) badge.style.display = 'inline-block';
+                    
+                    if (res.success) {
+                        if (badge) {
+                            badge.className = 'badge badge-success';
+                            badge.style.background = ''; // Reset style kegagalan sebelumnya
+                            badge.style.color = '';
+                            badge.innerHTML = '<i data-lucide="check" size="12" style="vertical-align:middle; margin-right:4px"></i> Connected';
+                        }
+                        if (dot) dot.style.background = '#10B981';
+                        Swal.fire({ title: 'Koneksi Berhasil!', text: res.message, icon: 'success', confirmButtonColor: '#3B82F6' });
+                    } else {
+                        if (badge) {
+                            badge.className = 'badge badge-warn';
+                            badge.style.background = '#FEE2E2';
+                            badge.style.color = '#B91C1C';
+                            badge.innerHTML = '<i data-lucide="x" size="12" style="vertical-align:middle; margin-right:4px"></i> Disconnected';
+                        }
+                        if (dot) dot.style.background = '#EF4444';
+                        Swal.fire({ title: 'Koneksi Gagal', text: res.message, icon: 'error', confirmButtonColor: '#EF4444' });
+                    }
+                    lucide.createIcons();
+                },
+                error: function() {
+                    Swal.fire('Error', 'Terjadi kesalahan sistem saat mencoba koneksi.', 'error');
+                },
+                complete: function() {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHTML;
+                    lucide.createIcons();
+                }
+            });
+        }
+
+        function testBexConnection() {
+            const host = document.getElementById('host_bex').value;
+            const name = document.getElementById('name_bex').value;
+            const user = document.getElementById('user_bex').value;
+            const pass = document.getElementById('pass_bex').value;
+            
+            const btn = document.getElementById('btnTestBex');
+            const originalHTML = btn.innerHTML;
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="spin" size="14" style="vertical-align:middle; margin-right:6px"></i> Menghubungkan...';
+            lucide.createIcons();
+            
+            $.ajax({
+                url: 'ajax_test_db.php',
+                method: 'POST',
+                data: { host: host, name: name, user: user, pass: pass },
+                success: function(res) {
+                    const badge = document.getElementById('bexStatusBadge');
+                    const dot = document.getElementById('bexDot');
+                    if (badge) badge.style.display = 'inline-block';
+                    
+                    if (res.success) {
+                        if (badge) {
+                            badge.className = 'badge badge-success';
+                            badge.style.background = ''; // Reset style kegagalan sebelumnya
+                            badge.style.color = '';
+                            badge.innerHTML = '<i data-lucide="check" size="12" style="vertical-align:middle; margin-right:4px"></i> Connected';
+                        }
+                        if (dot) dot.style.background = '#10B981';
+                        Swal.fire({ title: 'Koneksi Berhasil!', text: res.message, icon: 'success', confirmButtonColor: '#3B82F6' });
+                    } else {
+                        if (badge) {
+                            badge.className = 'badge badge-warn';
+                            badge.style.background = '#FEE2E2';
+                            badge.style.color = '#B91C1C';
+                            badge.innerHTML = '<i data-lucide="x" size="12" style="vertical-align:middle; margin-right:4px"></i> Disconnected';
+                        }
+                        if (dot) dot.style.background = '#EF4444';
+                        Swal.fire({ title: 'Koneksi Gagal', text: res.message, icon: 'error', confirmButtonColor: '#EF4444' });
+                    }
+                    lucide.createIcons();
+                },
+                error: function() {
+                    Swal.fire('Error', 'Terjadi kesalahan sistem saat mencoba koneksi.', 'error');
+                },
+                complete: function() {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHTML;
+                    lucide.createIcons();
+                }
+            });
         }
     </script>
 
