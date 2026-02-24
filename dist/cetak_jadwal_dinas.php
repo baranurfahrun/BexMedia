@@ -7,7 +7,7 @@ use Dompdf\Dompdf;
 date_default_timezone_set('Asia/Jakarta');
 
 // Cek login
-if (!isset($_SESSION['nama'])) {
+if (!isset($_SESSION['nama_user']) && !isset($_SESSION['username'])) {
     die("Anda belum login.");
 }
 
@@ -16,7 +16,7 @@ $q_perusahaan = mysqli_query($conn, "SELECT * FROM perusahaan LIMIT 1");
 $perusahaan   = mysqli_fetch_assoc($q_perusahaan);
 
 // Ambil nama user login
-$nama_login = $_SESSION['nama'] ?? 'User Login';
+$nama_login = $_SESSION['nama_user'] ?? ($_SESSION['username'] ?? 'User Login');
 
 // Ambil filter bulan/tahun
 $bulan = $_GET['bulan'] ?? date('n');
@@ -33,12 +33,11 @@ $bulanIndo = [
 
 // Mapping kode shift
 $kodeShift = [
-    'Pagi'  => 'P',
-    'Siang' => 'S',
-    'Malam' => 'M',
-    'Libur' => 'L',
-    'Tetap' => 'P'
-
+    'Pagi'         => 'P',
+    'Siang'        => 'S',
+    'Malam'        => 'M',
+    'Lepas Malam'  => 'Lepas',
+    'Libur'        => 'L'
 ];
 
 // Ambil daftar jam kerja
@@ -49,11 +48,11 @@ while ($j = mysqli_fetch_assoc($jamQuery)) {
 }
 
 // Ambil data jadwal tersimpan
-$savedQuery = "SELECT jd.*, u.nama AS nama_karyawan, u.unit_kerja 
+$savedQuery = "SELECT jd.*, u.nama_lengkap AS nama_karyawan, u.unit_kerja 
                FROM jadwal_dinas jd
                JOIN users u ON jd.user_id=u.id
                WHERE jd.bulan='$bulan' AND jd.tahun='$tahun'
-               ORDER BY u.unit_kerja, u.nama, jd.tanggal";
+               ORDER BY u.unit_kerja, u.nama_lengkap, jd.tanggal";
 $savedResult = mysqli_query($conn, $savedQuery);
 
 $savedData = [];

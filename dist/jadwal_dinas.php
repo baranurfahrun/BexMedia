@@ -22,11 +22,10 @@ mysqli_query($conn, "CREATE TABLE IF NOT EXISTS `jam_kerja` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
 mysqli_query($conn, "INSERT IGNORE INTO `jam_kerja` (`kode`,`nama_jam`,`jam_mulai`,`jam_selesai`,`warna`) VALUES
-  ('PAGI','Pagi','07:00:00','14:00:00','#3B82F6'),
+  ('PAGI','Pagi','09:00:00','14:00:00','#3B82F6'),
   ('SIANG','Siang','14:00:00','21:00:00','#10B981'),
-  ('MALAM','Malam','21:00:00','07:00:00','#8B5CF6'),
-  ('MID_P','Middle Pagi','10:00:00','17:00:00','#F59E0B'),
-  ('MID_S','Middle Siang','17:00:00','00:00:00','#EF4444'),
+  ('MALAM','Malam','21:00:00','09:00:00','#8B5CF6'),
+  ('LEPAS','Lepas Malam','00:00:00','00:00:00','#64748B'),
   ('LIBUR','Libur','00:00:00','00:00:00','#94A3B8')");
 
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS `jadwal_dinas` (
@@ -57,7 +56,13 @@ $unitLogin = $unitRow['unit_kerja'] ?? '';
 $username = $_SESSION['username'] ?? '';
 $isAdmin  = ($username === 'admin' || $username === 'bara');
 
-if ($isAdmin || $unitLogin === '') {
+// Ambil filter unit dari GET
+$view_unit = $_GET['unit'] ?? ($isAdmin ? '' : $unitLogin);
+
+if ($view_unit !== '') {
+    $uk = mysqli_real_escape_string($conn, $view_unit);
+    $userResult = mysqli_query($conn, "SELECT id, nama_lengkap AS nama, unit_kerja FROM users WHERE unit_kerja='$uk' ORDER BY nama_lengkap");
+} else if ($isAdmin) {
     $userResult = mysqli_query($conn, "SELECT id, nama_lengkap AS nama, unit_kerja FROM users ORDER BY nama_lengkap");
 } else {
     $uk = mysqli_real_escape_string($conn, $unitLogin);
@@ -128,30 +133,73 @@ $selected_emp   = (int)($_GET['emp']   ?? 0);
 $daysInMonth    = (int)date('t', strtotime("$selected_tahun-$selected_bulan-01"));
 
 // Ambil data jadwal tersimpan bulan ini
+$filterUnitSql = "";
+if ($view_unit !== '') {
+    $uk_esc = mysqli_real_escape_string($conn, $view_unit);
+    $filterUnitSql = "AND u.unit_kerja = '$uk_esc'";
+}
+
 $savedResult = mysqli_query($conn, "SELECT jd.id, jd.user_id, jd.tanggal, jd.jam_kerja_id,
     u.nama_lengkap AS nama_kary, jk.nama_jam, jk.warna
     FROM jadwal_dinas jd
     JOIN users u ON jd.user_id=u.id
     JOIN jam_kerja jk ON jd.jam_kerja_id=jk.id
-    WHERE jd.bulan='$selected_bulan' AND jd.tahun='$selected_tahun'
+    WHERE jd.bulan='$selected_bulan' AND jd.tahun='$selected_tahun' $filterUnitSql
     ORDER BY u.nama_lengkap, jd.tanggal");
 
-$savedData = []; $savedIds = [];
+$savedData = []; $savedIds = []; $savedNames = [];
 while ($row = mysqli_fetch_assoc($savedResult)) {
     $tgl = (int)date('j', strtotime($row['tanggal']));
-    $savedData[$row['nama_kary']][$tgl] = [
+    $uid = $row['user_id'];
+    $savedData[$uid][$tgl] = [
         'nama'  => $row['nama_jam'],
         'warna' => $row['warna'],
         'kid'   => $row['jam_kerja_id'],
     ];
-    $savedIds[$row['nama_kary']][$tgl] = $row['id'];
+    $savedIds[$uid][$tgl] = $row['id'];
+    $savedNames[$uid] = $row['nama_kary'];
 }
 
-// Hitung rekap shift per orang untuk bulan ini
+// ============ HAPUS JADWAL PER KARYAWAN ============
+if (isset($_POST['hapus_karyawan'])) {
+    csrf_verify();
+    $uid = (int)$_POST['user_id'];
+    $bln = (int)$_POST['bulan'];
+    $thn = (int)$_POST['tahun'];
+    mysqli_query($conn, "DELETE FROM jadwal_dinas WHERE user_id=$uid AND bulan=$bln AND tahun=$thn");
+    write_log("JADWAL_HAPUS_KARYAWAN", "User $nama_user menghapus jadwal user_id=$uid bulan=$bln/$thn");
+    $_SESSION['flash_message'] = "Jadwal karyawan berhasil dikosongkan.";
+    header("Location: jadwal_dinas.php?bulan=$bln&tahun=$thn");
+    exit;
+}
+
+// ============ HAPUS SEMUA JADWAL BULAN INI ============
+if (isset($_POST['hapus_semua'])) {
+    csrf_verify();
+    $bln = (int)$_POST['bulan'];
+    $thn = (int)$_POST['tahun'];
+    
+    if ($isAdmin) {
+        mysqli_query($conn, "DELETE FROM jadwal_dinas WHERE bulan=$bln AND tahun=$thn");
+    } else {
+        $uk = mysqli_real_escape_string($conn, $unitLogin);
+        mysqli_query($conn, "DELETE FROM jadwal_dinas WHERE bulan=$bln AND tahun=$thn AND user_id IN (SELECT id FROM users WHERE unit_kerja='$uk')");
+    }
+    
+    write_log("JADWAL_HAPUS_SEMUA", "User $nama_user menghapus SEMUA jadwal bulan=$bln/$thn");
+    $_SESSION['flash_message'] = "Semua jadwal bulan ini berhasil dikosongkan.";
+    header("Location: jadwal_dinas.php?bulan=$bln&tahun=$thn");
+    exit;
+}
+
+// Hitung rekap shift per orang & global untuk bulan ini
 $rekapShift = [];
-foreach ($savedData as $karyawan => $tglData) {
+$globalRekapShift = [];
+foreach ($savedData as $uid => $tglData) {
     foreach ($tglData as $tgl => $entry) {
-        $rekapShift[$karyawan][$entry['kid']] = ($rekapShift[$karyawan][$entry['kid']] ?? 0) + 1;
+        $kid = $entry['kid'];
+        $rekapShift[$uid][$kid] = ($rekapShift[$uid][$kid] ?? 0) + 1;
+        $globalRekapShift[$kid] = ($globalRekapShift[$kid] ?? 0) + 1;
     }
 }
 
@@ -173,6 +221,7 @@ if ($nm > 12) { $nm = 1; $ny++; }
     <title>Jadwal Dinas | BexMedia</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="../css/index.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -208,7 +257,33 @@ if ($nm > 12) { $nm = 1; $ny++; }
             box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
         }
 
-        /* ---- Shift Legend ---- */
+        /* ---- Flash Toast ---- */
+        .flash-toast {
+            position: fixed; top: 24px; right: 24px; z-index: 10000;
+            background: #10B981; color: white; padding: 14px 24px;
+            border-radius: 14px; display: flex; align-items: center; gap: 12px;
+            box-shadow: 0 20px 25px -5px rgba(16, 185, 129, 0.2);
+            font-weight: 700; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.2);
+            animation: slideInDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes slideInDown {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* ---- SweetAlert2 Styles (Premium) ---- */
+        .swal2-popup.bex-swal {
+            border-radius: 24px !important;
+            padding: 2em !important;
+            font-family: 'Outfit', sans-serif !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+        }
+        .swal2-container { z-index: 10001 !important; }
+        .swal2-title { color: #1E293B !important; font-weight: 800 !important; }
+        .swal2-html-container { color: #64748B !important; font-size: 0.95rem !important; line-height: 1.6 !important; }
+        .swal2-confirm { border-radius: 12px !important; font-weight: 700 !important; padding: 12px 32px !important; }
+        .swal2-cancel { border-radius: 12px !important; font-weight: 700 !important; padding: 12px 32px !important; }
+        .swal2-icon { border-width: 3px !important; }
         .shift-legend { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
         .legend-item { display: flex; align-items: center; gap: 7px; font-size: 0.82rem; color: #475569; }
         .legend-dot { width: 11px; height: 11px; border-radius: 4px; flex-shrink: 0; }
@@ -252,6 +327,23 @@ if ($nm > 12) { $nm = 1; $ny++; }
         .tbl-saved tbody tr:hover td { background: #F8FAFC; }
         .tbl-saved tbody td.weekend-cell { background: #FFF5F5; }
         .tbl-saved tfoot td { background: #F8FAFC; padding: 6px 4px; text-align: center; font-weight: 600; font-size: 0.72rem; }
+
+        .cell-interactive { 
+            cursor: pointer; 
+            transition: all 0.2s; 
+            position: relative;
+        }
+        .cell-interactive:hover { 
+            background: #F0F9FF !important; 
+            box-shadow: inset 0 0 0 1px var(--primary);
+        }
+        .cell-interactive:active { transform: scale(0.95); }
+        .cell-loading { opacity: 0.4; pointer-events: none; }
+        .cell-loading::after {
+            content: ""; position: absolute; inset: 0;
+            background: rgba(255,255,255,0.5);
+            display: flex; align-items: center; justify-content: center;
+        }
 
         .shift-pill {
             display: inline-block; padding: 3px 7px; border-radius: 6px;
@@ -386,122 +478,37 @@ if ($nm > 12) { $nm = 1; $ny++; }
             <?php endif; ?>
 
             <!-- Page Header -->
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
                 <div>
-                    <h1 style="font-family:'Outfit',sans-serif;font-weight:800;font-size:1.55rem;color:#1E293B;margin:0 0 2px;">Jadwal Dinas Bulanan</h1>
-                    <p style="color:#64748B;font-size:0.83rem;margin:0;"><?= h($isAdmin ? 'Semua Unit Kerja' : 'Unit: '.$unitLogin) ?></p>
+                    <h1 style="font-family:'Outfit',sans-serif;font-weight:800;font-size:1.6rem;color:#1E293B;margin:0 0 2px;letter-spacing:-0.01em;">Jadwal Dinas Bulanan</h1>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="width:8px;height:8px;border-radius:50%;background:#10B981;"></span>
+                        <p style="color:#64748B;font-size:0.85rem;margin:0;font-weight:500;"><?= h($isAdmin ? 'Semua Unit Kerja' : 'Unit: '.$unitLogin) ?></p>
+                    </div>
                 </div>
-                <div class="no-print" style="display:flex;gap:10px;">
-                    <a href="jam_kerja.php" class="btn-ghost"><i data-lucide="clock" size="15"></i> Kelola Shift</a>
+                <div class="no-print" style="display:flex;gap:12px;">
                     <button type="button" class="btn-ghost" onclick="openMagicGenerator()" style="background:#F0F9FF;color:#0369A1;border-color:#BAE6FD;">
-                        <i data-lucide="sparkles" size="15"></i> Generate Otomatis
+                        <i data-lucide="sparkles" size="15"></i> Magic Generator
                     </button>
-                    <a href="cetak_jadwal_dinas.php?bulan=<?= $selected_bulan ?>&tahun=<?= $selected_tahun ?>" target="_blank" class="btn-dark">
-                        <i data-lucide="printer" size="15"></i> Cetak
+                    <button type="button" class="btn-ghost" onclick="openShiftSettings()"><i data-lucide="settings-2" size="15"></i> Setting Jam</button>
+                    <button type="button" class="btn-ghost" 
+                            onclick="confirmHapusSemua()"
+                            style="color:#EF4444; border:1px solid #FEE2E2; background:#FEF2F2;">
+                        <i data-lucide="trash-2" size="15"></i> Kosongkan
+                    </button>
+                    <a href="cetak_jadwal_dinas.php?bulan=<?= $selected_bulan ?>&tahun=<?= $selected_tahun ?>" target="_blank" class="btn-dark" style="padding:11px 24px;">
+                        <i data-lucide="printer" size="16"></i> Cetak
                     </a>
                 </div>
             </div>
 
-            <!-- CARD: Input Jadwal -->
-            <div class="jd-card no-print">
-                <div class="jd-card-title">
-                    <i data-lucide="calendar-plus" size="18" style="color:var(--primary)"></i>
-                    Input Jadwal Karyawan
-                </div>
+            <form method="POST" id="formHapusSemua" style="display:none;">
+                <?= csrf_field() ?>
+                <input type="hidden" name="bulan" value="<?= $selected_bulan ?>">
+                <input type="hidden" name="tahun" value="<?= $selected_tahun ?>">
+                <input type="hidden" name="hapus_semua" value="1">
+            </form>
 
-                <?php if (empty($jamList)): ?>
-                <div class="info-box">
-                    <i data-lucide="alert-triangle" size="15" style="vertical-align:middle;margin-right:6px;"></i>
-                    Belum ada data shift/jam kerja. Silakan tambahkan melalui menu <strong>Kelola Shift</strong> terlebih dahulu.
-                </div>
-                <?php elseif (empty($userList)): ?>
-                <div class="info-box">
-                    <i data-lucide="users" size="15" style="vertical-align:middle;margin-right:6px;"></i>
-                    Belum ada karyawan terdaftar di unit kerja Anda.
-                </div>
-                <?php else: ?>
-                <form method="POST" id="formJadwal">
-                    <?php echo csrf_field(); ?>
-                    <div class="jd-row" style="margin-bottom:18px;">
-                        <div class="jd-group">
-                            <label class="jd-label">Karyawan</label>
-                            <select name="user_id" class="jd-select" required id="selKaryawan" style="min-width:220px;">
-                                <option value="">— Pilih Karyawan —</option>
-                                <?php foreach ($userList as $u): ?>
-                                <option value="<?= $u['id'] ?>" <?= $selected_emp==$u['id']?'selected':'' ?>>
-                                    <?= h($u['nama']) ?><?= $isAdmin ? ' ('.$u['unit_kerja'].')' : '' ?>
-                                </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="jd-group">
-                            <label class="jd-label">Bulan</label>
-                            <select name="bulan" class="jd-select" id="inpBulan">
-                                <?php for ($m=1;$m<=12;$m++): ?>
-                                <option value="<?= $m ?>" <?= $m==$selected_bulan?'selected':'' ?>><?= $bulanIndo[$m] ?></option>
-                                <?php endfor; ?>
-                            </select>
-                        </div>
-                        <div class="jd-group">
-                            <label class="jd-label">Tahun</label>
-                            <select name="tahun" class="jd-select" id="inpTahun">
-                                <?php for ($y=date('Y')-2;$y<=date('Y')+2;$y++): ?>
-                                <option value="<?= $y ?>" <?= $y==$selected_tahun?'selected':'' ?>><?= $y ?></option>
-                                <?php endfor; ?>
-                            </select>
-                        </div>
-                        <button type="submit" name="simpan" class="btn-prim">
-                            <i data-lucide="save" size="15"></i> Simpan Jadwal
-                        </button>
-                    </div>
-
-                    <!-- Shift Legend + Counter -->
-                    <div class="shift-legend" id="shiftLegend">
-                        <?php foreach ($jamList as $sid => $jdata): ?>
-                        <div class="legend-item">
-                            <div class="legend-dot" style="background:<?= $jdata['warna'] ?>"></div>
-                            <span><?= h($jdata['nama_jam']) ?></span>
-                            <span class="legend-count" style="background:<?= $jdata['warna'] ?>20;color:<?= $jdata['warna'] ?>" id="cnt-<?= $sid ?>">0</span>
-                        </div>
-                        <?php endforeach; ?>
-                    </div>
-
-                    <!-- Date Grid -->
-                    <div class="tbl-scroll">
-                    <table class="tbl-input">
-                        <thead>
-                            <tr>
-                                <?php for($d=1;$d<=$daysInMonth;$d++):
-                                    $dow=(int)date('w',strtotime("$selected_tahun-$selected_bulan-$d"));
-                                    $isWE=($dow==0||$dow==6);
-                                ?>
-                                <th class="<?= $isWE?'weekend-h':'' ?>">
-                                    <div><?= $d ?></div>
-                                    <div style="font-size:0.62rem;opacity:0.6"><?= $hariIndo[$dow] ?></div>
-                                </th>
-                                <?php endfor; ?>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                            <?php for($d=1;$d<=$daysInMonth;$d++):
-                                $dow=(int)date('w',strtotime("$selected_tahun-$selected_bulan-$d"));
-                                $isWE=($dow==0||$dow==6);
-                            ?>
-                            <td style="<?= $isWE?'background:#FFF5F5;':'' ?>">
-                                <button type="button" class="cell-btn" id="cb-<?= $d ?>"
-                                    data-day="<?= $d ?>" onclick="openPicker(<?= $d ?>)"
-                                    title="Tgl <?= $d ?>">+</button>
-                                <input type="hidden" name="jam[<?= $d ?>]" id="jam-<?= $d ?>" value="">
-                            </td>
-                            <?php endfor; ?>
-                            </tr>
-                        </tbody>
-                    </table>
-                    </div>
-                </form>
-                <?php endif; ?>
-            </div>
 
             <!-- CARD: Data Jadwal Tersimpan -->
             <div class="jd-card">
@@ -510,10 +517,27 @@ if ($nm > 12) { $nm = 1; $ny++; }
                         <i data-lucide="table-2" size="18" style="color:var(--primary)"></i>
                         Jadwal <?= $bulanIndo[$selected_bulan] ?> <?= $selected_tahun ?>
                     </div>
-                    <div class="month-ctrl no-print">
-                        <a href="?bulan=<?= $pm ?>&tahun=<?= $py ?>" class="month-btn"><i data-lucide="chevron-left" size="15"></i></a>
-                        <span class="month-label"><?= $bulanIndo[$selected_bulan] ?> <?= $selected_tahun ?></span>
-                        <a href="?bulan=<?= $nm ?>&tahun=<?= $ny ?>" class="month-btn"><i data-lucide="chevron-right" size="15"></i></a>
+                    <!-- Filter & Navigation -->
+                    <div class="jd-card" style="padding:16px 20px; border-radius:16px;">
+                        <form method="GET" class="jd-row" style="align-items: center; gap:16px;">
+                            <div class="jd-group" style="min-width:180px;">
+                                <label class="jd-label">Filter Unit Kerja</label>
+                                <select name="unit" class="jd-select" onchange="this.form.submit()">
+                                    <?php if($isAdmin): ?>
+                                    <option value="">— Tampilkan Semua —</option>
+                                    <?php endif; ?>
+                                    <?php foreach($unitOptions as $uo): ?>
+                                    <option value="<?= h($uo) ?>" <?= $view_unit == $uo ? 'selected' : '' ?>><?= h($uo) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            
+                            <div class="month-ctrl" style="margin-left:auto;">
+                                <a href="?bulan=<?= $pm ?>&tahun=<?= $py ?>&unit=<?= h($view_unit) ?>" class="month-btn"><i data-lucide="chevron-left" size="15"></i></a>
+                                <span class="month-label"><?= $bulanIndo[$selected_bulan] ?> <?= $selected_tahun ?></span>
+                                <a href="?bulan=<?= $nm ?>&tahun=<?= $ny ?>&unit=<?= h($view_unit) ?>" class="month-btn"><i data-lucide="chevron-right" size="15"></i></a>
+                            </div>
+                        </form>
                     </div>
                 </div>
 
@@ -524,6 +548,28 @@ if ($nm > 12) { $nm = 1; $ny++; }
                     <p style="font-size:0.85rem;margin:0;">Gunakan form input di atas untuk menambahkan jadwal.</p>
                 </div>
                 <?php else: ?>
+                <!-- Global Summary Summary (Beautified) -->
+                <div class="shift-legend" style="margin-bottom:24px; padding:16px 20px; background:linear-gradient(to right, #F8FAFC, #FFFFFF); border-radius:16px; border:1px solid #E2E8F0; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+                    <div style="font-size:0.7rem; font-weight:800; color:#64748B; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                        <div style="width:20px; height:20px; border-radius:6px; background:#E0F2FE; display:flex; align-items:center; justify-content:center;">
+                            <i data-lucide="bar-chart-3" size="12" style="color:#0EA5E9;"></i>
+                        </div>
+                        ESTIMASI TOTAL SHIFT BULAN INI
+                    </div>
+                    <div style="display:flex; gap:16px; flex-wrap:wrap;">
+                    <?php foreach ($jamList as $sid => $jdata): 
+                         $count = $globalRekapShift[$sid] ?? 0;
+                    ?>
+                        <div class="legend-item" style="background:white; border:1.5px solid #F1F5F9; padding:6px 16px; border-radius:12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+                            <div class="legend-dot" style="background:<?= $jdata['warna'] ?>; width:10px; height:10px;"></div>
+                            <span style="font-weight:700; color:#334155; font-size:0.85rem;"><?= h($jdata['nama_jam']) ?></span>
+                            <span class="legend-count" style="background:<?= $jdata['warna'] ?>15; color:<?= $jdata['warna'] ?>; min-width:32px; font-size:0.85rem; padding:2px 10px; border-radius:10px; font-weight:800;">
+                                <?= $count ?>
+                            </span>
+                        </div>
+                    <?php endforeach; ?>
+                    </div>
+                </div>
                 <div class="tbl-scroll">
                 <table class="tbl-saved">
                     <thead>
@@ -541,24 +587,44 @@ if ($nm > 12) { $nm = 1; $ny++; }
                         </tr>
                     </thead>
                     <tbody>
-                    <?php foreach($savedData as $karyawan => $tglData): ?>
+                    <?php foreach($savedData as $uid => $tglData): 
+                        $karyawan = $savedNames[$uid] ?? 'Unknown';
+                    ?>
                     <tr>
                         <td class="td-name">
-                            <div><?= h($karyawan) ?></div>
-                            <?php if(!empty($rekapShift[$karyawan])): ?>
-                            <div class="rekap-chips">
-                                <?php foreach($rekapShift[$karyawan] as $kid => $cnt): ?>
-                                <span class="rekap-chip" style="background:<?= $jamList[$kid]['warna'] ?? '#64748B' ?>"><?= h($jamList[$kid]['nama_jam']??'') ?>: <?= $cnt ?></span>
-                                <?php endforeach; ?>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span><?= h($karyawan) ?></span>
+                                <form method="POST" id="formHapusKaryawan_<?= $uid ?>" style="display:none;">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="user_id" value="<?= $uid ?>">
+                                    <input type="hidden" name="bulan" value="<?= $selected_bulan ?>">
+                                    <input type="hidden" name="tahun" value="<?= $selected_tahun ?>">
+                                    <input type="hidden" name="hapus_karyawan" value="1">
+                                </form>
+                                <button type="button" class="no-print" 
+                                        onclick="confirmHapusKaryawan('<?= $uid ?>', '<?= addslashes(h($karyawan)) ?>')"
+                                        style="background:none; border:none; color:#94A3B8; cursor:pointer;" title="Hapus jadwal orang ini">
+                                    <i data-lucide="trash-2" size="14"></i>
+                                </button>
                             </div>
-                            <?php endif; ?>
+                            <div class="rekap-chips" id="rekap-row-<?= $uid ?>">
+                                <?php if(!empty($rekapShift[$uid])): ?>
+                                    <?php foreach($rekapShift[$uid] as $kid => $cnt): ?>
+                                    <span class="rekap-chip" data-kid="<?= $kid ?>" style="background:<?= $jamList[$kid]['warna'] ?? '#64748B' ?>"><?= h($jamList[$kid]['nama_jam']??'') ?>: <?= $cnt ?></span>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </div>
                         </td>
                         <?php for($d=1;$d<=$daysInMonth;$d++):
                             $dow=(int)date('w',strtotime("$selected_tahun-$selected_bulan-$d"));
                             $isWE=($dow==0||$dow==6);
                             $e = $tglData[$d] ?? null;
                         ?>
-                        <td class="<?=$isWE?'weekend-cell':''?>">
+                        <td class="<?=$isWE?'weekend-cell':''?> cell-interactive" 
+                            data-uid="<?= $uid ?>" 
+                            data-tgl="<?= $selected_tahun . '-' . sprintf('%02d', $selected_bulan) . '-' . sprintf('%02d', $d) ?>"
+                            data-day="<?= $d ?>"
+                            onclick="openPickerQuick(this)">
                             <?php if($e): ?>
                             <span class="shift-pill" style="background:<?= $e['warna'] ?>" title="<?= h($e['nama']) ?>">
                                 <?= h($e['nama']) ?>
@@ -571,8 +637,8 @@ if ($nm > 12) { $nm = 1; $ny++; }
                         <td style="text-align:left;padding-left:10px;vertical-align:middle;">
                             <?php
                             $total = array_sum($rekapShift[$karyawan] ?? []);
-                            echo "<span style='font-weight:700;color:#1E293B;'>$total</span> <span style='color:#94A3B8;font-size:0.7rem;'>hari</span>";
                             ?>
+                            <span id="total-<?= $savedUids[$karyawan] ?>" style='font-weight:700;color:#1E293B;'><?= $total ?></span> <span style='color:#94A3B8;font-size:0.7rem;'>hari</span>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -580,6 +646,16 @@ if ($nm > 12) { $nm = 1; $ny++; }
                 </table>
                 </div>
                 <?php endif; ?>
+                
+                <div style="margin-top:20px; padding:15px; background:#F8FAFC; border-radius:12px; border:1px dashed #CBD5E1;">
+                    <h5 style="font-size:0.9rem; font-weight:700; color:#1E293B; margin-bottom:10px; display:flex; align-items:center; gap:8px;">
+                        <i data-lucide="info" size="16"></i> Info Logika Magic
+                    </h5>
+                    <p style="font-size:0.8rem; color:#64748B; margin:0; line-height:1.5;">
+                        Urutan otomatis 5 Hari: <strong>Pagi &rarr; Siang &rarr; Malam &rarr; Libur (Lepas) &rarr; Libur</strong>. 
+                        Sistem secara pintar memberikan istirahat 2 hari berturut-turut setelah tugas Malam agar kondisi prima.
+                    </p>
+                </div>
             </div>
 
         </div><!-- end jd-wrap -->
@@ -629,7 +705,8 @@ if ($nm > 12) { $nm = 1; $ny++; }
             <div class="jd-label" style="margin-bottom:10px;">Quota per Shift (Orang)</div>
             <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; margin-bottom:20px;">
                 <?php foreach($jamList as $sid => $jdata): 
-                    if($jdata['kode'] == 'LIBUR') continue;
+                    $k = strtoupper($jdata['kode']);
+                    if($k == 'LIBUR' || $k == 'LEPAS') continue;
                 ?>
                 <div class="jd-group" style="border:1px solid #E2E8F0; padding:8px; border-radius:8px;">
                     <label style="font-size:0.75rem; font-weight:700; color:<?= $jdata['warna'] ?>;"><?= h($jdata['nama_jam']) ?></label>
@@ -638,7 +715,7 @@ if ($nm > 12) { $nm = 1; $ny++; }
                 <?php endforeach; ?>
             </div>
 
-            <div class="jd-label" style="margin-bottom:10px;">Matriks Pengecualian (Pegawai Libur Per Pekan)</div>
+            <div class="jd-label" style="margin-bottom:10px;">Pilih Pegawai yang DIJADWALKAN (DICEKLIS = MASUK JADWAL)</div>
             <div id="excludeListWrap" style="background:white; border:1px solid #E2E8F0; border-radius:12px; overflow:auto; max-height:350px; min-height:60px; margin-bottom:10px;">
                 <!-- Pegawai dipopulasi lewat JS Matrix Table -->
                 <div style="text-align:center; color:#94A3B8; font-size:12px; padding:20px;">Pilih unit untuk melihat daftar pegawai.</div>
@@ -667,28 +744,222 @@ if ($nm > 12) { $nm = 1; $ny++; }
             </div>
             <?php endforeach; ?>
         </div>
-        <div class="picker-clear" onclick="clearShift()"><i data-lucide="x" size="13" style="vertical-align:middle;margin-right:4px;"></i>Hapus shift ini</div>
-        <button class="picker-cancel" onclick="closePicker()">Batal</button>
+        <div style="padding:15px; border-top:1px solid #E2E8F0; text-align:right;">
+            <button class="btn-ghost" onclick="closePicker()">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<!-- Shift Settings Modal -->
+<div class="picker-overlay" id="shiftSettingsOverlay" onclick="if(event.target===this)closeShiftSettings()">
+    <div class="picker-box" style="max-width:650px; width:95%; padding:0; overflow:hidden; box-sizing:border-box;">
+        <div class="picker-title" style="display:flex; align-items:center; gap:12px; padding:24px 30px; border-bottom:1px solid #F1F5F9; margin-bottom:0; background:#fff;">
+            <i data-lucide="settings-2" size="22" style="color:var(--primary);"></i> 
+            <span style="font-size:1.1rem; letter-spacing:-0.01em; font-weight:800;">Pengaturan Jam Jaga</span>
+        </div>
+        <div style="padding:25px; max-height:65vh; overflow-y:auto; background:#F8FAFC; box-sizing:border-box;">
+            <div id="shiftSettingsList">
+                <?php foreach($jamList as $sid => $j): 
+                    $k = strtoupper($j['kode']);
+                    if($k == 'LIBUR' || $k == 'LEPAS') continue;
+                ?>
+                <div class="jd-card" style="margin-bottom:20px; padding:24px; border:none; background:#ffffff; box-shadow:0 2px 12px rgba(0,0,0,0.04); box-sizing:border-box; width:100%;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #F8FAFC; padding-bottom:15px; flex-wrap:nowrap;">
+                        <span style="font-weight:800; color:<?= $j['warna'] ?>; font-family:'Outfit',sans-serif; font-size:1.05rem; display:flex; align-items:center; gap:10px; min-width:0; overflow:hidden; text-overflow:ellipsis;">
+                            <span style="width:12px; height:12px; border-radius:3px; background:<?= $j['warna'] ?>; flex-shrink:0;"></span>
+                            <?= h($j['nama_jam']) ?>
+                        </span>
+                        <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
+                            <label style="font-size:0.65rem; color:#94A3B8; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; white-space:nowrap;">PILIH WARNA</label>
+                            <input type="color" class="shift-color-input" data-id="<?= $sid ?>" value="<?= $j['warna'] ?>" 
+                                   style="border:none; width:36px; height:36px; cursor:pointer; background:none; padding:0; display:block; border-radius:6px; overflow:hidden;">
+                        </div>
+                    </div>
+                    
+                    <div style="display:grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap:20px; width:100%; box-sizing:border-box;">
+                        <div style="display:flex; flex-direction:column; gap:8px; min-width:0;">
+                            <label class="jd-label" style="color:#64748B; font-size:0.7rem; letter-spacing:0.05em; font-weight:700;">JAM MULAI</label>
+                            <input type="time" class="jd-select shift-start-input" data-id="<?= $sid ?>" value="<?= substr($j['jam_mulai'],0,5) ?>" 
+                                   style="width:100%; height:48px; border-radius:12px; padding:0 12px; border:1px solid #E2E8F0; font-weight:600; font-size:0.95rem; background:#fff; box-sizing:border-box; display:block;">
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:8px; min-width:0;">
+                            <label class="jd-label" style="color:#64748B; font-size:0.7rem; letter-spacing:0.05em; font-weight:700;">JAM SELESAI</label>
+                            <input type="time" class="jd-select shift-end-input" data-id="<?= $sid ?>" value="<?= substr($j['jam_selesai'],0,5) ?>" 
+                                   style="width:100%; height:48px; border-radius:12px; padding:0 12px; border:1px solid #E2E8F0; font-weight:600; font-size:0.95rem; background:#fff; box-sizing:border-box; display:block;">
+                        </div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <div style="padding:24px 30px; border-top:1px solid #F1F5F9; display:flex; gap:15px; background:#ffffff; box-sizing:border-box;">
+            <button class="btn-prim" style="flex:2; height:54px; border-radius:15px; font-size:1rem; justify-content:center; box-sizing:border-box;" onclick="saveShiftSettings()">
+                <i data-lucide="save" size="20"></i> Simpan Perubahan
+            </button>
+            <button class="btn-ghost" style="flex:1; height:54px; border-radius:15px; color:#64748B; justify-content:center; background:#F1F5F9; box-sizing:border-box;" onclick="closeShiftSettings()">Batal</button>
+        </div>
     </div>
 </div>
 
 <script>
-lucide.createIcons();
+// --- Global Debug Hook ---
+console.log("BexMedia Schedule System: Script Initializing...");
 
+document.addEventListener('DOMContentLoaded', function() {
+    lucide.createIcons();
+    console.log("BexMedia Schedule System: Lucide Icons Ready.");
+});
+
+// --- Magic Generator Logic ---
+window.processGeneration = function() {
+    console.log("Process Generation Triggered");
+    
+    // 1. Collect Quota
+    var quota = {};
+    document.querySelectorAll('.gen-quota').forEach(function(input) {
+        var val = parseInt(input.value) || 0;
+        if (val > 0) quota[input.dataset.id] = val;
+    });
+
+    // 2. Get Unit
+    var unitEl = document.getElementById('genUnit');
+    if(!unitEl) {
+        console.error("Critical: genUnit element not found!");
+        return;
+    }
+    var unit = unitEl.value;
+
+    // 3. Validation
+    if(!unit) {
+        if(typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Unit Belum Dipilih',
+                text: 'Silakan pilih Unit Kerja terlebih dahulu!',
+                icon: 'warning',
+                confirmButtonColor: '#3B82F6',
+                customClass: { popup: 'bex-swal' }
+            });
+        } else {
+            alert("Silakan pilih Unit Kerja terlebih dahulu!");
+        }
+        return;
+    }
+
+    if (Object.keys(quota).length === 0) {
+        if(typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Quota Kosong',
+                text: 'Silakan isi jumlah quota minimal untuk setidaknya satu shift!',
+                icon: 'warning',
+                confirmButtonColor: '#3B82F6',
+                customClass: { popup: 'bex-swal' }
+            });
+        } else {
+            alert("Silakan isi jumlah quota minimal!");
+        }
+        return;
+    }
+
+    // 4. Confirmation
+    if(typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Konfirmasi Pengacakan',
+            html: 'Sistem akan mengacak jadwal untuk <strong>SELURUH BULAN</strong> (Pekan 1-5) berdasarkan matriks pengecualian.<br><br><span style="color:#EF4444; font-size:0.8rem;">Data jadwal lama di bulan target akan ditumpuk.</span>',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3B82F6',
+            cancelButtonColor: '#F1F5F9',
+            confirmButtonText: 'Ya, Jalankan!',
+            cancelButtonText: 'Batal',
+            reverseButtons: true,
+            customClass: { popup: 'bex-swal' }
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                runFullMonthProcess(unit, quota);
+            }
+        });
+    } else {
+        if(confirm("Jalankan pengacakan jadwal satu bulan penuh?")) {
+            runFullMonthProcess(unit, quota);
+        }
+    }
+};
+
+async function runFullMonthProcess(unit, quota) {
+    if(typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Sedang Memproses...',
+            html: 'Mohon tunggu, sistem sedang membangun jadwal terbaik...',
+            allowOutsideClick: false,
+            didOpen: function() { Swal.showLoading(); },
+            customClass: { popup: 'bex-swal' }
+        });
+    }
+
+    var bEl = document.getElementById('genBulan');
+    var tEl = document.getElementById('genTahun');
+    var genBulan = bEl ? bEl.value : 0;
+    var genTahun = tEl ? tEl.value : 0;
+    var bNama = bEl ? bEl.options[bEl.selectedIndex].text : '';
+    
+    for (var m = 1; m <= 5; m++) {
+        var exclude = [];
+        document.querySelectorAll('.gen-exclude[data-week="'+m+'"]:checked').forEach(function(cb) {
+            exclude.push(cb.value);
+        });
+
+        try {
+            console.log("Processing Week " + m + " for Unit: " + unit + ", Selected IDs:", exclude);
+            var res = await $.ajax({
+                url: 'ajax_generate_jadwal.php',
+                method: 'POST',
+                data: {
+                    unit: unit,
+                    bulan: genBulan,
+                    tahun: genTahun,
+                    minggu: m,
+                    quota: quota,
+                    exclude_ids: exclude
+                }
+            });
+            if (res && !res.success) {
+                console.warn("Pekan " + m + " warning:", res.message);
+            }
+        } catch (e) {
+            console.error("Pekan " + m + " failed", e);
+        }
+    }
+
+    if(typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Berhasil!',
+            text: 'Jadwal untuk ' + bNama + ' ' + genTahun + ' telah diperbarui sepenuhnya.',
+            icon: 'success',
+            confirmButtonColor: '#10B981',
+            customClass: { popup: 'bex-swal' }
+        }).then(function() {
+            location.href = "jadwal_dinas.php?bulan=" + genBulan + "&tahun=" + genTahun + "&unit=" + encodeURIComponent(unit);
+        });
+    } else {
+        alert("Selesai! Jadwal diperbarui.");
+        location.href = "jadwal_dinas.php?bulan=" + genBulan + "&tahun=" + genTahun + "&unit=" + encodeURIComponent(unit);
+    }
+}
+
+// --- Navigation & Matrix ---
 function openMagicGenerator() {
     document.getElementById('magicOverlay').classList.add('open');
-    // Load awal jika sudah ada unit terpilih
     let unit = document.getElementById('genUnit').value;
     if(unit) loadEmployeesByUnit(unit);
 }
 
 function loadEmployeesByUnit(unit) {
-    console.log("Loading employees for unit: " + unit);
+    let wrap = document.getElementById('excludeListWrap');
     if(!unit) {
-        document.getElementById('excludeListWrap').innerHTML = '<div style="text-align:center; color:#94A3B8; font-size:12px; padding:20px;">Pilih unit untuk melihat daftar pegawai.</div>';
+        wrap.innerHTML = '<div style="text-align:center; color:#94A3B8; font-size:12px; padding:20px;">Pilih unit untuk melihat daftar pegawai.</div>';
         return;
     }
-    document.getElementById('excludeListWrap').innerHTML = '<div style="text-align:center; padding:20px; color:#64748B;"><i data-lucide="loader-2" class="spin" style="margin-right:8px;"></i> Memuat daftar pegawai...</div>';
+    wrap.innerHTML = '<div style="text-align:center; padding:20px; color:#64748B;"><i data-lucide="loader-2" class="spin" style="margin-right:8px;"></i> Memuat daftar pegawai...</div>';
     lucide.createIcons();
     
     $.ajax({
@@ -696,17 +967,12 @@ function loadEmployeesByUnit(unit) {
         method: 'POST',
         data: { unit: unit },
         success: function(html) {
-            console.log("AJAX Success");
-            document.getElementById('excludeListWrap').innerHTML = html;
-        },
-        error: function(xhr, status, error) {
-            console.error("AJAX Error: " + status + " " + error);
-            document.getElementById('excludeListWrap').innerHTML = '<div style="color:#EF4444; font-size:12px; padding:20px; text-align:center;">Gagal memuat pegawai. Terjadi kesalahan pada server.</div>';
+            wrap.innerHTML = html;
+            lucide.createIcons();
         }
     });
 }
 
-// Matrix Logic Functions
 function toggleMatrixCol(week, cb) {
     document.querySelectorAll('.gen-exclude[data-week="'+week+'"]').forEach(c => c.checked = cb.checked);
 }
@@ -721,115 +987,109 @@ function closeMagicGenerator() {
     document.getElementById('magicOverlay').classList.remove('open');
 }
 
-function processGeneration() {
-    let quota = {};
-    document.querySelectorAll('.gen-quota').forEach(input => {
-        let val = parseInt(input.value);
-        if (val > 0) quota[input.dataset.id] = val;
-    });
-
-    let unit = document.getElementById('genUnit').value;
-
-    if(!unit) {
-        alert("Silakan pilih Unit Kerja terlebih dahulu!");
-        return;
-    }
-
-    if (Object.keys(quota).length === 0) {
-        alert("Silakan isi quota minimal untuk satu shift!");
-        return;
-    }
-
-    if (confirm("Sistem akan mengacak jadwal untuk SELURUH BULAN (Pekan 1-5) berdasarkan matriks pengecualian. Lanjutkan?")) {
-        const btn = event.target;
-        const originalText = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Memproses...';
-
-        // Fungsi rekursif atau loop untuk memproses semua pekan
-        async function runFullMonth() {
-            let genBulan = document.getElementById('genBulan').value;
-            let genTahun = document.getElementById('genTahun').value;
-            let successMsgs = [];
-            
-            for (let m = 1; m <= 5; m++) {
-                let exclude = [];
-                document.querySelectorAll('.gen-exclude[data-week="'+m+'"]:checked').forEach(cb => {
-                    exclude.push(cb.value);
-                });
-
-                try {
-                    const res = await $.ajax({
-                        url: 'ajax_generate_jadwal.php',
-                        method: 'POST',
-                        data: {
-                            unit: unit,
-                            bulan: genBulan,
-                            tahun: genTahun,
-                            minggu: m,
-                            quota: quota,
-                            exclude_ids: exclude
-                        }
-                    });
-                    if (res.success) successMsgs.push("Pekan " + m + ": Berhasil");
-                    else console.warn("Pekan " + m + " gagal: " + res.message);
-                } catch (e) {
-                    console.error("Pekan " + m + " error", e);
-                }
-            }
-            alert("Selesai! Jadwal untuk " + document.getElementById('genBulan').options[document.getElementById('genBulan').selectedIndex].text + " " + genTahun + " telah diperbarui.");
-            // Redirect ke bulan yang baru saja di-generate agar user bisa melihat hasilnya
-            location.href = "jadwal_dinas.php?bulan=" + genBulan + "&tahun=" + genTahun;
-        }
-
-        runFullMonth();
-    }
-}
-
+// --- Schedule Quick Interaction ---
 var curDay = 0;
-var shiftState = {}; // day -> {id, warna, nama}
+var shiftState = {}; 
+var activeMode = 'draft';
+var activeCell = null;
 
-function openPicker(day) {
+const BexToast = (typeof Swal !== 'undefined') ? Swal.mixin({
+    toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, 
+    timerProgressBar: true, customClass: { popup: 'bex-toast-premium' }
+}) : null;
+
+function openPickerDraft(day) {
     curDay = day;
-    document.getElementById('pickerDayLabel').textContent = 'Tanggal ' + day;
-    document.querySelectorAll('.picker-opt').forEach(o => {
-        o.classList.toggle('active-sel', shiftState[day] && parseInt(o.dataset.id) === shiftState[day].id);
-    });
+    activeMode = 'draft';
+    document.getElementById('pickerDayLabel').textContent = 'Pilih Shift Tgl: ' + day;
     document.getElementById('pickerOverlay').classList.add('open');
 }
+
+function openPickerQuick(el) {
+    activeCell = el;
+    activeMode = 'quick';
+    document.getElementById('pickerDayLabel').textContent = 'Pilih Shift: ' + el.dataset.tgl;
+    document.getElementById('pickerOverlay').classList.add('open');
+}
+
 function closePicker() {
     document.getElementById('pickerOverlay').classList.remove('open');
     curDay = 0;
+    activeCell = null;
 }
+
 function selectShift(id, warna, nama) {
-    shiftState[curDay] = {id, warna, nama};
-    document.getElementById('jam-' + curDay).value = id;
-    var btn = document.getElementById('cb-' + curDay);
-    btn.classList.add('filled');
-    btn.style.background      = warna;
-    btn.style.borderColor     = warna;
-    btn.style.color           = 'white';
-    btn.style.fontSize        = '0.62rem';
-    btn.style.padding         = '0 3px';
-    btn.textContent           = nama.length>5 ? nama.substring(0,5)+'…' : nama;
-    updateCounts();
-    closePicker();
+    if (activeMode === 'draft') {
+        if (!curDay) return;
+        shiftState[curDay] = {id, warna, nama};
+        document.getElementById('jam-' + curDay).value = id;
+        var btn = document.getElementById('cb-' + curDay);
+        btn.classList.add('filled');
+        btn.style.background = warna;
+        btn.style.borderColor = warna;
+        btn.style.color = 'white';
+        btn.style.fontSize = '0.62rem';
+        btn.style.padding = '0 3px';
+        btn.textContent = nama.length > 5 ? nama.substring(0,5)+'…' : nama;
+        updateCounts();
+        closePicker();
+    } else {
+        if (!activeCell) return;
+        let uid = activeCell.dataset.uid;
+        let tgl = activeCell.dataset.tgl;
+        activeCell.classList.add('cell-loading');
+        closePicker();
+        $.ajax({
+            url: 'ajax_save_jadwal_v2.php',
+            method: 'POST',
+            data: { csrf_token: '<?= $_SESSION['csrf_token'] ?>', user_id: uid, tanggal: tgl, shift_id: id },
+            dataType: 'json',
+            success: function(res) {
+                activeCell.classList.remove('cell-loading');
+                if (res.success) {
+                    activeCell.innerHTML = `<span class="shift-pill" style="background:${res.warna}" title="${res.nama}">${res.nama}</span>`;
+                    refreshRekapRow(uid);
+                    if(BexToast) BexToast.fire({ icon: 'success', title: 'Jadwal diperbarui' });
+                }
+            }
+        });
+    }
 }
+
 function clearShift() {
-    if (!curDay) return;
-    delete shiftState[curDay];
-    document.getElementById('jam-' + curDay).value = '';
-    var btn = document.getElementById('cb-' + curDay);
-    btn.classList.remove('filled');
-    btn.style.background = '';
-    btn.style.borderColor = '';
-    btn.style.color = '';
-    btn.style.fontSize = '';
-    btn.style.padding = '';
-    btn.textContent = '+';
-    updateCounts();
-    closePicker();
+    if (activeMode === 'draft') {
+        if (!curDay) return;
+        delete shiftState[curDay];
+        document.getElementById('jam-' + curDay).value = '';
+        var btn = document.getElementById('cb-' + curDay);
+        btn.classList.remove('filled');
+        btn.style.background = ''; btn.style.borderColor = ''; btn.style.color = '';
+        btn.style.fontSize = ''; btn.style.padding = ''; btn.textContent = '+';
+        updateCounts();
+        closePicker();
+    } else {
+        if (!activeCell) return;
+        let uid = activeCell.dataset.uid;
+        let tgl = activeCell.dataset.tgl;
+        activeCell.classList.add('cell-loading');
+        closePicker();
+        $.ajax({
+            url: 'ajax_save_jadwal_v2.php',
+            method: 'POST',
+            data: { csrf_token: '<?= $_SESSION['csrf_token'] ?>', user_id: uid, tanggal: tgl, shift_id: 0 },
+            dataType: 'json',
+            success: function(res) {
+                activeCell.classList.remove('cell-loading');
+                if (res.success) {
+                    activeCell.innerHTML = `<span class="shift-empty">·</span>`;
+                    refreshRekapRow(uid);
+                    if(BexToast) BexToast.fire({ icon: 'success', title: 'Shift dihapus' });
+                }
+            }
+        });
+    }
 }
+
 function updateCounts() {
     var counts = {};
     <?php foreach($jamList as $sid => $j): ?>
@@ -841,51 +1101,144 @@ function updateCounts() {
     }
     for (var k in counts) {
         var el = document.getElementById('cnt-' + k);
-        if (el) el.textContent = counts[k];
+        if (el) {
+            el.textContent = counts[k];
+            if (counts[k] > 0) {
+                el.parentElement.style.borderColor = el.style.backgroundColor;
+                el.parentElement.style.background = '#F8FAFC';
+            } else {
+                el.parentElement.style.borderColor = '#F1F5F9';
+                el.parentElement.style.background = 'white';
+            }
+        }
     }
 }
 
-// Flash hide
-var ft = document.getElementById('flashToast');
-if (ft) setTimeout(() => ft.style.opacity = '0', 3500);
-
-// ESC close
-document.addEventListener('keydown', e => { if(e.key==='Escape') closePicker(); });
-
-// Pre-fill input grid jika ada emp param (load existing schedule for employee)
-<?php if ($selected_emp && isset($savedData)): ?>
-// Find employee in savedData by user_id
-var empId = <?= $selected_emp ?>;
-// Fill cells from existing saved data for selected employee
-<?php
-$empNama = '';
-foreach ($userList as $ul) {
-    if ($ul['id'] == $selected_emp) { $empNama = $ul['nama']; break; }
-}
-if ($empNama && isset($savedData[$empNama])) {
-    foreach ($savedData[$empNama] as $d => $entry) {
-        echo "selectShiftSilent($d, {$entry['kid']}, '".addslashes($entry['warna'])."', '".addslashes($entry['nama'])."');\n";
+function refreshRekapRow(uid) {
+    let rowEl = document.querySelector(`td[data-uid="${uid}"]`);
+    if(!rowEl) return;
+    let row = rowEl.closest('tr');
+    let cells = row.querySelectorAll('.cell-interactive .shift-pill');
+    let counts = {};
+    let total = 0;
+    
+    cells.forEach(p => {
+        let name = p.textContent.trim();
+        let color = p.style.backgroundColor;
+        if (!counts[name]) counts[name] = { count: 0, color: color };
+        counts[name].count++;
+        total++;
+    });
+    
+    let rekapDiv = document.getElementById('rekap-row-' + uid);
+    if(rekapDiv) {
+        rekapDiv.innerHTML = '';
+        for (let name in counts) {
+            rekapDiv.innerHTML += `<span class="rekap-chip" style="background:${counts[name].color}">${name}: ${counts[name].count}</span> `;
+        }
     }
+    
+    let totalEl = document.getElementById('total-' + uid);
+    if(totalEl) totalEl.textContent = total;
+    refreshGlobalRekap();
 }
-?>
-<?php endif; ?>
-function selectShiftSilent(day, id, warna, nama) {
-    shiftState[day] = {id, warna, nama};
-    document.getElementById('jam-' + day).value = id;
-    var btn = document.getElementById('cb-' + day);
-    if (btn) {
-        btn.classList.add('filled');
-        btn.style.background  = warna;
-        btn.style.borderColor = warna;
-        btn.style.color       = 'white';
-        btn.style.fontSize    = '0.62rem';
-        btn.style.padding     = '0 3px';
-        btn.textContent       = nama.length > 5 ? nama.substring(0,5)+'…' : nama;
-    }
-    updateCounts();
+
+function refreshGlobalRekap() {
+    let allCells = document.querySelectorAll('.cell-interactive .shift-pill');
+    let globalCounts = {};
+    allCells.forEach(p => {
+        let name = p.textContent.trim();
+        globalCounts[name] = (globalCounts[name] || 0) + 1;
+    });
+    document.querySelectorAll('.shift-legend .legend-item').forEach(item => {
+        let label = item.querySelector('span:not(.legend-count)').textContent.trim();
+        let countEl = item.querySelector('.legend-count');
+        if(countEl) countEl.textContent = globalCounts[label] || 0;
+    });
+}
+
+function openShiftSettings() {
+    document.getElementById('shiftSettingsOverlay').classList.add('open');
+}
+
+function closeShiftSettings() {
+    document.getElementById('shiftSettingsOverlay').classList.remove('open');
+}
+
+function saveShiftSettings() {
+    let shifts = [];
+    document.querySelectorAll('#shiftSettingsList .jd-card').forEach(card => {
+        let id = card.querySelector('.shift-color-input').dataset.id;
+        shifts.push({
+            id: id,
+            start: card.querySelector('.shift-start-input').value,
+            end: card.querySelector('.shift-end-input').value,
+            color: card.querySelector('.shift-color-input').value
+        });
+    });
+
+    if(BexToast) BexToast.fire({ title: 'Menyimpan...', didOpen: () => { Swal.showLoading(); } });
+
+    $.ajax({
+        url: 'ajax_update_shifts.php',
+        method: 'POST',
+        data: { shifts: shifts },
+        success: function(res) {
+            if (res.success) {
+                if(BexToast) BexToast.fire({ icon: 'success', title: 'Pengaturan jam disimpan' });
+                setTimeout(() => { location.reload(); }, 1000);
+            }
+        }
+    });
+}
+
+function confirmHapusSemua() {
+    if(typeof Swal === 'undefined') { if(confirm("Kosongkan semua jadwal bulan ini?")) document.getElementById('formHapusSemua').submit(); return; }
+    Swal.fire({
+        title: 'Kosongkan Jadwal?',
+        text: "Seluruh data jadwal di bulan ini akan dihapus permanen. Tindakan ini tidak dapat dibatalkan!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#EF4444',
+        cancelButtonColor: '#F1F5F9',
+        confirmButtonText: 'Ya, Kosongkan!',
+        cancelButtonText: 'Batal',
+        reverseButtons: true,
+        customClass: { popup: 'bex-swal' }
+    }).then((result) => {
+        if (result.isConfirmed) document.getElementById('formHapusSemua').submit();
+    });
+}
+
+function confirmHapusKaryawan(uid, nama) {
+    if(typeof Swal === 'undefined') { if(confirm("Hapus jadwal untuk " + nama + "?")) document.getElementById('formHapusKaryawan_' + uid).submit(); return; }
+    Swal.fire({
+        title: 'Hapus Jadwal?',
+        html: `Apakah Anda yakin ingin menghapus seluruh jadwal bulan ini untuk <strong>${nama}</strong>?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3B82F6',
+        cancelButtonColor: '#F1F5F9',
+        confirmButtonText: 'Ya, Hapus',
+        cancelButtonText: 'Batal',
+        reverseButtons: true,
+        customClass: { popup: 'bex-swal' }
+    }).then((result) => {
+        if (result.isConfirmed) document.getElementById('formHapusKaryawan_' + uid).submit();
+    });
 }
 
 lucide.createIcons();
 </script>
+<style>
+/* Additional Toast Polish */
+.bex-toast-premium {
+    border-radius: 16px !important;
+    background: #0F172A !important;
+    color: #fff !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4) !important;
+}
+.swal2-timer-progress-bar { background: var(--primary) !important; }
+</style>
 </body>
 </html>

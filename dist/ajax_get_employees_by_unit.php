@@ -12,7 +12,7 @@ if (empty($unit)) {
 }
 
 $unitEsc = mysqli_real_escape_string($conn, $unit);
-$res = mysqli_query($conn, "SELECT id, nama_lengkap FROM users WHERE unit_kerja = '$unitEsc' ORDER BY nama_lengkap ASC");
+$res = mysqli_query($conn, "SELECT id, nama_lengkap, username FROM users WHERE unit_kerja = '$unitEsc' ORDER BY nama_lengkap ASC");
 
 if (mysqli_num_rows($res) === 0) {
     echo '<div style="grid-column: span 2; text-align:center; color:#94A3B8; font-size:12px; padding:10px;">Tidak ada pegawai di unit ini.</div>';
@@ -39,7 +39,8 @@ while ($u = mysqli_fetch_assoc($res)) {
     echo '
     <tr style="border-bottom:1px solid #F1F5F9;">
         <td style="padding:8px; text-align:center;"><input type="checkbox" class="row-trigger" data-uid="'.$uid.'" onclick="toggleMatrixRow('.$uid.', this)"></td>
-        <td style="padding:8px; font-weight:500; color:#334155;">'. h($u['nama_lengkap']) .'</td>';
+        <td style="padding:8px; font-weight:500; color:#334155;">'. h($u['nama_lengkap']) .' <small style="color:#94A3B8; font-weight:400; font-size:0.7rem;">(@'.h($u['username']).')</small></td>
+';
         for($w=1; $w<=5; $w++) {
             echo '<td style="padding:8px; text-align:center; border-left:1px solid #F1F5F9;">
                     <input type="checkbox" class="gen-exclude matrix-check" 
