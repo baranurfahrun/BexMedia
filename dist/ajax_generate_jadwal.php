@@ -73,27 +73,25 @@ while($rh = mysqli_fetch_assoc($qH2)) $user_history_2[$rh['user_id']] = (int)$rh
 $user_last = $user_history_1;
 $user_prev = $user_history_2;
 
+// Urutkan pegawai secara konsisten di awal saja sebagai starting point
+usort($employees, function($a, $b) { return (int)$a['id'] - (int)$b['id']; });
+
 for ($day = $start_day; $day <= $end_day; $day++) {
     $current_date = sprintf("%04d-%02d-%02d", $tahun, $bulan, $day);
     
-    // Klasifikasikan pegawai berdasarkan HAK MEREKA hari ini
-    $candidates_pagi  = []; // Orang yg kemarin LIBUR (Siap Pagi)
-    $candidates_siang = []; // Orang yg kemarin PAGI (Siap Siang)
-    $candidates_malam = []; // Orang yg kemarin SIANG (Siap Malam)
-    $must_lepas = [];       // Orang yg kemarin MALAM (Wajib Lepas)
-    $must_libur = [];       // Orang yg kemarin LEPAS (Wajib Libur Murni)
+    // 1. Klasifikasikan pegawai berdasarkan HAK MEREKA hari ini
+    $candidates_pagi  = []; 
+    $candidates_siang = []; 
+    $candidates_malam = []; 
+    $must_lepas = [];       
     
     foreach ($employees as $emp) {
         $uid = $emp['id'];
         $y   = $user_last[$uid] ?? 0;
-        $dby = $user_prev[$uid] ?? 0;
         
         if ($y == $m_id) {
             $must_lepas[] = $uid;
         } 
-        elseif ($y == $lep_id) {
-            $must_libur[] = $uid;
-        }
         elseif ($y == $p_id) {
             $candidates_siang[] = $uid;
         }
@@ -101,53 +99,68 @@ for ($day = $start_day; $day <= $end_day; $day++) {
             $candidates_malam[] = $uid;
         }
         else {
-            // Termasuk yang kemarin LIBUR murni
+            // Termasuk yang kemarin Lepas Malam atau Libur
             $candidates_pagi[] = $uid;
         }
     }
     
-    // Urutkan pegawai secara konsisten (biar antrean adil, tidak acak-acakan tiap hari)
-    usort($employees, function($a, $b) { return $a['id'] - $b['id']; });
+    // --- FITUR FAIRNESS: Urutkan candidates_pagi berdasarkan lama menunggu ---
+    usort($candidates_pagi, function($a, $b) use ($wait_counts) {
+        return $wait_counts[$b] - $wait_counts[$a]; // Yang nunggu lama di depan
+    });
     
     $assigned_today = [];
     
-    // 1. Assign yang OTOMATIS (Lepas & Libur) - INI HAK PATEN ISTIRAHAT
+    // 2. Assign yang OTOMATIS (Lepas)
     foreach ($must_lepas as $uid) {
         $result_schedule[] = ['user_id' => $uid, 'tanggal' => $current_date, 'jam_kerja_id' => $lep_id];
         $assigned_today[$uid] = $lep_id;
-    }
-    foreach ($must_libur as $uid) {
-        $result_schedule[] = ['user_id' => $uid, 'tanggal' => $current_date, 'jam_kerja_id' => $l_id];
-        $assigned_today[$uid] = $l_id;
+        $wait_counts[$uid] = 0;
     }
     
-    // 2. Isi Quota dengan PROTEKSI RANTAI (Tertib Antrean)
+    // 3. Isi Quota P, S, M (Chain-Locked)
     $workflow = [
         ['id' => $p_id, 'pool' => &$candidates_pagi],
         ['id' => $s_id, 'pool' => &$candidates_siang],
         ['id' => $m_id, 'pool' => &$candidates_malam]
     ];
     
-    foreach ($workflow as $wf) {
+    foreach ($workflow as $index => &$wf) {
         $sid = $wf['id'];
         $q_needed = (int)($quota[$sid] ?? 0);
+        
+        // --- PRIORITAS: Selalu urutkan pool Pagi berdasarkan yang paling lama menunggu ---
+        if ($sid == $p_id) {
+            usort($wf['pool'], function($a, $b) use ($wait_counts) {
+                return $wait_counts[$b] - $wait_counts[$a];
+            });
+        }
+        
+        // JUMPSTART: Di hari pertama, jika pool kosong, tarik dari pool Pagi
+        if ($day === $start_day && empty($wf['pool']) && !empty($candidates_pagi)) {
+            $wf['pool'] = &$candidates_pagi;
+        }
         
         for ($i = 0; $i < $q_needed; $i++) {
             $pick = array_shift($wf['pool']);
             if ($pick) {
                 $result_schedule[] = ['user_id' => $pick, 'tanggal' => $current_date, 'jam_kerja_id' => $sid];
                 $assigned_today[$pick] = $sid;
+                $wait_counts[$pick] = 0;
+                
+                // Jika tadi narik dari candidates_pagi, hapus dari sana juga
+                if (($key = array_search($pick, $candidates_pagi)) !== false) unset($candidates_pagi[$key]);
             }
         }
     }
     
-    // 3. Sisanya (yang tidak masuk kuota hari ini) WAJIB LIBUR
-    // Ini menjaga agar mereka tetap di pool "Siap ke Step Berikutnya" untuk besok
+    // 4. Sisanya (yang benar-benar tidak bertugas) WAJIB LIBUR
     foreach ($employees as $emp) {
         $uid = $emp['id'];
         if (!isset($assigned_today[$uid])) {
             $result_schedule[] = ['user_id' => $uid, 'tanggal' => $current_date, 'jam_kerja_id' => $l_id];
             $assigned_today[$uid] = $l_id;
+            $wait_counts[$uid]++; // Tambah poin menunggu agar besok diprioritaskan
         }
     }
     

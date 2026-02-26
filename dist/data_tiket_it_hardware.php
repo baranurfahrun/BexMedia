@@ -87,8 +87,6 @@ $tgl_sampai = isset($_GET['tgl_sampai']) ? $_GET['tgl_sampai'] : '';
   box-shadow: 0 5px 15px rgba(0,0,0,0.3);
   border-radius: 10px;
 }
-
-
 </style>
 </head>
 <body>
@@ -97,11 +95,15 @@ $tgl_sampai = isset($_GET['tgl_sampai']) ? $_GET['tgl_sampai'] : '';
       <?php include 'navbar.php'; ?>
       <?php include 'sidebar.php'; ?>
       <div class="main-content">
+        <?php 
+        $breadcrumb = "Technical Support / <strong>Hardware Service Request Data</strong>";
+        include "topbar.php"; 
+        ?>
         <section class="section">
           <div class="section-body">
             <div class="card">
               <div class="card-header d-flex justify-content-between align-items-center">
-                <h4><i class="fas fa-desktop me-2 text-primary"></i>  Data Tiket IT Hardware</h4>
+                <h4><i class="fas fa-desktop me-2 text-primary"></i> Hardware Service Request Data</h4>
 
               </div>
              
@@ -167,7 +169,7 @@ $tgl_sampai = isset($_GET['tgl_sampai']) ? $_GET['tgl_sampai'] : '';
                  <thead class="thead-dark text-center">
   <tr>
     <th>No</th>
-    <th>Nomor Tiket</th>
+    <th>SR Number</th>
     <th>Tanggal</th>
     <th>NIK</th>
     <th>Nama Order</th>
@@ -177,10 +179,9 @@ $tgl_sampai = isset($_GET['tgl_sampai']) ? $_GET['tgl_sampai'] : '';
     <th>Kategori</th>
     <th>Kendala</th>
     <th>Status</th>
-    <th>Validasi</th> <!-- ✅ Tambahkan ini -->
+    <th>Validasi</th>
     <th>Aksi</th>
-    <th>Terbit BA</th>
-
+    <th>BA Report</th>
   </tr>
 </thead>
 
@@ -189,7 +190,6 @@ $tgl_sampai = isset($_GET['tgl_sampai']) ? $_GET['tgl_sampai'] : '';
     <?php while ($row = mysqli_fetch_assoc($result)): ?>
       <?php 
         $tgl = date('d-m-Y H:i', strtotime($row['tanggal_input'])); 
-        ob_start();
       ?>
     <tr>
   <td class="text-center"><?= $no++; ?></td>
@@ -207,19 +207,16 @@ $tgl_sampai = isset($_GET['tgl_sampai']) ? $_GET['tgl_sampai'] : '';
     <?= !empty($row['waktu_validasi']) ? '<span class="badge badge-success">Sudah</span>' : '<span class="badge badge-warning">Belum</span>'; ?>
   </td>
   <td class="text-center">
-    <a href="berita_acara.php?tiket_id=<?= $row['id']; ?>" target="_blank" class="btn btn-sm btn-success">
-      <i class="fas fa-file-alt"></i> BA
-    </a>
-  </td>
-  <td class="text-center">
     <button class="btn btn-sm btn-info" data-toggle="modal" data-target="#modalStatus<?= $row['id']; ?>">
-      <i class="fas fa-edit"></i> Ubah Status
+      <i class="fas fa-edit"></i> Status
     </button>
   </td>
+  <td class="text-center">
+    <a href="berita_acara.php?tiket_id=<?= $row['id']; ?>" target="_blank" class="btn btn-sm btn-success">
+      <i class="fas fa-file-pdf"></i> BA
+    </a>
+  </td>
 </tr>
-
-
-
 
       <?php
         $modals[] = '
@@ -228,37 +225,36 @@ $tgl_sampai = isset($_GET['tgl_sampai']) ? $_GET['tgl_sampai'] : '';
             <div class="modal-content">
               <form action="ubah_status_it_hardware.php" method="POST">
                 <div class="modal-header">
-                  <h5 class="modal-title" id="modalStatusLabel'.$row['id'].'">Ubah Status Tiket</h5>
+                  <h5 class="modal-title" id="modalStatusLabel'.$row['id'].'">Update Request Status</h5>
                   <button type="button" class="close" data-dismiss="modal" aria-label="Tutup">
                     <span aria-hidden="true">&times;</span>
                   </button>
                 </div>
               <div class="modal-body">
-  <input type="hidden" name="tiket_id" value="'.$row['id'].'">
-  <input type="hidden" name="teknisi" value="'.$_SESSION['nama'].'">
-  
-  <div class="form-group">
-    <label for="statusSelect'.$row['id'].'">Status Baru:</label>
-    <select class="form-control" id="statusSelect'.$row['id'].'" name="status" required>
-      <option value="">-- Pilih Status --</option>
-      <option value="Menunggu" '.($row['status'] === 'Menunggu' ? 'selected' : '').'>Menunggu</option>
-      <option value="Diproses" '.($row['status'] === 'Diproses' ? 'selected' : '').'>Diproses</option>
-      <option value="Selesai" '.($row['status'] === 'Selesai' ? 'selected' : '').'>Selesai</option>
-      <option value="Tidak Bisa Diperbaiki" '.($row['status'] === 'Tidak Bisa Diperbaiki' ? 'selected' : '').'>Tidak Bisa Diperbaiki</option>
-      <option value="Ditolak" '.($row['status'] === 'Ditolak' ? 'selected' : '').'>Ditolak</option>
-    </select>
-  </div>
-
-  <div class="form-group">
-    <label for="catatanIt'.$row['id'].'">Catatan IT:</label>
-    <textarea class="form-control" id="catatanIt'.$row['id'].'" name="catatan_it" rows="3" placeholder="Masukkan catatan atau detail tambahan..."></textarea>
-  </div>
-</div>
-
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Batal</button>
-                  <button type="submit" name="ubah_status" class="btn btn-primary btn-sm">Simpan</button>
+                <input type="hidden" name="tiket_id" value="'.$row['id'].'">
+                <input type="hidden" name="teknisi" value="'.$_SESSION['nama'].'">
+                
+                <div class="form-group">
+                  <label>Status Baru:</label>
+                  <select class="form-control" name="status" required>
+                    <option value="">-- Pilih Status --</option>
+                    <option value="Menunggu" '.($row['status'] === 'Menunggu' ? 'selected' : '').'>Menunggu</option>
+                    <option value="Diproses" '.($row['status'] === 'Diproses' ? 'selected' : '').'>Diproses</option>
+                    <option value="Selesai" '.($row['status'] === 'Selesai' ? 'selected' : '').'>Selesai</option>
+                    <option value="Tidak Bisa Diperbaiki" '.($row['status'] === 'Tidak Bisa Diperbaiki' ? 'selected' : '').'>Tidak Bisa Diperbaiki</option>
+                    <option value="Ditolak" '.($row['status'] === 'Ditolak' ? 'selected' : '').'>Ditolak</option>
+                  </select>
                 </div>
+
+                <div class="form-group">
+                  <label>Catatan IT:</label>
+                  <textarea class="form-control" name="catatan_it" rows="3" placeholder="Masukkan catatan penanganan...">'.htmlspecialchars($row['catatan_it']).'</textarea>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Batal</button>
+                <button type="submit" name="ubah_status" class="btn btn-primary btn-sm">Simpan</button>
+              </div>
               </form>
             </div>
           </div>
@@ -266,22 +262,12 @@ $tgl_sampai = isset($_GET['tgl_sampai']) ? $_GET['tgl_sampai'] : '';
       ?>
     <?php endwhile; ?>
   <?php else: ?>
-    <tr><td colspan="13" class="text-center">Tidak ada data ditemukan.</td></tr>
+    <tr><td colspan="14" class="text-center">Tidak ada data ditemukan.</td></tr>
   <?php endif; ?>
 </tbody>
 
-
-                    <?php if (isset($_GET['notif']) && $_GET['notif'] == 'berhasil'): ?>
-  <div id="notif-toast" class="alert alert-success text-center">
-    <i class="fas fa-check-circle fa-2x mb-1"></i><br>
-    Status berhasil diperbarui.
-  </div>
-<?php endif; ?>
-
                   </table>
                 </div>
-
-                
 
                 <?php if ($totalPages > 1): ?>
                   <nav>
@@ -302,7 +288,14 @@ $tgl_sampai = isset($_GET['tgl_sampai']) ? $_GET['tgl_sampai'] : '';
       </div>
     </div>
   </div>
-<!-- SCRIPTS -->
+
+  <?php if (isset($_GET['notif']) && $_GET['notif'] == 'berhasil'): ?>
+    <div id="notif-toast" class="alert alert-success text-center">
+      <i class="fas fa-check-circle fa-2x mb-1"></i><br>
+      Status berhasil diperbarui.
+    </div>
+  <?php endif; ?>
+
 <script src="assets/modules/jquery.min.js"></script>
 <script src="assets/modules/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script src="assets/modules/nicescroll/jquery.nicescroll.min.js"></script>
@@ -311,9 +304,7 @@ $tgl_sampai = isset($_GET['tgl_sampai']) ? $_GET['tgl_sampai'] : '';
 <script src="assets/js/scripts.js"></script>
 <script src="assets/js/custom.js"></script>
 
-<?php foreach ($modals as $modal) echo $modal; ?> <!-- 🟢 MODAL DIPINDAH KE SINI -->
-
-
+<?php foreach ($modals as $modal) echo $modal; ?>
 
 <script>
   $(document).ready(function () {
@@ -326,10 +317,3 @@ $tgl_sampai = isset($_GET['tgl_sampai']) ? $_GET['tgl_sampai'] : '';
 
 </body>
 </html>
-
-
-
-
-
-
-

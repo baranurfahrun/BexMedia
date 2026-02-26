@@ -632,11 +632,10 @@ date_default_timezone_set('Asia/Jakarta'); // WIB
   </div>
 </div>
 
-<!-- jQuery & Bootstrap -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.6.2/js/bootstrap.min.js"></script>
-<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.6.2/css/bootstrap.min.css" rel="stylesheet">
+<!-- Libs scripts (Local Assets) -->
+<script src="assets/modules/jquery.min.js"></script>
+<script src="assets/modules/popper.js"></script>
+<script src="assets/modules/bootstrap/js/bootstrap.min.js"></script>
 
 <!-- Jam Digital -->
 <script>
@@ -776,7 +775,8 @@ date_default_timezone_set('Asia/Jakarta'); // WIB
     loadOnlineUsers();
   });
 
-  // WebSocket
+  /* 
+  // WebSocket Chat - Disabled to fix CSP & Connection Errors
   try {
     const ws = new WebSocket("ws://localhost:8081");
 
@@ -805,6 +805,7 @@ date_default_timezone_set('Asia/Jakarta'); // WIB
   } catch (e) {
     console.log("WebSocket tidak tersedia");
   }
+  */
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

@@ -1,10 +1,9 @@
 <?php
-include 'security.php'; 
+include 'security.php'; // sudah handle session_start + cek login + timeout
 include 'koneksi.php';
 date_default_timezone_set('Asia/Jakarta');
 
 $user_id = $_SESSION['user_id'];
-
 $current_file = basename(__FILE__); // 
 
 // Cek apakah user boleh mengakses halaman ini
@@ -34,50 +33,77 @@ $tgl_sampai = isset($_GET['tgl_sampai']) ? $_GET['tgl_sampai'] : '';
   <link rel="stylesheet" href="assets/modules/fontawesome/css/all.min.css" />
   <link rel="stylesheet" href="assets/css/style.css" />
   <link rel="stylesheet" href="assets/css/components.css" />
-  <style>
-    /* Tambahan styling */
-    #notif-toast {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 9999;
-      display: none;
-      min-width: 300px;
-      padding: 20px;
-      font-size: 16px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-      border-radius: 10px;
-    }
-    .table-responsive {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-    table.table {
-      min-width: 1200px;
-    }
-    .table td, .table th {
-      white-space: nowrap;
-      vertical-align: middle;
-    }
-  </style>
+ <style>
+  #notif-toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    display: none;
+    min-width: 300px;
+  }
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  table.table {
+    min-width: 1200px;
+  }
+
+  /* Modal z-index fix */
+  .modal-backdrop {
+    z-index: 1040;
+  }
+
+  .modal {
+    z-index: 1050;
+  }
+
+  .table td, .table th {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.table td.kategori-col,
+.table td.kendala-col,
+.table td.perangkat-col {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#notif-toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  display: none;
+  min-width: 300px;
+  padding: 20px;
+  font-size: 16px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  border-radius: 10px;
+}
+</style>
 </head>
 <body>
   <div id="app">
     <div class="main-wrapper main-wrapper-1">
       <?php include 'navbar.php'; ?>
       <?php include 'sidebar.php'; ?>
-      
-    <div class="main-content">
-      <?php 
-      $breadcrumb = "Technical Support / <strong>Data Tiket It Software</strong>";
-      include "topbar.php"; 
-      ?>
+      <div class="main-content">
+        <?php 
+        $breadcrumb = "Technical Support / <strong>Software Service Request Data</strong>";
+        include "topbar.php"; 
+        ?>
         <section class="section">
           <div class="section-body">
             <div class="card">
               <div class="card-header d-flex justify-content-between align-items-center">
-                <h4><i class="fas fa-code me-2 text-primary"></i> Data Tiket IT Software</h4>
+                <h4><i class="fas fa-code me-2 text-primary"></i> Software Service Request Data</h4>
 
               </div>
 
@@ -142,7 +168,7 @@ $tgl_sampai = isset($_GET['tgl_sampai']) ? $_GET['tgl_sampai'] : '';
                     <thead class="thead-dark text-center">
                       <tr>
                         <th>No</th>
-                        <th>Nomor Tiket</th>
+                        <th>SR Number</th>
                         <th>Tanggal</th>
                         <th>NIK</th>
                         <th>Nama Order</th>
@@ -152,18 +178,14 @@ $tgl_sampai = isset($_GET['tgl_sampai']) ? $_GET['tgl_sampai'] : '';
                         <th>Kategori</th>
                         <th>Kendala</th>
                         <th>Status</th>
-                        <th>Validasi</th>
                         <th>Aksi</th>
-                        <th>Terbit BA</th>
+                        <th>Laporan</th>
                       </tr>
                     </thead>
                     <tbody>
                       <?php if (mysqli_num_rows($result) > 0): ?>
                         <?php while ($row = mysqli_fetch_assoc($result)): ?>
-                          <?php 
-                            $tgl = date('d-m-Y H:i', strtotime($row['tanggal_input'])); 
-                            ob_start();
-                          ?>
+                          <?php $tgl = date('d-m-Y H:i', strtotime($row['tanggal_input'])); ?>
                           <tr>
                             <td class="text-center"><?= $no++; ?></td>
                             <td><strong><?= $row['nomor_tiket']; ?></strong></td>
@@ -173,24 +195,30 @@ $tgl_sampai = isset($_GET['tgl_sampai']) ? $_GET['tgl_sampai'] : '';
                             <td><?= htmlspecialchars($row['teknisi_nama'] ?? '-'); ?></td>
                             <td><?= $row['jabatan']; ?></td>
                             <td><?= $row['unit_kerja']; ?></td>
-                            <td><?= $row['kategori']; ?></td>
-                            <td><?= $row['kendala']; ?></td>
-                            <td><strong><?= ucwords($row['status']); ?></strong></td>
+                            <td class="kategori-col" title="<?= $row['kategori']; ?>"><?= $row['kategori']; ?></td>
+                            <td class="kendala-col" title="<?= $row['kendala']; ?>"><?= $row['kendala']; ?></td>
                             <td class="text-center">
-                              <?= !empty($row['waktu_validasi']) ? '<span class="badge badge-success">Sudah</span>' : '<span class="badge badge-warning">Belum</span>'; ?>
-                            </td>
-                            <td class="text-center">
-                              <a href="berita_acara_software.php?tiket_id=<?= $row['id']; ?>" target="_blank" class="btn btn-sm btn-success">
-                                <i class="fas fa-file-alt"></i> BA
-                              </a>
+                              <?php
+                              $status = $row['status'];
+                              $badgeClass = 'badge-secondary';
+                              if ($status == 'Menunggu') $badgeClass = 'badge-warning';
+                              elseif ($status == 'Diproses') $badgeClass = 'badge-info';
+                              elseif ($status == 'Selesai') $badgeClass = 'badge-success';
+                              elseif ($status == 'Ditolak') $badgeClass = 'badge-danger';
+                              ?>
+                              <span class="badge <?= $badgeClass ?>"><?= $status; ?></span>
                             </td>
                             <td class="text-center">
                               <button class="btn btn-sm btn-info" data-toggle="modal" data-target="#modalStatus<?= $row['id']; ?>">
-                                <i class="fas fa-edit"></i> Ubah Status
+                                <i class="fas fa-edit"></i> Status
                               </button>
                             </td>
+                            <td class="text-center">
+                              <a href="berita_acara_software.php?tiket_id=<?= $row['id']; ?>" target="_blank" class="btn btn-sm btn-success">
+                                <i class="fas fa-file-pdf"></i> BA
+                              </a>
+                            </td>
                           </tr>
-
                           <?php
                           $modals[] = '
                           <div class="modal fade" id="modalStatus'.$row['id'].'" tabindex="-1" role="dialog" aria-labelledby="modalStatusLabel'.$row['id'].'" aria-hidden="true">
@@ -198,7 +226,7 @@ $tgl_sampai = isset($_GET['tgl_sampai']) ? $_GET['tgl_sampai'] : '';
                               <div class="modal-content">
                                 <form action="ubah_status_it_software.php" method="POST">
                                   <div class="modal-header">
-                                    <h5 class="modal-title" id="modalStatusLabel'.$row['id'].'">Ubah Status Tiket</h5>
+                                    <h5 class="modal-title" id="modalStatusLabel'.$row['id'].'">Update Request Status</h5>
                                     <button type="button" class="close" data-dismiss="modal" aria-label="Tutup">
                                       <span aria-hidden="true">&times;</span>
                                     </button>
@@ -206,20 +234,21 @@ $tgl_sampai = isset($_GET['tgl_sampai']) ? $_GET['tgl_sampai'] : '';
                                   <div class="modal-body">
                                     <input type="hidden" name="tiket_id" value="'.$row['id'].'">
                                     <input type="hidden" name="teknisi" value="'.$_SESSION['nama'].'">
+                                    
                                     <div class="form-group">
-                                      <label for="statusSelect'.$row['id'].'">Status Baru:</label>
-                                      <select class="form-control" id="statusSelect'.$row['id'].'" name="status" required>
+                                      <label>Status Baru:</label>
+                                      <select class="form-control" name="status" required>
                                         <option value="">-- Pilih Status --</option>
                                         <option value="Menunggu" '.($row['status'] === 'Menunggu' ? 'selected' : '').'>Menunggu</option>
                                         <option value="Diproses" '.($row['status'] === 'Diproses' ? 'selected' : '').'>Diproses</option>
                                         <option value="Selesai" '.($row['status'] === 'Selesai' ? 'selected' : '').'>Selesai</option>
-                                        <option value="Tidak Bisa Diperbaiki" '.($row['status'] === 'Tidak Bisa Diperbaiki' ? 'selected' : '').'>Tidak Bisa Diperbaiki</option>
                                         <option value="Ditolak" '.($row['status'] === 'Ditolak' ? 'selected' : '').'>Ditolak</option>
                                       </select>
                                     </div>
+
                                     <div class="form-group">
-                                      <label for="catatanIt'.$row['id'].'">Catatan IT:</label>
-                                      <textarea class="form-control" id="catatanIt'.$row['id'].'" name="catatan_it" rows="3" placeholder="Masukkan catatan atau detail tambahan..."></textarea>
+                                      <label>Catatan IT:</label>
+                                      <textarea class="form-control" name="catatan_it" rows="3" placeholder="Masukkan catatan penanganan...">'.htmlspecialchars($row['catatan_it']).'</textarea>
                                     </div>
                                   </div>
                                   <div class="modal-footer">
@@ -250,6 +279,7 @@ $tgl_sampai = isset($_GET['tgl_sampai']) ? $_GET['tgl_sampai'] : '';
                     </ul>
                   </nav>
                 <?php endif; ?>
+
               </div>
             </div>
           </div>
@@ -258,14 +288,21 @@ $tgl_sampai = isset($_GET['tgl_sampai']) ? $_GET['tgl_sampai'] : '';
     </div>
   </div>
 
-<script src="assets/modules/jquery.min.js"></script>
-<script src="assets/modules/popper.js"></script>
-<script src="assets/modules/bootstrap/js/bootstrap.min.js"></script>
-<script src="assets/modules/nicescroll/jquery.nicescroll.min.js"></script>
-<script src="assets/modules/moment.min.js"></script>
-<script src="assets/js/stisla.js"></script>
-<script src="assets/js/scripts.js"></script>
-<script src="assets/js/custom.js"></script>
+  <?php if (isset($_GET['notif']) && $_GET['notif'] == 'berhasil'): ?>
+    <div id="notif-toast" class="alert alert-success text-center">
+      <i class="fas fa-check-circle fa-2x mb-1"></i><br>
+      Status berhasil diperbarui.
+    </div>
+  <?php endif; ?>
+
+  <script src="assets/modules/jquery.min.js"></script>
+  <script src="assets/modules/popper.js"></script>
+  <script src="assets/modules/bootstrap/js/bootstrap.min.js"></script>
+  <script src="assets/modules/nicescroll/jquery.nicescroll.min.js"></script>
+  <script src="assets/modules/moment.min.js"></script>
+  <script src="assets/js/stisla.js"></script>
+  <script src="assets/js/scripts.js"></script>
+  <script src="assets/js/custom.js"></script>
 
   <?php foreach ($modals as $modal) echo $modal; ?>
 
@@ -279,10 +316,3 @@ $tgl_sampai = isset($_GET['tgl_sampai']) ? $_GET['tgl_sampai'] : '';
   </script>
 </body>
 </html>
-
-
-
-
-
-
-

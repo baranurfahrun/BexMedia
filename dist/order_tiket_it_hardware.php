@@ -16,11 +16,8 @@ if (mysqli_num_rows($result) == 0) {
   exit;
 }
 
-
-
-
 $user_id = $_SESSION['user_id'];
-$queryUser = mysqli_query($conn, "SELECT nik, nama, jabatan, unit_kerja FROM users WHERE id = '$user_id'");
+$queryUser = mysqli_query($conn, "SELECT nik, nama_lengkap, jabatan, unit_kerja FROM users WHERE id = '$user_id'");
 $userData = mysqli_fetch_assoc($queryUser);
 
 $keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
@@ -74,23 +71,23 @@ $keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
     
     <div class="main-content">
       <?php 
-      $breadcrumb = "Technical Support / <strong>Order Tiket It Hardware</strong>";
+      $breadcrumb = "Technical Support / <strong>Hardware Service Request</strong>";
       include "topbar.php"; 
       ?>
       <section class="section">
         <div class="section-body">
           <div class="card">
             <div class="card-header">
-              <h4><i class="fas fa-tools text-warning mr-2"></i>Order Tiket IT Hardware</h4>
+              <h4><i class="fas fa-tools text-warning mr-2"></i>Hardware Service Request</h4>
             </div>
 
             <div class="card-body">
               <ul class="nav nav-tabs" id="myTab" role="tablist">
                 <li class="nav-item">
-                  <a class="nav-link active" id="order-tab" data-toggle="tab" href="#order" role="tab">Order Tiket</a>
+                  <a class="nav-link active" id="order-tab" data-toggle="tab" href="#order" role="tab">New Request</a>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link" id="tiket-saya-tab" data-toggle="tab" href="#tiket-saya" role="tab">Tiket Saya</a>
+                  <a class="nav-link" id="tiket-saya-tab" data-toggle="tab" href="#tiket-saya" role="tab">My Requests</a>
                 </li>
               </ul>
 
@@ -102,19 +99,28 @@ $keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
                     <div class="row">
                       <div class="form-group col-md-4">
                         <label for="nik">NIK</label>
-                        <input type="text" name="nik" class="form-control" value="<?= $userData['nik']; ?>" readonly>
+                        <input type="text" name="nik" class="form-control" value="<?= htmlspecialchars($userData['nik'] ?? ''); ?>" <?= empty($userData['nik']) ? '' : 'readonly'; ?>>
                       </div>
                       <div class="form-group col-md-4">
                         <label for="nama">Nama</label>
-                        <input type="text" name="nama" class="form-control" value="<?= $userData['nama']; ?>" readonly>
+                        <input type="text" name="nama" class="form-control" value="<?= $userData['nama_lengkap']; ?>" readonly>
                       </div>
                       <div class="form-group col-md-4">
                         <label for="jabatan">Jabatan</label>
-                        <input type="text" name="jabatan" class="form-control" value="<?= $userData['jabatan']; ?>" readonly>
+                        <input type="text" name="jabatan" class="form-control" value="<?= htmlspecialchars($userData['jabatan'] ?? ''); ?>" <?= empty($userData['jabatan']) ? '' : 'readonly'; ?>>
                       </div>
                       <div class="form-group col-md-4">
                         <label for="unit_kerja">Unit Kerja</label>
-                        <input type="text" name="unit_kerja" class="form-control" value="<?= $userData['unit_kerja']; ?>" readonly>
+                        <select name="unit_kerja" id="unit_kerja" class="form-control" required>
+                          <option value="">-- Pilih Unit Kerja --</option>
+                          <?php
+                          $unitResult = mysqli_query($conn, "SELECT nama_unit FROM unit_kerja ORDER BY nama_unit ASC");
+                          while ($u = mysqli_fetch_assoc($unitResult)) {
+                            $selected = ($userData['unit_kerja'] == $u['nama_unit']) ? 'selected' : '';
+                            echo "<option value='{$u['nama_unit']}' $selected>{$u['nama_unit']}</option>";
+                          }
+                          ?>
+                        </select>
                       </div>
                       <div class="form-group col-md-4">
                         <label for="kategori">Kategori Hardware</label>
@@ -137,7 +143,7 @@ $keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
                         <textarea name="kendala" class="form-control" rows="3" required></textarea>
                       </div>
                     </div>
-                    <button type="submit" name="simpan" class="btn btn-primary">Simpan Tiket</button>
+                    <button type="submit" name="simpan" class="btn btn-primary">Submit Request</button>
                   </form>
                 </div>
 
@@ -148,14 +154,14 @@ $keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
                       <thead>
                         <tr>
                           <th>No</th>
-                          <th>Nomor Tiket</th>
-                          <th>Tanggal</th>
-                          <th>Kategori</th>
-                          <th>Kendala</th>
-                          <th>Catatan IT</th>
+                          <th>SR Number</th>
+                          <th>Date</th>
+                          <th>Category</th>
+                          <th>Issue</th>
+                          <th>IT Remarks</th>
                           <th>Status</th>
-                          <th>Validasi</th>
-                          <th>Ticket</th>
+                          <th>Validation</th>
+                          <th>Print</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -242,10 +248,3 @@ $keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
 <script src="assets/js/custom.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-

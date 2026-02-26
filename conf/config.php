@@ -178,6 +178,22 @@ if (mysqli_num_rows($check_unit) == 0) {
         ('Laboratorium'), ('Radiologi'), ('Administrasi'), ('IT')");
 }
 
+// Seed Kategori Software if empty
+$check_kat_soft = mysqli_query($conn, "SELECT id FROM kategori_software LIMIT 1");
+if (mysqli_num_rows($check_kat_soft) == 0) {
+    mysqli_query($conn, "INSERT INTO kategori_software (nama_kategori) VALUES 
+        ('Operating System'), ('Microsoft Office'), ('SIMRS'), ('Email / Network'), 
+        ('Browser / Web'), ('Antivirus / Security'), ('Lain-lain')");
+}
+
+// Seed Kategori Hardware if empty
+$check_kat_hard = mysqli_query($conn, "SELECT id FROM kategori_hardware LIMIT 1");
+if (mysqli_num_rows($check_kat_hard) == 0) {
+    mysqli_query($conn, "INSERT INTO kategori_hardware (nama_kategori) VALUES 
+        ('Monitor / Display'), ('Keyboard / Mouse'), ('Printer / Scanner'), ('PC / Laptop'), 
+        ('Jaringan / Router'), ('CCTV / Security'), ('Lain-lain')");
+}
+
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS web_dokter_audit_log (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id VARCHAR(100),

@@ -137,9 +137,9 @@ function is_group_active($files) {
                 <i data-lucide="chevron-down"></i>
             </div>
             <div class="dropdown-content">
-                <a href="order_tiket_it_software.php" class="dropdown-item">Tiket Software</a>
-                <a href="order_tiket_it_hardware.php" class="dropdown-item">Tiket Hardware</a>
-                <a href="order_tiket_sarpras.php" class="dropdown-item">Tiket Sarpras</a>
+                <a href="order_tiket_it_software.php" class="dropdown-item">Software Service Request</a>
+                <a href="order_tiket_it_hardware.php" class="dropdown-item">Hardware Service Request</a>
+                <a href="order_tiket_sarpras.php" class="dropdown-item">Sarpras Service Request</a>
                 <a href="handling_time.php" class="dropdown-item">Handling Time IT</a>
                 <a href="maintenance_rutin.php" class="dropdown-item">Maintenance Rutin</a>
                 <a href="data_barang_it.php" class="dropdown-item">Inventaris Aset IT</a>

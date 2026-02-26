@@ -62,7 +62,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_settings'])) {
     $settings_fields = [
         'app_name', 'host_khanza', 'name_khanza', 'user_khanza', 'pass_khanza', 
         'host_bex', 'name_bex', 'user_bex', 'pass_bex',
-        'running_text', 'rt_speed', 'rt_font_size', 'rt_font_family', 'rt_color'
+        'running_text', 'rt_speed', 'rt_font_size', 'rt_font_family', 'rt_color',
+        'wa_gateway_url', 'wa_group_it', 'wa_group_sarpras', 'telegram_bot_token', 'telegram_chat_id'
     ];
     $updated_count = 0;
     $saved_keys = [];
@@ -517,6 +518,9 @@ if (isset($conn) && $conn !== false) {
                         <div class="settings-nav-item" onclick="showTab('email')">
                             <i data-lucide="mail"></i> Email Engine
                         </div>
+                        <div class="settings-nav-item" onclick="showTab('notifications')">
+                            <i data-lucide="bell"></i> Notification Gateway
+                        </div>
                         
                         <!-- Account Management Dropdown -->
                         <div class="settings-nav-item dropdown-trigger" onclick="toggleSub('acc-mgmt')">
@@ -543,11 +547,13 @@ if (isset($conn) && $conn !== false) {
                         </div>
                     </div>
 
-                    <form method="POST" class="settings-content" enctype="multipart/form-data">
-                        <?php echo csrf_field(); ?>
+                    <div class="settings-content">
                         
                         <!-- TAB: PROFILE -->
                         <div id="profile" class="tab-content active">
+                            <form method="POST" enctype="multipart/form-data">
+                                <?php echo csrf_field(); ?>
+                                <input type="hidden" name="save_settings" value="1">
                             <div class="form-section">
                                 <h3>Account Profile</h3>
                                 
@@ -587,68 +593,91 @@ if (isset($conn) && $conn !== false) {
                                     Akun Anda berasal dari database KHANZA. Profil hanya bisa diubah di sistem SIMRS utama.
                                 </p>
                                 <?php endif; ?>
+
+                                <button type="submit" class="btn-save">
+                                    <i data-lucide="save" size="16" style="vertical-align: middle; margin-right: 6px;"></i>
+                                    Simpan Perubahan Profil
+                                </button>
                             </div>
+                            </form>
                         </div>
 
                         <!-- TAB: GENERAL -->
                         <div id="general" class="tab-content">
-                            <div class="form-section">
-                                <div class="form-group" style="margin-top:20px">
-                                    <label>Application Name (Brand)</label>
-                                    <input type="text" name="app_name" value="<?php echo h(get_setting('app_name', 'BexMedia')); ?>">
+                            <form method="POST">
+                                <?php echo csrf_field(); ?>
+                                <input type="hidden" name="save_settings" value="1">
+                                <div class="form-section">
+                                    <h3>App Identity</h3>
+                                    <div class="form-group" style="margin-top:20px">
+                                        <label>Application Name (Brand)</label>
+                                        <input type="text" name="app_name" value="<?php echo h(get_setting('app_name', 'BexMedia')); ?>">
+                                    </div>
+                                    <button type="submit" class="btn-save">
+                                        <i data-lucide="save" size="16" style="vertical-align: middle; margin-right: 6px;"></i>
+                                        Simpan Nama Aplikasi
+                                    </button>
                                 </div>
-                            </div>
+                            </form>
 
-                            <div class="form-section">
-                                <h3>Running Text Configuration</h3>
-                                <div class="form-group">
-                                    <label>Teks Berjalan (Marquee Text)</label>
-                                    <input type="text" name="running_text" value="<?php echo h(get_setting('running_text')); ?>" placeholder="Masukkan teks pengumuman/selamat datang...">
-                                </div>
-                                <div class="form-row">
+                            <form method="POST">
+                                <?php echo csrf_field(); ?>
+                                <input type="hidden" name="save_settings" value="1">
+                                <div class="form-section">
+                                    <h3>Running Text Configuration</h3>
                                     <div class="form-group">
-                                        <label>Kecepatan (1-50, semakin besar semakin cepat)</label>
-                                        <input type="number" name="rt_speed" value="<?php echo h(get_setting('rt_speed', '10')); ?>" min="1" max="50">
+                                        <label>Teks Berjalan (Marquee Text)</label>
+                                        <input type="text" name="running_text" value="<?php echo h(get_setting('running_text')); ?>" placeholder="Masukkan teks pengumuman/selamat datang...">
                                     </div>
-                                    <div class="form-group">
-                                        <label>Ukuran Font (Pixel)</label>
-                                        <input type="number" name="rt_font_size" value="<?php echo h(get_setting('rt_font_size', '16')); ?>" min="8" max="72">
-                                    </div>
-                                </div>
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label>Jenis Font (Font Family)</label>
-                                        <select name="rt_font_family">
-                                            <?php 
-                                            $current_font = get_setting('rt_font_family', "'Inter', sans-serif");
-                                            $fonts = [
-                                                "'Inter', sans-serif" => "Inter (Standard)",
-                                                "'Outfit', sans-serif" => "Outfit (Premium)",
-                                                "'Montserrat', sans-serif" => "Montserrat (Modern)",
-                                                "'Poppins', sans-serif" => "Poppins (Clean)",
-                                                "'Playfair Display', serif" => "Playfair (Elegant)",
-                                                "'Ubuntu', sans-serif" => "Ubuntu (Style)",
-                                                "'Open Sans', sans-serif" => "Open Sans (Readable)",
-                                                "'Roboto', sans-serif" => "Roboto",
-                                                "Arial, sans-serif" => "Arial",
-                                                "'Courier New', monospace" => "Monospace"
-                                            ];
-                                            foreach ($fonts as $val => $label) {
-                                                $sel = ($current_font == $val) ? "selected" : "";
-                                                echo "<option value=\"$val\" $sel>$label</option>";
-                                            }
-                                            ?>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Warna Font</label>
-                                        <div style="display:flex; gap:12px; align-items:center;">
-                                            <input type="color" name="rt_color" value="<?php echo h(get_setting('rt_color', '#1e3a8a')); ?>">
-                                            <span style="font-family:monospace; color:#64748B; font-weight:600;"><?php echo h(get_setting('rt_color', '#1e3a8a')); ?></span>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Kecepatan (1-50, semakin besar semakin cepat)</label>
+                                            <input type="number" name="rt_speed" value="<?php echo h(get_setting('rt_speed', '10')); ?>" min="1" max="50">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Ukuran Font (Pixel)</label>
+                                            <input type="number" name="rt_font_size" value="<?php echo h(get_setting('rt_font_size', '16')); ?>" min="8" max="72">
                                         </div>
                                     </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Jenis Font (Font Family)</label>
+                                            <select name="rt_font_family">
+                                                <?php 
+                                                $current_font = get_setting('rt_font_family', "'Inter', sans-serif");
+                                                $fonts = [
+                                                    "'Inter', sans-serif" => "Inter (Standard)",
+                                                    "'Outfit', sans-serif" => "Outfit (Premium)",
+                                                    "'Montserrat', sans-serif" => "Montserrat (Modern)",
+                                                    "'Poppins', sans-serif" => "Poppins (Clean)",
+                                                    "'Playfair Display', serif" => "Playfair (Elegant)",
+                                                    "'Ubuntu', sans-serif" => "Ubuntu (Style)",
+                                                    "'Open Sans', sans-serif" => "Open Sans (Readable)",
+                                                    "'Roboto', sans-serif" => "Roboto",
+                                                    "Arial, sans-serif" => "Arial",
+                                                    "'Courier New', monospace" => "Monospace"
+                                                ];
+                                                foreach ($fonts as $val => $label) {
+                                                    $sel = ($current_font == $val) ? "selected" : "";
+                                                    echo "<option value=\"$val\" $sel>$label</option>";
+                                                }
+                                                ?>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Warna Font</label>
+                                            <div style="display:flex; gap:12px; align-items:center;">
+                                                <input type="color" name="rt_color" value="<?php echo h(get_setting('rt_color', '#1e3a8a')); ?>">
+                                                <span style="font-family:monospace; color:#64748B; font-weight:600;"><?php echo h(get_setting('rt_color', '#1e3a8a')); ?></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn-save">
+                                        <i data-lucide="save" size="16" style="vertical-align: middle; margin-right: 6px;"></i>
+                                        Simpan Running Text
+                                    </button>
                                 </div>
-                            </div>
+                            </form>
                         </div>
 
                         <!-- TAB: CONNECTION -->
@@ -662,38 +691,45 @@ if (isset($conn) && $conn !== false) {
                                         <span id="khanzaStatusBadge" class="badge badge-warn" style="background:#FEE2E2; color:#B91C1C; transition: all 0.3s;"><i data-lucide="x" size="12" style="vertical-align:middle; margin-right:4px"></i> Disconnected</span>
                                     <?php endif; ?>
                                 </div>
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label>Hostname / IP</label>
-                                        <input type="text" name="host_khanza" id="host_khanza" value="<?php echo h(get_setting('host_khanza')); ?>">
+                                <form method="POST">
+                                    <?php echo csrf_field(); ?>
+                                    <input type="hidden" name="save_settings" value="1">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Hostname / IP</label>
+                                            <input type="text" name="host_khanza" id="host_khanza" value="<?php echo h(get_setting('host_khanza')); ?>">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Database Name</label>
+                                            <input type="text" name="name_khanza" id="name_khanza" value="<?php echo h(get_setting('name_khanza')); ?>">
+                                        </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label>Database Name</label>
-                                        <input type="text" name="name_khanza" id="name_khanza" value="<?php echo h(get_setting('name_khanza')); ?>">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Username</label>
+                                            <input type="text" name="user_khanza" id="user_khanza" value="<?php echo h(get_setting('user_khanza')); ?>">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Password</label>
+                                            <input type="password" name="pass_khanza" id="pass_khanza" value="<?php echo h(get_setting('pass_khanza')); ?>">
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label>Username</label>
-                                        <input type="text" name="user_khanza" id="user_khanza" value="<?php echo h(get_setting('user_khanza')); ?>">
+                                    <div style="margin-top:-10px; margin-bottom:20px; display: flex; gap: 10px;">
+                                        <button type="button" id="btnTestKhanza" class="btn-save" style="background:#F1F5F9; color:#475569; padding:10px 18px; font-size:0.8rem; border:1px solid #E2E8F0; display:flex; align-items:center;" onclick="testKhanzaConnection()">
+                                            <i data-lucide="refresh-cw" size="14" style="margin-right:6px"></i> Tes Koneksi Remote
+                                        </button>
+                                        <span id="khanzaDot" style="display:inline-block; width:10px; height:10px; border-radius:50%; background:<?php echo ($khanza_status === 'online' ? '#10B981' : '#EF4444'); ?>; margin-left:5px; transition: background 0.3s;" title="Status Koneksi"></span>
+                                        <button type="submit" class="btn-save" style="padding:10px 18px; font-size:0.8rem;">
+                                            <i data-lucide="save" size="14" style="vertical-align:middle; margin-right:6px"></i> Simpan Konfigurasi Remote
+                                        </button>
                                     </div>
-                                    <div class="form-group">
-                                        <label>Password</label>
-                                        <input type="password" name="pass_khanza" id="pass_khanza" value="<?php echo h(get_setting('pass_khanza')); ?>">
-                                    </div>
-                                </div>
-                                <div style="margin-top:-10px; margin-bottom:20px; display: flex; gap: 10px;">
-                                    <button type="button" id="btnTestKhanza" class="btn-save" style="background:#F1F5F9; color:#475569; padding:10px 18px; font-size:0.8rem; border:1px solid #E2E8F0; display:flex; align-items:center;" onclick="testKhanzaConnection()">
-                                        <i data-lucide="refresh-cw" size="14" style="margin-right:6px"></i> Tes Koneksi Remote
-                                    </button>
-                                    <span id="khanzaDot" style="display:inline-block; width:10px; height:10px; border-radius:50%; background:<?php echo ($khanza_status === 'online' ? '#10B981' : '#EF4444'); ?>; margin-left:5px; transition: background 0.3s;" title="Status Koneksi"></span>
-                                    <button type="submit" name="save_settings" class="btn-save" style="padding:10px 18px; font-size:0.8rem;">
-                                        <i data-lucide="save" size="14" style="vertical-align:middle; margin-right:6px"></i> Simpan Konfigurasi Remote
-                                    </button>
-                                </div>
+                                </form>
                             </div>
 
                             <div class="form-section">
+                                <form method="POST">
+                                <?php echo csrf_field(); ?>
+                                <input type="hidden" name="save_settings" value="1">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #EEE; padding-bottom: 10px;">
                                     <h3 style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">Database BexMedia (Local Server)</h3>
                                     <?php if ($bex_status === 'online'): ?>
@@ -731,70 +767,130 @@ if (isset($conn) && $conn !== false) {
                                         <i data-lucide="save" size="14" style="vertical-align:middle; margin-right:6px"></i> Simpan Konfigurasi Lokal
                                     </button>
                                 </div>
+                                </form>
                             </div>
                         </div>
 
                         <!-- TAB: EMAIL ENGINE -->
                         <div id="email" class="tab-content">
-                            <?php
-                            $mail_setting = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM mail_settings LIMIT 1"));
-                            ?>
-                            <div class="form-section">
-                                <h3>Email Engine (SMTP Config)</h3>
-                                <p style="color: #64748B; font-size: 0.9rem; margin-bottom: 25px;">
-                                    Konfigurasi SMTP server untuk pengiriman email otomatis (laporan audit, notifikasi sistem).
-                                </p>
+                            <form method="POST">
+                                <?php echo csrf_field(); ?>
+                                <input type="hidden" name="save_mail" value="1">
+                                <input type="hidden" name="mail_id" value="<?php echo $mail_setting['id'] ?? 0; ?>">
+                                <?php
+                                $mail_setting = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM mail_settings LIMIT 1"));
+                                ?>
+                                <div class="form-section">
+                                    <h3>Email Engine (SMTP Config)</h3>
+                                    <p style="color: #64748B; font-size: 0.9rem; margin-bottom: 25px;">
+                                        Konfigurasi SMTP server untuk pengiriman email otomatis (laporan audit, notifikasi sistem).
+                                    </p>
 
-                                <div style="background: #F0F9FF; border-left: 4px solid var(--primary); border-radius: 0 12px 12px 0; padding: 14px 18px; margin-bottom: 25px; font-size: 0.85rem; color: #0369a1;">
-                                    <i data-lucide="info" size="16" style="vertical-align: middle; margin-right: 6px;"></i>
-                                    Untuk Gmail, gunakan SMTP <strong>smtp.gmail.com</strong> port <strong>587</strong> dan gunakan <strong>App Password</strong> (bukan password biasa).
+                                    <div style="background: #F0F9FF; border-left: 4px solid var(--primary); border-radius: 0 12px 12px 0; padding: 14px 18px; margin-bottom: 25px; font-size: 0.85rem; color: #0369a1;">
+                                        <i data-lucide="info" size="16" style="vertical-align: middle; margin-right: 6px;"></i>
+                                        Untuk Gmail, gunakan SMTP <strong>smtp.gmail.com</strong> port <strong>587</strong> dan gunakan <strong>App Password</strong> (bukan password biasa).
+                                    </div>
+
+                                    <div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label>SMTP Host</label>
+                                                <input type="text" name="mail_host" value="<?php echo htmlspecialchars($mail_setting['mail_host'] ?? ''); ?>" placeholder="smtp.gmail.com">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>SMTP Port</label>
+                                                <input type="number" name="mail_port" value="<?php echo htmlspecialchars($mail_setting['mail_port'] ?? '587'); ?>" placeholder="587">
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label>Username (Email)</label>
+                                                <input type="text" name="mail_username" value="<?php echo htmlspecialchars($mail_setting['mail_username'] ?? ''); ?>" placeholder="yourname@gmail.com">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>App Password</label>
+                                                <input type="password" name="mail_password" value="<?php echo htmlspecialchars($mail_setting['mail_password'] ?? ''); ?>" placeholder="••••••••••••">
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label>From Email</label>
+                                                <input type="email" name="mail_from_email" value="<?php echo htmlspecialchars($mail_setting['mail_from_email'] ?? ''); ?>" placeholder="noreply@bexmedia.id">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>From Name</label>
+                                                <input type="text" name="mail_from_name" value="<?php echo htmlspecialchars($mail_setting['mail_from_name'] ?? ''); ?>" placeholder="BexMedia System">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Base URL Aplikasi</label>
+                                            <input type="text" name="base_url" value="<?php echo htmlspecialchars($mail_setting['base_url'] ?? ''); ?>" placeholder="http://localhost/bexmedia">
+                                        </div>
+
+                                        <button type="submit" class="btn-save">
+                                            <i data-lucide="save" size="16" style="vertical-align: middle; margin-right: 6px;"></i>
+                                            Simpan Email Engine
+                                        </button>
+                                    </div>
                                 </div>
+                            </form>
+                        </div>
 
-                                <div>
-                                    <input type="hidden" name="save_mail" value="0" id="save_mail_flag">
-                                    <input type="hidden" name="mail_id" value="<?php echo $mail_setting['id'] ?? 0; ?>">
-
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label>SMTP Host</label>
-                                            <input type="text" name="mail_host" value="<?php echo htmlspecialchars($mail_setting['mail_host'] ?? ''); ?>" placeholder="smtp.gmail.com">
-                                        </div>
-                                        <div class="form-group">
-                                            <label>SMTP Port</label>
-                                            <input type="number" name="mail_port" value="<?php echo htmlspecialchars($mail_setting['mail_port'] ?? '587'); ?>" placeholder="587">
-                                        </div>
-                                    </div>
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label>Username (Email)</label>
-                                            <input type="text" name="mail_username" value="<?php echo htmlspecialchars($mail_setting['mail_username'] ?? ''); ?>" placeholder="yourname@gmail.com">
-                                        </div>
-                                        <div class="form-group">
-                                            <label>App Password</label>
-                                            <input type="password" name="mail_password" value="<?php echo htmlspecialchars($mail_setting['mail_password'] ?? ''); ?>" placeholder="••••••••••••">
-                                        </div>
-                                    </div>
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label>From Email</label>
-                                            <input type="email" name="mail_from_email" value="<?php echo htmlspecialchars($mail_setting['mail_from_email'] ?? ''); ?>" placeholder="noreply@bexmedia.id">
-                                        </div>
-                                        <div class="form-group">
-                                            <label>From Name</label>
-                                            <input type="text" name="mail_from_name" value="<?php echo htmlspecialchars($mail_setting['mail_from_name'] ?? ''); ?>" placeholder="BexMedia System">
-                                        </div>
-                                    </div>
+                        <!-- TAB: NOTIFICATION GATEWAY -->
+                        <div id="notifications" class="tab-content">
+                            <form method="POST">
+                                <?php echo csrf_field(); ?>
+                                <input type="hidden" name="save_settings" value="1">
+                                <div class="form-section">
+                                    <h3>WhatsApp Gateway Configuration</h3>
+                                    <p style="color: #64748B; font-size: 0.9rem; margin-bottom: 25px;">
+                                        Configure the WhatsApp gateway to send automated alerts via WA Bot.
+                                    </p>
+                                    
                                     <div class="form-group">
-                                        <label>Base URL Aplikasi</label>
-                                        <input type="text" name="base_url" value="<?php echo htmlspecialchars($mail_setting['base_url'] ?? ''); ?>" placeholder="http://localhost/bexmedia">
+                                        <label>WhatsApp Gateway URL</label>
+                                        <input type="text" name="wa_gateway_url" value="<?php echo h(get_setting('wa_gateway_url')); ?>" placeholder="https://api.whatsapp.id/send">
                                     </div>
-
-                                    <button type="button" class="btn-save" onclick="submitMailForm()">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>WA Group ID - IT Support</label>
+                                            <input type="text" name="wa_group_it" value="<?php echo h(get_setting('wa_group_it')); ?>" placeholder="Enter WA Group ID for IT">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>WA Group ID - Sarpras</label>
+                                            <input type="text" name="wa_group_sarpras" value="<?php echo h(get_setting('wa_group_sarpras')); ?>" placeholder="Enter WA Group ID for Sarpras">
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn-save">
                                         <i data-lucide="save" size="16" style="vertical-align: middle; margin-right: 6px;"></i>
-                                        Simpan Email Engine
+                                        Simpan Gateway WhatsApp
                                     </button>
                                 </div>
-                            </div>
+                            </form>
+
+                            <form method="POST">
+                                <?php echo csrf_field(); ?>
+                                <input type="hidden" name="save_settings" value="1">
+                                <div class="form-section" style="margin-top: 40px;">
+                                    <h3>Telegram Notification Configuration</h3>
+                                    <p style="color: #64748B; font-size: 0.9rem; margin-bottom: 25px;">
+                                        Configure the Telegram Bot token and targets for secondary alerts.
+                                    </p>
+                                    
+                                    <div class="form-group">
+                                        <label>Telegram Bot Token</label>
+                                        <input type="text" name="telegram_bot_token" value="<?php echo h(get_setting('telegram_bot_token')); ?>" placeholder="000000000:AAHHHxxxx...">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Telegram Chat ID (Target)</label>
+                                        <input type="text" name="telegram_chat_id" value="<?php echo h(get_setting('telegram_chat_id')); ?>" placeholder="-100xxxxxxx">
+                                    </div>
+                                    <button type="submit" class="btn-save">
+                                        <i data-lucide="save" size="16" style="vertical-align: middle; margin-right: 6px;"></i>
+                                        Simpan Gateway Telegram
+                                    </button>
+                                </div>
+                            </form>
                         </div>
 
                         <!-- TAB: ACCESS RIGHTS -->
@@ -1004,13 +1100,8 @@ if (isset($conn) && $conn !== false) {
                             </div>
                         </div>
 
-                        <div id="saveContainer" style="margin-top: 20px;">
-                            <button type="submit" name="save_settings" class="btn-save">
-                                <i data-lucide="save" size="18" style="vertical-align: middle; margin-right: 8px"></i>
-                                Save All Settings
-                            </button>
-                        </div>
-                    </form>
+                        <!-- The saveContainer is removed as each section now has its own submit button -->
+                    </div>
                 </div>
 
                 <!-- Hidden Form for Activation (Moved outside to fix nesting issue) -->
@@ -1052,15 +1143,26 @@ if (isset($conn) && $conn !== false) {
     <script>
         lucide.createIcons();
 
-        // Auto-open tab from URL param (e.g. after save redirect)
+        // Auto-open tab from URL param
         const urlParams = new URLSearchParams(window.location.search);
         const activeTab = urlParams.get('tab');
         if (activeTab) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            const el = document.getElementById(activeTab);
-            if (el) el.classList.add('active');
-            document.getElementById('saveContainer').style.display = 
-                ['logs','confirm','access','userlist','integrity','email', 'connection'].includes(activeTab) ? 'none' : 'block';
+            document.querySelectorAll('.settings-nav-item').forEach(i => i.classList.remove('active'));
+            const content = document.getElementById(activeTab);
+            if (content) content.classList.add('active');
+            
+            // Find corresponding nav item
+            const navItems = document.querySelectorAll('.settings-nav-item');
+            navItems.forEach(item => {
+                if (item.getAttribute('onclick') && item.getAttribute('onclick').includes(activeTab)) {
+                    item.classList.add('active');
+                    // If it's in a sub-menu, open it
+                    if (item.closest('.nav-sub')) {
+                        item.closest('.nav-sub').classList.add('active');
+                    }
+                }
+            });
         }
 
         function showTab(tabId) {
@@ -1075,14 +1177,6 @@ if (isset($conn) && $conn !== false) {
                 content.classList.remove('active');
             });
             document.getElementById(tabId).classList.add('active');
-
-            // Save button visibility
-            const saveBtn = document.getElementById('saveContainer');
-            if (tabId === 'logs' || tabId === 'confirm' || tabId === 'access' || tabId === 'userlist' || tabId === 'integrity' || tabId === 'email' || tabId === 'connection') {
-                saveBtn.style.display = 'none';
-            } else {
-                saveBtn.style.display = 'block';
-            }
         }
 
         function toggleSub(id) {
@@ -1119,12 +1213,6 @@ if (isset($conn) && $conn !== false) {
                 }
                 reader.readAsDataURL(input.files[0]);
             }
-        }
-
-        // Submit mail settings via outer form
-        function submitMailForm() {
-            document.getElementById('save_mail_flag').value = '1';
-            document.querySelector('form.settings-content').submit();
         }
 
         // Auto hide toast
@@ -1195,7 +1283,7 @@ if (isset($conn) && $conn !== false) {
                     if (res.success) {
                         if (badge) {
                             badge.className = 'badge badge-success';
-                            badge.style.background = ''; // Reset style kegagalan sebelumnya
+                            badge.style.background = ''; 
                             badge.style.color = '';
                             badge.innerHTML = '<i data-lucide="check" size="12" style="vertical-align:middle; margin-right:4px"></i> Connected';
                         }
@@ -1249,7 +1337,7 @@ if (isset($conn) && $conn !== false) {
                     if (res.success) {
                         if (badge) {
                             badge.className = 'badge badge-success';
-                            badge.style.background = ''; // Reset style kegagalan sebelumnya
+                            badge.style.background = ''; 
                             badge.style.color = '';
                             badge.innerHTML = '<i data-lucide="check" size="12" style="vertical-align:middle; margin-right:4px"></i> Connected';
                         }

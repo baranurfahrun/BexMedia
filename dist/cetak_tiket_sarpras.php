@@ -10,10 +10,7 @@ if (!isset($_GET['id'])) {
 $id = intval($_GET['id']);
 
 // Ambil data tiket Sarpras
-$query = mysqli_query($conn, "SELECT t.*, u.nik, u.nama, u.jabatan, u.unit_kerja
-                              FROM tiket_sarpras t
-                              JOIN users u ON t.user_id = u.id
-                              WHERE t.id = '$id'");
+$query = mysqli_query($conn, "SELECT * FROM tiket_sarpras WHERE id = '$id'");
 $data = mysqli_fetch_assoc($query);
 
 if (!$data) {
@@ -54,10 +51,10 @@ $html = '
     Telp: ' . htmlspecialchars($perusahaan['kontak']) . ' | Email: ' . htmlspecialchars($perusahaan['email']) . '</div>
   </div>
 
-  <div class="title">TIKET SARPRAS</div>
+  <div class="title">SERVICE REQUEST SARPRAS</div>
 
   <div class="info">
-    <div><span class="label">No. Tiket</span>: ' . $data['nomor_tiket'] . '</div>
+    <div><span class="label">SR Number</span>: ' . $data['nomor_tiket'] . '</div>
     <div><span class="label">Tanggal</span>: ' . date('d-m-Y H:i', strtotime($data['tanggal_input'])) . '</div>
     <div><span class="label">NIK</span>: ' . $data['nik'] . '</div>
     <div><span class="label">Nama</span>: ' . $data['nama'] . '</div>
@@ -87,9 +84,9 @@ $dompdf->render();
 $canvas = $dompdf->getCanvas();
 $canvas->set_opacity(0.07); 
 
-$imagePath = 'assets/watermark.jpg';
+$imagePath = '../images/logo_final.png';
 if (file_exists($imagePath)) {
-    $width = 700;  
+    $width = 300;  
     $height = 300;
     $x = ($canvas->get_width() - $width) / 2;
     $y = ($canvas->get_height() - $height) / 2;

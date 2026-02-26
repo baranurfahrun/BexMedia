@@ -29,13 +29,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $unit_kerja  = $dataTiket['unit_kerja'];
       $kategori    = $dataTiket['kategori'];
       $kendala     = $dataTiket['kendala'];
-      $tanggal     = $dataTiket['tanggal'];
+      $tanggal     = $dataTiket['tanggal_input'];
 
       // Ambil token dan chat_id dari tabel setting
-      $resultSetting = mysqli_query($conn, "SELECT nama, nilai FROM setting WHERE nama IN ('telegram_bot_token', 'telegram_chat_id')");
+      $resultSetting = mysqli_query($conn, "SELECT setting_key, setting_value FROM web_settings WHERE setting_key IN ('telegram_bot_token', 'telegram_chat_id')");
       $settings = [];
       while ($row = mysqli_fetch_assoc($resultSetting)) {
-        $settings[$row['nama']] = $row['nilai'];
+        $settings[$row['setting_key']] = $row['setting_value'];
       }
 
       $token = $settings['telegram_bot_token'] ?? '';
@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       if ($token && $chat_id) {
         // Format pesan Telegram
-    $pesan = "<b>✅ VALIDASI TIKET IT HARDWARE</b>\n";
+    $pesan = "<b>✅ HARDWARE SERVICE REQUEST VALIDATION</b>\n";
 $pesan .= "📄 Nomor: <b>$nomor_tiket</b>\n";
 $pesan .= "👤 Nama: $nama\n";
 $pesan .= "💼 Jabatan: $jabatan\n";

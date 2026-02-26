@@ -16,9 +16,9 @@ function sendWA($nomor, $pesan) {
         return false;
     }
 
-    // Ambil URL gateway WA dari tabel wa_setting
-    $row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT nilai FROM wa_setting WHERE nama='wa_gateway_url' LIMIT 1"));
-    $wa_gateway = $row['nilai'] ?? '';
+    // Ambil URL gateway WA dari tabel web_settings
+    $row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT setting_value FROM web_settings WHERE setting_key='wa_gateway_url' LIMIT 1"));
+    $wa_gateway = $row['setting_value'] ?? 'http://192.168.100.165:8000/send-message';
 
     // Pastikan URL lengkap
     if (!empty($wa_gateway) && !preg_match('/^https?:\/\//', $wa_gateway)) {

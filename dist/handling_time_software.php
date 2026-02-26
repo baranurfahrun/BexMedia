@@ -62,21 +62,25 @@ $offset = ($page - 1) * $limit;
     <?php include 'sidebar.php'; ?>
 
     <div class="main-content">
+      <?php 
+      $breadcrumb = "Technical Support / <strong>Handling Time</strong>";
+      include "topbar.php"; 
+      ?>
       <section class="section">
         <div class="section-body">
           <div class="card">
             <div class="card-header">
-              <h4><i class="fas fa-clock"></i> Data Handling Time Tiket</h4>
+              <h4><i class="fas fa-clock"></i> SR Handling Time Data</h4>
             </div>
             <div class="card-body">
 
               <!-- Tabs -->
               <ul class="nav nav-tabs mb-4">
                 <li class="nav-item">
-                  <a class="nav-link" href="handling_time.php">IT Hardware</a>
+                  <a class="nav-link" href="handling_time.php">Hardware SR</a>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link active" href="handling_time_software.php">IT Software</a>
+                  <a class="nav-link active" href="handling_time_software.php">Software SR</a>
                 </li>
               </ul>
 
@@ -134,7 +138,7 @@ $offset = ($page - 1) * $limit;
                   <thead class="thead-dark text-center">
                     <tr>
                       <th>No</th>
-                      <th>Nomor Tiket</th>
+                      <th>SR Number</th>
                       <th>NIK</th>
                       <th>Nama</th>
                       <th>Jabatan</th>
@@ -214,24 +218,23 @@ $offset = ($page - 1) * $limit;
                               </td>";
 
                         $status = $row['status'];
-                        $badgeClass = match (strtolower($status)) {
-                          'menunggu' => 'warning',
-                          'diproses' => 'info',
-                          'selesai' => 'success',
-                          'tidak bisa diperbaiki' => 'danger',
-                          default => 'secondary'
-                        };
+                        $badgeClass = 'secondary';
+                        if(strtolower($status) == 'menunggu') $badgeClass = 'warning';
+                        elseif(strtolower($status) == 'diproses') $badgeClass = 'info';
+                        elseif(strtolower($status) == 'selesai') $badgeClass = 'success';
+                        elseif(strtolower($status) == 'tidak bisa diperbaiki') $badgeClass = 'danger';
+                        
                         echo "<td class='text-center'><span class='badge badge-{$badgeClass}'>{$status}</span></td>";
 
-                        echo "<td>{$row['teknisi_nama']}</td>";
+                        echo "<td>{$row['teknisi_nama'] ?? '-'}</td>";
                         echo "<td>" . formatTanggal($row['tanggal_input']) . "</td>";
                         echo "<td>" . formatTanggal($row['waktu_diproses']) . "</td>";
                         echo "<td>" . formatTanggal($row['waktu_selesai']) . "</td>";
-                        echo "<td>{$row['status_validasi']}</td>";
-                        echo "<td>" . formatTanggal($row['waktu_validasi']) . "</td>";
+                        echo "<td>{$row['status_validasi'] ?? '-'}</td>";
+                        echo "<td>" . formatTanggal($row['waktu_validasi'] ?? null) . "</td>";
                         echo "<td>" . hitungDurasi($row['tanggal_input'], $row['waktu_diproses']) . "</td>";
                         echo "<td>" . hitungDurasi($row['tanggal_input'], $row['waktu_selesai']) . "</td>";
-                        echo "<td>" . hitungDurasi($row['tanggal_input'], $row['waktu_validasi']) . "</td>";
+                        echo "<td>" . hitungDurasi($row['tanggal_input'], $row['waktu_validasi'] ?? null) . "</td>";
                         echo "</tr>";
                         $no++;
                       }
@@ -365,10 +368,3 @@ $(document).ready(function() {
 
 </body>
 </html>
-
-
-
-
-
-
-

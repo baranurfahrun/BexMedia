@@ -5,8 +5,8 @@
  */
 
 $files_to_check = [
-    'sidebar.php' => 'cb751a167204704550f307ee292c292d9c86df43',
-    'footer.php' => '9f13187065c6073ae84916dc4243897fc01410a5'
+    'sidebar.php' => '0fc614ab0e85c5431568c1463f98d38f2e1535e3',
+    'footer.php' => 'fef4d5f311cb36a6d1a1c820e9b70d83ef1141fa'
 ];
 
 foreach ($files_to_check as $filename => $expected_hash) {

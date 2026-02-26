@@ -17,7 +17,7 @@ if (mysqli_num_rows($result) == 0) {
 }
 
 // === Ambil data user login ===
-$queryUser = mysqli_query($conn, "SELECT nik, nama, jabatan, unit_kerja FROM users WHERE id = '$user_id'");
+$queryUser = mysqli_query($conn, "SELECT nik, nama_lengkap, jabatan, unit_kerja FROM users WHERE id = '$user_id'");
 $userData = mysqli_fetch_assoc($queryUser);
 ?>
 <!DOCTYPE html>
@@ -28,7 +28,7 @@ $userData = mysqli_fetch_assoc($queryUser);
   
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no" />
-  <title>Order Tiket Sarpras</title>
+  <title>BexMedia Dashboard</title>
 
   <link rel="stylesheet" href="assets/modules/bootstrap/css/bootstrap.min.css">
   <link rel="stylesheet" href="assets/modules/fontawesome/css/all.min.css">
@@ -61,24 +61,24 @@ $userData = mysqli_fetch_assoc($queryUser);
     
     <div class="main-content">
       <?php 
-      $breadcrumb = "Technical Support / <strong>Order Tiket Sarpras</strong>";
+      $breadcrumb = "Technical Support / <strong>Sarpras Service Request</strong>";
       include "topbar.php"; 
       ?>
       <section class="section">
         <div class="section-body">
           <div class="card">
             <div class="card-header">
-              <h4>Order Tiket Sarpras</h4>
+              <h4>Sarpras Service Request</h4>
             </div>
             <div class="card-body">
               
               <!-- Tabs -->
               <ul class="nav nav-tabs" id="myTab" role="tablist">
                 <li class="nav-item">
-                  <a class="nav-link active" id="order-tab" data-toggle="tab" href="#order" role="tab">Order Tiket</a>
+                  <a class="nav-link active" id="order-tab" data-toggle="tab" href="#order" role="tab">New Request</a>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link" id="tiket-saya-tab" data-toggle="tab" href="#tiket-saya" role="tab">Tiket Saya</a>
+                  <a class="nav-link" id="tiket-saya-tab" data-toggle="tab" href="#tiket-saya" role="tab">My Requests</a>
                 </li>
               </ul>
 
@@ -90,19 +90,28 @@ $userData = mysqli_fetch_assoc($queryUser);
                     <div class="row">
                       <div class="form-group col-md-3">
                         <label>NIK</label>
-                        <input type="text" name="nik" value="<?= htmlspecialchars($userData['nik']); ?>" class="form-control" readonly>
+                        <input type="text" name="nik" value="<?= htmlspecialchars($userData['nik'] ?? ''); ?>" class="form-control" <?= empty($userData['nik']) ? '' : 'readonly'; ?>>
                       </div>
                       <div class="form-group col-md-3">
                         <label>Nama</label>
-                        <input type="text" name="nama" value="<?= htmlspecialchars($userData['nama']); ?>" class="form-control" readonly>
+                        <input type="text" name="nama" value="<?= htmlspecialchars($userData['nama_lengkap']); ?>" class="form-control" readonly>
                       </div>
                       <div class="form-group col-md-3">
                         <label>Jabatan</label>
-                        <input type="text" name="jabatan" value="<?= htmlspecialchars($userData['jabatan']); ?>" class="form-control" readonly>
+                        <input type="text" name="jabatan" value="<?= htmlspecialchars($userData['jabatan'] ?? ''); ?>" class="form-control" <?= empty($userData['jabatan']) ? '' : 'readonly'; ?>>
                       </div>
                       <div class="form-group col-md-3">
                         <label>Unit Kerja</label>
-                        <input type="text" name="unit_kerja" value="<?= htmlspecialchars($userData['unit_kerja']); ?>" class="form-control" readonly>
+                        <select name="unit_kerja" class="form-control" required>
+                          <option value="">-- Pilih Unit Kerja --</option>
+                          <?php
+                          $unitResult = mysqli_query($conn, "SELECT nama_unit FROM unit_kerja ORDER BY nama_unit ASC");
+                          while ($u = mysqli_fetch_assoc($unitResult)) {
+                            $selected = ($userData['unit_kerja'] == $u['nama_unit']) ? 'selected' : '';
+                            echo "<option value='{$u['nama_unit']}' $selected>{$u['nama_unit']}</option>";
+                          }
+                          ?>
+                        </select>
                       </div>
 
                       <div class="form-group col-md-6">
@@ -137,7 +146,7 @@ $userData = mysqli_fetch_assoc($queryUser);
                         <textarea name="kendala" class="form-control" rows="3" placeholder="Tuliskan kendala atau permintaan..." required></textarea>
                       </div>
                     </div>
-                    <button type="submit" name="simpan" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Kirim Tiket</button>
+                    <button type="submit" name="simpan" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Submit Request</button>
                   </form>
                 </div>
 
@@ -145,23 +154,23 @@ $userData = mysqli_fetch_assoc($queryUser);
                 <div class="tab-pane fade" id="tiket-saya" role="tabpanel">
                   <div class="table-responsive-custom">
                     <table class="table table-bordered table-striped">
-                     <thead>
-  <tr>
-    <th>No</th>
-    <th>Nomor Tiket</th>
-    <th>Tanggal Input</th>
-    <th>Kategori</th>
-    <th>Kendala / Laporan</th>
-    <th>Status</th>
-    <th>Status Validasi</th>
-    <th>Waktu Validasi</th>
-    <th>Teknisi</th>
-    <th>Catatan IT</th>
-    <th>Aksi</th>
-    <th>Cetak Tiket</th> <!-- Kolom baru -->
-  </tr>
-</thead>
-<tbody>
+                      <thead>
+                        <tr>
+                          <th>No</th>
+                          <th>SR Number</th>
+                          <th>Date</th>
+                          <th>Category</th>
+                          <th>Issue</th>
+                          <th>Status</th>
+                          <th>Validation Status</th>
+                          <th>Validation Time</th>
+                          <th>Technician</th>
+                          <th>IT Remarks</th>
+                          <th>Action</th>
+                          <th>Print</th>
+                        </tr>
+                      </thead>
+                      <tbody>
 <?php
 $no = 1;
 $queryTiket = mysqli_query($conn, "SELECT * FROM tiket_sarpras WHERE user_id = '$user_id' ORDER BY tanggal_input DESC");
@@ -201,8 +210,8 @@ if (mysqli_num_rows($queryTiket) > 0) {
 
     // Tambah kolom Cetak Tiket
     echo "<td class='text-center'>
-      <a href='cetak_tiket_sarpras.php?id={$row['id']}' target='_blank' class='btn btn-primary btn-sm' title='Cetak Tiket'>
-        <i class='fas fa-ticket-alt'></i>
+      <a href='cetak_tiket_sarpras.php?id={$row['id']}' target='_blank' class='btn btn-primary btn-sm' title='Print Request'>
+        <i class='fas fa-print'></i>
       </a>
     </td>";
 
@@ -210,7 +219,7 @@ if (mysqli_num_rows($queryTiket) > 0) {
     $no++;
   }
 } else {
-  echo "<tr><td colspan='12' class='text-center'>Belum ada tiket yang dibuat.</td></tr>";
+  echo "<tr><td colspan='12' class='text-center'>Belum ada request yang dibuat.</td></tr>";
 }
 
 // Fungsi warna status
@@ -259,10 +268,3 @@ function validasiColor($status_validasi) {
 
 </body>
 </html>
-
-
-
-
-
-
-

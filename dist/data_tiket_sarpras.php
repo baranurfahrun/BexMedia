@@ -29,7 +29,7 @@ $tgl_sampai = isset($_GET['tgl_sampai']) ? $_GET['tgl_sampai'] : '';
   
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no">
-  <title>Data Tiket Sarpras</title>
+  <title>BexMedia Dashboard</title>
 
   <link rel="stylesheet" href="assets/modules/bootstrap/css/bootstrap.min.css">
   <link rel="stylesheet" href="assets/modules/fontawesome/css/all.min.css">
@@ -92,11 +92,15 @@ $tgl_sampai = isset($_GET['tgl_sampai']) ? $_GET['tgl_sampai'] : '';
     <?php include 'sidebar.php'; ?>
 
     <div class="main-content">
+      <?php 
+      $breadcrumb = "Technical Support / <strong>Sarpras Service Request Data</strong>";
+      include "topbar.php"; 
+      ?>
       <section class="section">
         <div class="section-body">
           <div class="card">
             <div class="card-header d-flex justify-content-between">
-              <h4><i class="fas fa-tools text-primary mr-2"></i>Data Tiket Sarpras</h4>
+              <h4><i class="fas fa-tools text-primary mr-2"></i>Sarpras Service Request Data</h4>
             </div>
             <div class="card-body">
 
@@ -179,7 +183,7 @@ $tgl_sampai = isset($_GET['tgl_sampai']) ? $_GET['tgl_sampai'] : '';
                   <thead>
                     <tr>
                       <th>No</th>
-                      <th>Nomor Tiket</th>
+                      <th>SR Number</th>
                       <th>Tanggal Input</th>
                       <th>NIK</th>
                       <th>Nama</th>
@@ -233,7 +237,7 @@ $tgl_sampai = isset($_GET['tgl_sampai']) ? $_GET['tgl_sampai'] : '';
                             <div class="modal-content">
                               <form action="ubah_status_sarpras.php" method="POST">
                                 <div class="modal-header">
-                                  <h5 class="modal-title">Ubah Status Tiket</h5>
+                                  <h5 class="modal-title">Update Request Status</h5>
                                   <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                     <span aria-hidden="true">&times;</span>
                                   </button>
@@ -306,10 +310,3 @@ $tgl_sampai = isset($_GET['tgl_sampai']) ? $_GET['tgl_sampai'] : '';
 <script src="assets/js/custom.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-

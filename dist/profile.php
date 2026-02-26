@@ -22,7 +22,7 @@ $success = '';
 $q_user = mysqli_query($conn, "SELECT * FROM users WHERE id = $user_id");
 $row = mysqli_fetch_assoc($q_user);
 $nik        = $row['nik'];
-$nama       = $row['nama'];
+$nama       = $row['nama_lengkap'];
 $jabatan    = $row['jabatan'];
 $unit_kerja = $row['unit_kerja'];
 $email      = $row['email'];
@@ -90,7 +90,7 @@ if (isset($_POST['update'])) {
 
   // === UPDATE PROFIL UTAMA ===
   $query_update = "UPDATE users SET 
-    nama = '$nama',
+    nama_lengkap = '$nama',
     email = '$email',
     no_hp = '$no_hp',
     jabatan = '$jabatan_nama',
@@ -112,7 +112,7 @@ if (isset($_POST['update'])) {
 $q_user = mysqli_query($conn, "SELECT * FROM users WHERE id = $user_id");
 $row = mysqli_fetch_assoc($q_user);
 $nik        = $row['nik'];
-$nama       = $row['nama'];
+$nama       = $row['nama_lengkap'];
 $jabatan    = $row['jabatan'];
 $unit_kerja = $row['unit_kerja'];
 $email      = $row['email'];
@@ -125,14 +125,14 @@ $ttd        = $row['ttd'] ?? '';
 // Ambil daftar dropdown
 $daftar_jabatan_arr = mysqli_fetch_all(mysqli_query($conn, "SELECT id, nama_jabatan FROM jabatan"), MYSQLI_ASSOC);
 $daftar_unit_arr = mysqli_fetch_all(mysqli_query($conn, "SELECT id, nama_unit FROM unit_kerja"), MYSQLI_ASSOC);
-$daftar_atasan_arr = mysqli_fetch_all(mysqli_query($conn, "SELECT id, nama FROM users WHERE id != $user_id"), MYSQLI_ASSOC);
+$daftar_atasan_arr = mysqli_fetch_all(mysqli_query($conn, "SELECT id, nama_lengkap as nama FROM users WHERE id != $user_id"), MYSQLI_ASSOC);
 
 // Nama atasan
 $nama_atasan = '-';
 if (!empty($atasan_id)) {
-  $q_atasan = mysqli_query($conn, "SELECT nama FROM users WHERE id = '$atasan_id' LIMIT 1");
+  $q_atasan = mysqli_query($conn, "SELECT nama_lengkap FROM users WHERE id = '$atasan_id' LIMIT 1");
   $r_atasan = mysqli_fetch_assoc($q_atasan);
-  $nama_atasan = $r_atasan['nama'] ?? '-';
+  $nama_atasan = $r_atasan['nama_lengkap'] ?? '-';
 }
 ?>
 <!DOCTYPE html>
