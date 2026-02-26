@@ -35,6 +35,57 @@ if (isset($_POST['simpan'])) {
             ('$user_id', '$nama_teknisi', '$barang_id', '$kondisi_fisik', '$fungsi_perangkat', '$catatan', NOW())";
 
   if (mysqli_query($conn, $query)) {
+    // --- NOTIFIKASI WHATSAPP (MULAI) ---
+    include_once 'send_wa.php';
+    
+    // Ambil detail barang untuk pesan WA
+    $q_brg = mysqli_query($conn, "SELECT nama_barang, lokasi FROM data_barang_it WHERE id = '$barang_id' LIMIT 1");
+    $d_brg = mysqli_fetch_assoc($q_brg);
+    $nama_brg = $d_brg['nama_barang'] ?? '-';
+    $lokasi_brg = $d_brg['lokasi'] ?? '-';
+    
+    $waktu_skrg = date('d-m-Y H:i');
+    
+    // Format pesan (Gunakan simbol aman !!! dan » untuk list)
+    $pesan_wa = "!!! MAINTENANCE RUTIN IT !!!\n\n";
+    $pesan_wa .= "*Barang*: " . $nama_brg . "\n";
+    $pesan_wa .= "*Lokasi*: " . $lokasi_brg . "\n";
+    $pesan_wa .= "*Teknisi*: " . $nama_teknisi . "\n";
+    $pesan_wa .= "*Waktu*: " . $waktu_skrg . " WIB\n\n";
+    
+    if (!empty($kondisi_fisik)) {
+        $pesan_wa .= "*Kondisi Fisik*:\n";
+        $kf_arr = explode(", ", $kondisi_fisik);
+        foreach ($kf_arr as $kf) {
+            $pesan_wa .= "» " . $kf . "\n";
+        }
+        $pesan_wa .= "\n";
+    }
+    
+    if (!empty($fungsi_perangkat)) {
+        $pesan_wa .= "*Fungsi Perangkat*:\n";
+        $fp_arr = explode(", ", $fungsi_perangkat);
+        foreach ($fp_arr as $fp) {
+            $pesan_wa .= "» " . $fp . "\n";
+        }
+        $pesan_wa .= "\n";
+    }
+    
+    if (!empty($catatan)) {
+        $pesan_wa .= "*Catatan*: " . $catatan . "\n";
+    }
+
+    // Ambil setting WA
+    $target_wa = get_setting('wa_group_it'); 
+    if (empty($target_wa)) {
+        $target_wa = get_setting('wa_number'); // Fallback ke nomor default
+    }
+
+    if (!empty($target_wa)) {
+        sendWA($target_wa, $pesan_wa);
+    }
+    // --- NOTIFIKASI WHATSAPP (SELESAI) ---
+
     $_SESSION['flash_message'] = "Data maintenance berhasil disimpan.";
     $_SESSION['flash_type'] = "success";
     echo "<script>location.href='maintenance_rutin.php?tab=data';</script>";
@@ -55,7 +106,7 @@ $activeTab = $_GET['tab'] ?? 'form';
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <link rel="icon" href="../images/logo_final.png">
+    <link rel="icon" href="../images/logo_final.png?v=1">
     
   
   <meta charset="UTF-8">
@@ -87,13 +138,12 @@ $activeTab = $_GET['tab'] ?? 'form';
     }
     
     .table-maintenance thead th {
-      background-color: #6777ef !important;
+      background-color: #000 !important;
       color: #fff !important;
       font-weight: 600;
       vertical-align: middle;
       text-align: center;
       padding: 12px 8px;
-      border: 1px solid #5568d3;
     }
     
     .table-maintenance tbody td {
@@ -135,11 +185,12 @@ $activeTab = $_GET['tab'] ?? 'form';
     }
 
     .filter-card {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
       padding: 20px;
       border-radius: 10px;
       margin-bottom: 20px;
       color: white;
+      box-shadow: 0 4px 15px rgba(52, 152, 219, 0.2);
     }
 
     .filter-card .form-control {
@@ -193,6 +244,24 @@ $activeTab = $_GET['tab'] ?? 'form';
       font-size: 14px;
       color: #000;
       font-weight: 500;
+    }
+
+    /* Custom Ice Blue Button */
+    .btn-ice-blue {
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+      border: none;
+      color: #fff;
+      box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .btn-ice-blue:hover {
+      background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+      color: #fff;
     }
 
     .form-check-label {
@@ -283,13 +352,20 @@ $activeTab = $_GET['tab'] ?? 'form';
                           <label for="barang_id"><i class="fas fa-laptop"></i> Pilih Barang <span class="text-danger">*</span></label>
                           <select name="barang_id" id="barang_id" class="form-control" required>
                             <option value="">-- Pilih Barang IT --</option>
-                            <?php mysqli_data_seek($data_barang, 0); ?>
-                            <?php while($row = mysqli_fetch_assoc($data_barang)): ?>
+                            <?php mysqli_data_seek($data_barang, 0); 
+                            $ada_barang = false;
+                            while($row = mysqli_fetch_assoc($data_barang)): 
+                              $ada_barang = true;?>
                               <option value="<?= $row['id'] ?>">
                                 <?= htmlspecialchars($row['nama_barang']) ?> - <?= htmlspecialchars($row['lokasi']) ?>
                               </option>
                             <?php endwhile; ?>
                           </select>
+                          <?php if (!$ada_barang): ?>
+                            <div class="mt-2">
+                              <small class="text-danger"><i class="fas fa-exclamation-triangle"></i> Data barang masih kosong. Silakan isi dulu di menu <a href="data_barang_it.php"><strong>Data Barang IT</strong></a>.</small>
+                            </div>
+                          <?php endif; ?>
                         </div>
 
                         <div class="form-group">
@@ -353,7 +429,7 @@ $activeTab = $_GET['tab'] ?? 'form';
                         </div>
 
                         <div class="form-group text-right">
-                          <button type="submit" name="simpan" class="btn btn-primary btn-lg">
+                          <button type="submit" name="simpan" class="btn btn-ice-blue btn-lg">
                             <i class="fas fa-save"></i> Simpan Data Maintenance
                           </button>
                           <button type="reset" class="btn btn-secondary btn-lg">
@@ -381,7 +457,7 @@ $activeTab = $_GET['tab'] ?? 'form';
                         <input type="date" id="sampai" name="sampai" class="form-control" value="<?= $_GET['sampai'] ?? '' ?>" required>
                       </div>
 
-                      <button type="submit" class="btn btn-light btn-sm mr-2">
+                      <button type="submit" class="btn btn-ice-blue btn-sm mr-2" style="border: 1px solid #fff;">
                         <i class="fas fa-filter"></i> Filter
                       </button>
 

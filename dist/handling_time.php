@@ -51,8 +51,40 @@ $offset = ($page - 1) * $limit;
     .table-responsive-custom { width: 100%; overflow-x: auto; }
     .table-responsive-custom table { min-width: 1500px; white-space: nowrap; }
     .pagination { margin-top: 20px; }
-    .pagination .page-link { color: #6777ef; }
-    .pagination .page-item.active .page-link { background-color: #6777ef; border-color: #6777ef; }
+    .pagination .page-link { color: #3498db; }
+    .pagination .page-item.active .page-link { 
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); 
+      border-color: #2980b9; 
+      color: #fff;
+    }
+    .pagination .page-link:hover {
+      background-color: #3498db;
+      color: #fff;
+      border-color: #3498db;
+    }
+
+    /* Custom Ice Blue Button */
+    .btn-ice-blue {
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+      border: none;
+      color: #fff;
+      box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .btn-ice-blue:hover {
+      background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+      color: #fff;
+    }
+
+    .table thead th {
+      background-color: #000 !important;
+      color: #fff !important;
+    }
   </style>
 </head>
 <body>
@@ -82,6 +114,9 @@ $offset = ($page - 1) * $limit;
                 </li>
                 <li class="nav-item">
                   <a class="nav-link" href="handling_time_software.php">Software SR</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="handling_time_sarpras.php">Sarpras SR</a>
                 </li>
               </ul>
 
@@ -123,7 +158,7 @@ $offset = ($page - 1) * $limit;
                     <div class="form-group">
                       <label>&nbsp;</label>
                       <div>
-                        <button type="submit" class="btn btn-primary btn-sm mr-1"><i class="fas fa-search"></i> Filter</button>
+                        <button type="submit" class="btn btn-ice-blue btn-sm mr-1"><i class="fas fa-search"></i> Filter</button>
                         <a href="handling_time.php" class="btn btn-secondary btn-sm mr-1"><i class="fas fa-sync"></i> Reset</a>
                         <a href="handling_time_hardware_pdf.php?dari_tanggal=<?php echo $dari_tanggal; ?>&sampai_tanggal=<?php echo $sampai_tanggal; ?>&keyword=<?php echo urlencode($keyword); ?>&status=<?php echo urlencode($filter_status); ?>"
                            target="_blank" class="btn btn-danger btn-sm"><i class="fas fa-file-pdf"></i> PDF</a>
@@ -136,7 +171,7 @@ $offset = ($page - 1) * $limit;
               <!-- Tabel -->
               <div class="table-responsive-custom">
                 <table class="table table-bordered table-sm table-hover">
-                  <thead class="thead-dark text-center">
+                  <thead class="text-center">
                     <tr>
                       <th>No</th>
                       <th>SR Number</th>
@@ -227,15 +262,15 @@ $offset = ($page - 1) * $limit;
                         
                         echo "<td class='text-center'><span class='badge badge-{$badgeClass}'>{$status}</span></td>";
 
-                        echo "<td>{$row['teknisi_nama'] ?? '-'}</td>";
+                        echo "<td>" . ($row['teknisi_nama'] ?? '-') . "</td>";
                         echo "<td>" . formatTanggal($row['tanggal_input']) . "</td>";
                         echo "<td>" . formatTanggal($row['waktu_diproses']) . "</td>";
                         echo "<td>" . formatTanggal($row['waktu_selesai']) . "</td>";
-                        echo "<td>{$row['status_validasi'] ?? '-'}</td>";
-                        echo "<td>" . formatTanggal($row['waktu_validasi'] ?? null) . "</td>";
+                        echo "<td>" . ($row['status_validasi'] ?? '-') . "</td>";
+                        echo "<td>" . formatTanggal(isset($row['waktu_validasi']) ? $row['waktu_validasi'] : null) . "</td>";
                         echo "<td>" . hitungDurasi($row['tanggal_input'], $row['waktu_diproses']) . "</td>";
                         echo "<td>" . hitungDurasi($row['tanggal_input'], $row['waktu_selesai']) . "</td>";
-                        echo "<td>" . hitungDurasi($row['tanggal_input'], $row['waktu_validasi'] ?? null) . "</td>";
+                        echo "<td>" . hitungDurasi($row['tanggal_input'], isset($row['waktu_validasi']) ? $row['waktu_validasi'] : null) . "</td>";
                         echo "</tr>";
                         $no++;
                       }

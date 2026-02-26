@@ -139,7 +139,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="icon" href="images/logo_final.png">
+    <link rel="icon" href="images/logo_final.png?v=1">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | <?php echo $brand_name; ?></title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
@@ -260,7 +260,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div class="bg-overlay"></div>
     <div class="login-card">
         <div class="logo-section">
-            <img src="<?php echo $logo_path; ?>" alt="Logo" class="brand-logo">
+            <img src="<?php echo $logo_path; ?>?v=1" alt="Logo" class="brand-logo">
         </div>
 
         <?php if ($error): ?>

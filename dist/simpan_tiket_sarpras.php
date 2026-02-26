@@ -21,8 +21,8 @@ if (isset($_POST['simpan'])) {
     $dataNomor = mysqli_fetch_assoc($cekNomor);
     $noUrut = $dataNomor['total'] + 1;
 
-    // Format nomor tiket: TKT0001/SARPRAS/DD/MM/YYYY
-    $nomor_tiket = 'TKT' . str_pad($noUrut, 4, '0', STR_PAD_LEFT) . '/SARPRAS/' . date('d') . '/' . date('m') . '/' . date('Y');
+    // Format nomor tiket: SRN0001/SARPRAS/DD/MM/YYYY
+    $nomor_tiket = 'SRN' . str_pad($noUrut, 4, '0', STR_PAD_LEFT) . '/SARPRAS/' . date('d') . '/' . date('m') . '/' . date('Y');
 
     // Default status
     $status = 'Menunggu';

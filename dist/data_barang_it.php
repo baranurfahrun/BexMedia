@@ -27,7 +27,7 @@ function generateNoBarang($conn) {
     $row = mysqli_fetch_assoc($result);
     $last_no = $row['no_barang'];
     
-    // Ambil angka dari format 00001/INV-IT/RSPH
+    // Ambil angka dari format 00001/INV-IT/2026
     $parts = explode('/', $last_no);
     $number = intval($parts[0]);
     $new_number = $number + 1;
@@ -36,8 +36,8 @@ function generateNoBarang($conn) {
     $new_number = 1;
   }
   
-  // Format: 00001/INV-IT/RSPH
-  $no_barang = sprintf("%05d", $new_number) . "/INV-IT/RSPH";
+  // Format: 00001/INV-IT/2026
+  $no_barang = sprintf("%05d", $new_number) . "/INV-IT/" . date('Y');
   
   return $no_barang;
 }
@@ -209,16 +209,17 @@ $rekap_kondisi = mysqli_query($conn, "
   }
 
   .pagination .page-link:hover {
-    background-color: #6777ef;
+    background-color: #3498db;
     color: #fff;
-    border-color: #6777ef;
+    border-color: #3498db;
   }
 
   .pagination .page-item.active .page-link {
-    background-color: #6777ef;
-    border-color: #6777ef;
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    border-color: #2980b9;
     color: #fff;
     font-weight: bold;
+    box-shadow: 0 2px 5px rgba(52, 152, 219, 0.3);
   }
 
   .pagination .page-item.disabled .page-link {
@@ -229,6 +230,24 @@ $rekap_kondisi = mysqli_query($conn, "
 
   .pagination .page-link i {
     font-size: 12px;
+  }
+
+  /* Custom Ice Blue Button */
+  .btn-ice-blue {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    border: none;
+    color: #fff;
+    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s;
+  }
+
+  .btn-ice-blue:hover {
+    background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+    color: #fff;
   }
 
 
@@ -317,7 +336,7 @@ $rekap_kondisi = mysqli_query($conn, "
                       </div>
                       <div class="form-group col-md-4">
                         <label>Spesifikasi</label>
-                        <input type="text" name="spesifikasi" class="form-control" placeholder="Contoh: Intel Core i5, RAM 8GB">
+                        <input type="text" name="merk" class="form-control" placeholder="Contoh: Intel Core i5, RAM 8GB">
                       </div>
                       <div class="form-group col-md-4">
                         <label>IP Address</label>
@@ -330,6 +349,7 @@ $rekap_kondisi = mysqli_query($conn, "
                         <label>Lokasi <span class="text-danger">*</span></label>
                         <select name="lokasi" class="form-control" required>
                           <option value="">-- Pilih Lokasi --</option>
+                          <?php mysqli_data_seek($lokasi_query, 0); ?>
                           <?php while ($row = mysqli_fetch_assoc($lokasi_query)): ?>
                             <option value="<?= htmlspecialchars($row['nama_unit']) ?>"><?= htmlspecialchars($row['nama_unit']) ?></option>
                           <?php endwhile; ?>
@@ -348,10 +368,10 @@ $rekap_kondisi = mysqli_query($conn, "
 
                     <div class="alert alert-info">
                       <i class="fas fa-info-circle"></i> 
-                      <strong>Info:</strong> Nomor barang akan digenerate otomatis dengan format: <code>00001/INV-IT/RSPH</code>
+                      <strong>Info:</strong> Nomor barang akan digenerate otomatis dengan format: <code>00001/INV-IT/<?= date('Y') ?></code>
                     </div>
 
-                    <button type="submit" name="simpan" class="btn btn-primary btn-lg">
+                    <button type="submit" name="simpan" class="btn btn-ice-blue btn-lg">
                       <i class="fas fa-save"></i> Simpan Data Barang
                     </button>
                     <button type="reset" class="btn btn-secondary btn-lg">
@@ -370,7 +390,7 @@ $rekap_kondisi = mysqli_query($conn, "
                         <div class="input-group" style="width: 100%;">
                           <input type="text" name="search" class="form-control" placeholder="Cari nama barang atau IP address..." value="<?= htmlspecialchars($search) ?>">
                           <div class="input-group-append">
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-ice-blue">
                               <i class="fas fa-search"></i> Cari
                             </button>
                             <?php if (!empty($search)): ?>
@@ -445,7 +465,7 @@ $rekap_kondisi = mysqli_query($conn, "
                             <td><?= htmlspecialchars($barang['nama_barang']) ?></td>
                             <td><?= htmlspecialchars($barang['kategori']) ?></td>
                             <td><?= htmlspecialchars($barang['merk']) ?></td>
-                            <td><?= htmlspecialchars($barang['spesifikasi']) ?></td>
+                            <td><?= htmlspecialchars($barang['spesifikasi'] ?? '-') ?></td>
                             <td><?= htmlspecialchars($barang['ip_address']) ?></td>
                             <td><?= htmlspecialchars($barang['lokasi']) ?></td>
                             <td>
@@ -544,6 +564,7 @@ $rekap_kondisi = mysqli_query($conn, "
         </div>
         <div class="card-body">
           <ul class="list-group">
+            <?php mysqli_data_seek($rekap_kategori, 0); ?>
             <?php while ($kat = mysqli_fetch_assoc($rekap_kategori)) : ?>
               <li class="list-group-item d-flex justify-content-between align-items-center">
                 <?= htmlspecialchars($kat['kategori']) ?>
@@ -562,6 +583,7 @@ $rekap_kondisi = mysqli_query($conn, "
         </div>
         <div class="card-body">
           <ul class="list-group">
+            <?php mysqli_data_seek($rekap_kondisi, 0); ?>
             <?php while ($kon = mysqli_fetch_assoc($rekap_kondisi)) : ?>
               <li class="list-group-item d-flex justify-content-between align-items-center">
                 <?= htmlspecialchars($kon['kondisi']) ?>
@@ -576,9 +598,6 @@ $rekap_kondisi = mysqli_query($conn, "
 </div>
 
 
-                    </table>
-                  </div>
-                </div>
               </div> <!-- End tab-content -->
             </div> <!-- End card-body -->
           </div> <!-- End card -->
@@ -619,10 +638,3 @@ $rekap_kondisi = mysqli_query($conn, "
 
 </body>
 </html>
-
-
-
-
-
-
-

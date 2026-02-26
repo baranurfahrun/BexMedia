@@ -20,8 +20,8 @@ if (isset($_POST['simpan'])) {
     $dataNomor = mysqli_fetch_assoc($cekNomor);
     $noUrut = $dataNomor['total'] + 1;
 
-    // Format nomor: TKT0001/IT-SOFT/DD/MM/YYYY
-    $nomor_tiket = 'TKT' . str_pad($noUrut, 4, '0', STR_PAD_LEFT) . '/IT-SOFT/' . date('d') . '/' . date('m') . '/' . date('Y');
+    // Format nomor: SRN0001/IT-SOFT/DD/MM/YYYY
+    $nomor_tiket = 'SRN' . str_pad($noUrut, 4, '0', STR_PAD_LEFT) . '/IT-SOFT/' . date('d') . '/' . date('m') . '/' . date('Y');
 
     $status = 'Menunggu';
 

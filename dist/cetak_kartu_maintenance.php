@@ -11,7 +11,7 @@ $id = intval($_GET['id']);
 
 // Ambil data maintenance + user + barang AC
 $query = mysqli_query($conn, "
-    SELECT m.*, u.nik, u.nama, u.jabatan, u.unit_kerja, 
+    SELECT m.*, u.nik, u.nama_lengkap as nama, u.jabatan, u.unit_kerja, 
            b.kode_ac, b.lokasi, b.merk, b.tipe, b.kapasitas, b.no_seri, b.tahun_beli
     FROM maintanance_rutin_sarpras m
     JOIN users u ON m.user_id = u.id
@@ -36,14 +36,27 @@ $perusahaan = mysqli_fetch_assoc($q_perusahaan);
 // Hitung tanggal maintenance berikutnya (3 bulan ke depan)
 $tanggal_berikutnya = date('d-m-Y', strtotime($data['waktu_input'] . ' +3 months'));
 
+// Menyiapkan logo untuk PDF (Base64 agar aman di DOMPDF)
+$logo_path = '../images/logo_final.png';
+if (file_exists($logo_path)) {
+    $logo_data = base64_encode(file_get_contents($logo_path));
+    $logo_src = 'data:image/png;base64,' . $logo_data;
+} else {
+    $logo_src = '';
+}
+
 $html = '
-<style>
-  body { 
-    font-family: Arial, sans-serif; 
-    font-size: 11px; 
-    color: #000; 
-    margin: 30px;
-  }
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" href="../images/logo_final.png">
+  <title>Cetak Kartu Maintenance AC</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      font-size: 11px; 
+      color: #000; 
+      margin: 30px;
+    }
   .ticket {
     border: 2px dashed #000;
     padding: 20px;
@@ -101,6 +114,7 @@ $html = '
 
 <div class="ticket">
   <div class="header">
+    ' . (($logo_src) ? '<img src="'.$logo_src.'" style="height: 60px; margin-bottom: 10px;">' : '') . '
     <div class="nama-perusahaan">' . htmlspecialchars($perusahaan['nama_perusahaan']) . '</div>
     <div class="alamat">' . htmlspecialchars($perusahaan['alamat']) . ', ' . htmlspecialchars($perusahaan['kota']) . '<br>
     Telp: ' . htmlspecialchars($perusahaan['kontak']) . ' | Email: ' . htmlspecialchars($perusahaan['email']) . '</div>
@@ -142,20 +156,12 @@ $dompdf->loadHtml($html);
 // Ukuran A4 portrait, agar tidak terpotong dan tetap muat
 $dompdf->setPaper('A4', 'portrait');
 
+// Set judul dokumen (untuk tampilan di tab browser)
+$dompdf->add_info('Title', 'Kartu Maintenance AC - ' . $data['kode_ac']);
+
 $dompdf->render();
 
-// Tambahkan watermark transparan
-$canvas = $dompdf->getCanvas();
-$canvas->set_opacity(0.07);
-
-$imagePath = 'assets/watermark.jpg';
-if (file_exists($imagePath)) {
-    $width = 400;
-    $height = 200;
-    $x = ($canvas->get_width() - $width) / 2;
-    $y = ($canvas->get_height() - $height) / 2;
-    $canvas->image($imagePath, $x, $y, $width, $height);
-}
+// Watermark dihapus sesuai permintaan
 
 $dompdf->stream('kartu_maintenance_ac_' . $data['id'] . '.pdf', ['Attachment' => false]);
 ?>
