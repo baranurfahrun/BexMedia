@@ -798,3 +798,47 @@ Stack trace:
 Stack trace:
 #0 {main}
   thrown in C:\xampp\htdocs\BexMedia\dist\data_karyawan.php on line 54
+[26-Feb-2026 08:35:27 Asia/Jakarta] WA gagal ke 6283199354543: Received HTTP/0.9 when not allowed
+
+[26-Feb-2026 08:49:11 Asia/Jakarta] WA gagal: koneksi_wa.php tidak menyediakan $conn_wa
+[26-Feb-2026 08:49:31 Asia/Jakarta] Koneksi WA Gateway Gagal: Access denied for user 'simrs'@'192.20.20.253' (using password: NO)
+[26-Feb-2026 08:49:32 Asia/Jakarta] Koneksi WA Gateway Gagal: Access denied for user 'simrs'@'192.20.20.253' (using password: NO)
+[26-Feb-2026 08:49:33 Asia/Jakarta] Koneksi WA Gateway Gagal: Access denied for user 'simrs'@'192.20.20.253' (using password: NO)
+[26-Feb-2026 08:49:34 Asia/Jakarta] Koneksi WA Gateway Gagal: Access denied for user 'simrs'@'192.20.20.253' (using password: NO)
+[26-Feb-2026 08:49:39 Asia/Jakarta] Koneksi WA Gateway Gagal: Access denied for user 'simrs'@'192.20.20.253' (using password: NO)
+[26-Feb-2026 08:49:40 Asia/Jakarta] Koneksi WA Gateway Gagal: Access denied for user 'simrs'@'192.20.20.253' (using password: NO)
+[26-Feb-2026 08:49:40 Asia/Jakarta] Koneksi WA Gateway Gagal: Access denied for user 'simrs'@'192.20.20.253' (using password: NO)
+[26-Feb-2026 08:49:41 Asia/Jakarta] Koneksi WA Gateway Gagal: Access denied for user 'simrs'@'192.20.20.253' (using password: NO)
+[26-Feb-2026 08:49:41 Asia/Jakarta] Koneksi WA Gateway Gagal: Access denied for user 'simrs'@'192.20.20.253' (using password: NO)
+[26-Feb-2026 08:49:41 Asia/Jakarta] Koneksi WA Gateway Gagal: Access denied for user 'simrs'@'192.20.20.253' (using password: NO)
+[26-Feb-2026 08:49:41 Asia/Jakarta] Koneksi WA Gateway Gagal: Access denied for user 'simrs'@'192.20.20.253' (using password: NO)
+[26-Feb-2026 08:49:41 Asia/Jakarta] Koneksi WA Gateway Gagal: Access denied for user 'simrs'@'192.20.20.253' (using password: NO)
+[26-Feb-2026 08:49:42 Asia/Jakarta] Koneksi WA Gateway Gagal: Access denied for user 'simrs'@'192.20.20.253' (using password: NO)
+[26-Feb-2026 08:49:42 Asia/Jakarta] Koneksi WA Gateway Gagal: Access denied for user 'simrs'@'192.20.20.253' (using password: NO)
+[26-Feb-2026 08:49:43 Asia/Jakarta] Koneksi WA Gateway Gagal: Access denied for user 'simrs'@'192.20.20.253' (using password: NO)
+[26-Feb-2026 08:49:43 Asia/Jakarta] Koneksi WA Gateway Gagal: Access denied for user 'simrs'@'192.20.20.253' (using password: NO)
+[26-Feb-2026 08:49:43 Asia/Jakarta] Koneksi WA Gateway Gagal: Access denied for user 'simrs'@'192.20.20.253' (using password: NO)
+[26-Feb-2026 08:49:43 Asia/Jakarta] Koneksi WA Gateway Gagal: Access denied for user 'simrs'@'192.20.20.253' (using password: NO)
+[26-Feb-2026 08:49:45 Asia/Jakarta] Koneksi WA Gateway Gagal: Access denied for user 'simrs'@'192.20.20.253' (using password: NO)
+[26-Feb-2026 08:50:12 Asia/Jakarta] Koneksi WA Gateway Gagal: Access denied for user 'simrs'@'192.20.20.253' (using password: NO)
+[26-Feb-2026 08:51:27 Asia/Jakarta] PHP Warning:  mysqli::__construct(): (HY000/1045): Access denied for user 'simrs'@'192.20.20.253' (using password: NO) in C:\xampp\htdocs\BexMedia\dist\koneksi_wa.php on line 10
+[26-Feb-2026 08:51:27 Asia/Jakarta] Koneksi WA Gateway Gagal: Access denied for user 'simrs'@'192.20.20.253' (using password: NO)
+[26-Feb-2026 08:51:27 Asia/Jakarta] PHP Fatal error:  Uncaught Error: Call to undefined function str_contains() in C:\xampp\htdocs\BexMedia\dist\send_wa.php:29
+Stack trace:
+#0 C:\xampp\htdocs\BexMedia\dist\test_wa.php(13): sendWA('6281342264881', 'Halo! Ini adala...')
+#1 {main}
+  thrown in C:\xampp\htdocs\BexMedia\dist\send_wa.php on line 29
+[26-Feb-2026 08:51:57 Asia/Jakarta] PHP Warning:  mysqli::__construct(): (HY000/1045): Access denied for user 'simrs'@'192.20.20.253' (using password: NO) in C:\xampp\htdocs\BexMedia\dist\koneksi_wa.php on line 10
+[26-Feb-2026 08:51:57 Asia/Jakarta] Koneksi WA Gateway Gagal: Access denied for user 'simrs'@'192.20.20.253' (using password: NO)
+[26-Feb-2026 08:51:57 Asia/Jakarta] PHP Warning:  mysqli::prepare(): Couldn't fetch mysqli in C:\xampp\htdocs\BexMedia\dist\send_wa.php on line 42
+[26-Feb-2026 08:51:57 Asia/Jakarta] PHP Warning:  sendWA(): Couldn't fetch mysqli in C:\xampp\htdocs\BexMedia\dist\send_wa.php on line 47
+[26-Feb-2026 08:51:57 Asia/Jakarta] WA gagal prepare stmt: 
+[26-Feb-2026 08:52:02 Asia/Jakarta] PHP Warning:  mysqli::__construct(): (HY000/1045): Access denied for user 'simrs'@'192.20.20.253' (using password: NO) in C:\xampp\htdocs\BexMedia\dist\koneksi_wa.php on line 10
+[26-Feb-2026 08:52:02 Asia/Jakarta] Koneksi WA Gateway Gagal: Access denied for user 'simrs'@'192.20.20.253' (using password: NO)
+[26-Feb-2026 08:52:02 Asia/Jakarta] PHP Warning:  mysqli::prepare(): Couldn't fetch mysqli in C:\xampp\htdocs\BexMedia\dist\send_wa.php on line 42
+[26-Feb-2026 08:52:02 Asia/Jakarta] PHP Warning:  sendWA(): Couldn't fetch mysqli in C:\xampp\htdocs\BexMedia\dist\send_wa.php on line 47
+[26-Feb-2026 08:52:02 Asia/Jakarta] WA gagal prepare stmt: 
+[26-Feb-2026 09:01:22 Asia/Jakarta] WA gagal: Koneksi ke gateway database bermasalah.
+[26-Feb-2026 09:01:44 Asia/Jakarta] WA gagal: Koneksi ke gateway database bermasalah.
+[26-Feb-2026 09:02:02 Asia/Jakarta] WA gagal: Koneksi ke gateway database bermasalah.
+[26-Feb-2026 09:02:37 Asia/Jakarta] WA gagal: Koneksi ke gateway database bermasalah.

@@ -63,7 +63,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_settings'])) {
         'app_name', 'host_khanza', 'name_khanza', 'user_khanza', 'pass_khanza', 
         'host_bex', 'name_bex', 'user_bex', 'pass_bex',
         'running_text', 'rt_speed', 'rt_font_size', 'rt_font_family', 'rt_color',
-        'wa_gateway_url', 'wa_group_it', 'wa_group_sarpras', 'telegram_bot_token', 'telegram_chat_id'
+        'wa_gateway_url', 'wa_number', 'wa_group_it', 'wa_group_sarpras', 
+        'wa_db_host', 'wa_db_user', 'wa_db_pass', 'wa_db_name',
+        'telegram_bot_token', 'telegram_chat_id'
     ];
     $updated_count = 0;
     $saved_keys = [];
@@ -851,6 +853,10 @@ if (isset($conn) && $conn !== false) {
                                         <label>WhatsApp Gateway URL</label>
                                         <input type="text" name="wa_gateway_url" value="<?php echo h(get_setting('wa_gateway_url')); ?>" placeholder="https://api.whatsapp.id/send">
                                     </div>
+                                    <div class="form-group">
+                                        <label>Default WhatsApp Number (Admin/Test)</label>
+                                        <input type="text" name="wa_number" value="<?php echo h(get_setting('wa_number')); ?>" placeholder="628123456789">
+                                    </div>
                                     <div class="form-row">
                                         <div class="form-group">
                                             <label>WA Group ID - IT Support</label>
@@ -861,6 +867,32 @@ if (isset($conn) && $conn !== false) {
                                             <input type="text" name="wa_group_sarpras" value="<?php echo h(get_setting('wa_group_sarpras')); ?>" placeholder="Enter WA Group ID for Sarpras">
                                         </div>
                                     </div>
+
+                                    <!-- Added Database Configuration for WA Gateway -->
+                                    <div style="margin-top: 20px; padding: 15px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+                                        <h4 style="font-size: 1rem; margin-bottom: 15px; color: #1e293b;"><i data-lucide="database" size="16" style="vertical-align: middle; margin-right: 8px;"></i> Database Queue Configuration</h4>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label>DB Host</label>
+                                                <input type="text" name="wa_db_host" value="<?php echo h(get_setting('wa_db_host', '192.20.20.234')); ?>">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>DB Name</label>
+                                                <input type="text" name="wa_db_name" value="<?php echo h(get_setting('wa_db_name', 'wa_gateway')); ?>">
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label>DB Username</label>
+                                                <input type="text" name="wa_db_user" value="<?php echo h(get_setting('wa_db_user', 'simrs')); ?>">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>DB Password</label>
+                                                <input type="password" name="wa_db_pass" value="<?php echo h(get_setting('wa_db_pass')); ?>" placeholder="••••••••">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <br>
                                     <button type="submit" class="btn-save">
                                         <i data-lucide="save" size="16" style="vertical-align: middle; margin-right: 6px;"></i>
                                         Simpan Gateway WhatsApp

@@ -9,51 +9,64 @@ date_default_timezone_set('Asia/Jakarta');
  * @return bool true jika berhasil, false jika gagal
  */
 function sendWA($nomor, $pesan) {
-    global $conn;
+    global $conn, $conn_wa;
 
     if (empty($nomor) || empty($pesan)) {
         error_log("WA gagal: nomor atau pesan kosong.");
         return false;
     }
 
-    // Ambil URL gateway WA dari tabel web_settings
-    $row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT setting_value FROM web_settings WHERE setting_key='wa_gateway_url' LIMIT 1"));
-    $wa_gateway = $row['setting_value'] ?? 'http://192.168.100.165:8000/send-message';
-
-    // Pastikan URL lengkap
-    if (!empty($wa_gateway) && !preg_match('/^https?:\/\//', $wa_gateway)) {
-        $wa_gateway = 'http://' . $wa_gateway;
+    // Load koneksi khusus database WA
+    include_once 'koneksi_wa.php'; 
+    
+    if (!isset($conn_wa) || $conn_wa->connect_error) {
+        error_log("WA gagal: Koneksi ke gateway database bermasalah.");
+        return false;
     }
 
-    if (empty($wa_gateway)) {
-        error_log("WA gagal: URL gateway kosong.");
+    // Format nomor: hilangkan karakter kecuali angka, @, dan - (penting untuk Group ID)
+    $nowa = preg_replace('/[^0-9@\-]/', '', $nomor);
+    
+    // Jika diawali 0, ubah ke 62
+    if (substr($nowa, 0, 1) == '0') {
+        $nowa = '62' . substr($nowa, 1);
+    }
+    
+    // Tambahkan suffix jika belum ada @
+    if (strpos($nowa, '@') === false) {
+        // Jika mengandung tanda hubung '-', biasanya itu Group ID
+        if (strpos($nowa, '-') !== false) {
+            $nowa .= '@g.us';
+        } else {
+            $nowa .= '@c.us';
+        }
+    }
+
+    $tanggal_jam = date('Y-m-d H:i:s');
+    $status_wa   = 'ANTRIAN';
+    $source      = 'KHANZA'; // Samakan dengan KHANZA
+    $sender      = 'NODEJS';  // Samakan dengan NODEJS atau DELPHI
+    $type        = 'TEXT';
+
+    // Query INSERT sesuai schema di database.sql (lowercase)
+    $sql = "INSERT INTO wa_outbox (nowa, pesan, tanggal_jam, status, source, sender, type) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    $stmt = $conn_wa->prepare($sql);
+
+    if (!$stmt) {
+        error_log("WA gagal prepare: " . $conn_wa->error);
         return false;
-    }   
+    }
 
-    // Siapkan data POST sesuai format gateway
-    $data = http_build_query([
-        'number' => $nomor,
-        'text'   => $pesan  // pastikan gateway menerima field 'text'
-    ]);
-
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $wa_gateway);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-
-    $response = curl_exec($ch);
-    $curl_error = curl_error($ch);
-    curl_close($ch);
-
-    // Logging untuk debugging
-    if ($response === false) {
-        error_log("WA gagal ke $nomor: $curl_error");
-        return false;
+    $stmt->bind_param("sssssss", $nowa, $pesan, $tanggal_jam, $status_wa, $source, $sender, $type);
+    
+    if ($stmt->execute()) {
+        $success = ($stmt->affected_rows > 0);
+        $stmt->close();
+        return $success;
     } else {
-        error_log("WA berhasil ke $nomor, response: $response");
-        return true;
+        error_log("WA gagal execute: " . $stmt->error);
+        $stmt->close();
+        return false;
     }
 }
 
