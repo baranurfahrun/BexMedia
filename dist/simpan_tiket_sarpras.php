@@ -67,12 +67,16 @@ if (isset($_POST['simpan'])) {
             curl_close($ch);
         }
 
-        // === Kirim WhatsApp ===
-        $pesan_wa  = "🛠️ *SARPRAS SERVICE REQUEST*\n";
-        $pesan_wa .= "SR Number: $nomor_tiket\n";
-        $pesan_wa .= "Nama: $nama\nJabatan: $jabatan\nUnit Kerja: $unit_kerja\n";
-        $pesan_wa .= "Kategori: $kategori\nLokasi: $lokasi\nKendala: $kendala\n";
-        $pesan_wa .= "Tanggal: $tanggal";
+        // === Kirim WhatsApp (Simbol Aman 100%) ===
+        $pesan_wa  = "!!! *SARPRAS SERVICE REQUEST*\n\n";
+        $pesan_wa .= "» *SR Number:* $nomor_tiket\n";
+        $pesan_wa .= "» *Nama:* $nama\n";
+        $pesan_wa .= "» *Jabatan:* $jabatan\n";
+        $pesan_wa .= "» *Unit:* $unit_kerja\n";
+        $pesan_wa .= "» *Kategori:* $kategori\n";
+        $pesan_wa .= "» *Lokasi:* $lokasi\n";
+        $pesan_wa .= "» *Kendala:* $kendala\n\n";
+        $pesan_wa .= "» *Tanggal:* $tanggal";
 
         // 1. Kirim ke atasan user (jika ada)
         $row_user = mysqli_fetch_assoc(mysqli_query($conn, "SELECT atasan_id, no_hp FROM users WHERE id = $user_id"));

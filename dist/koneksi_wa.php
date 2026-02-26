@@ -17,5 +17,7 @@ if (empty($db_wa)) $db_wa = "wa_gateway";
 $conn_wa = @new mysqli($host_wa, $user_wa, $pass_wa, $db_wa);
 if ($conn_wa->connect_error) {
     error_log("Koneksi WA Gateway Gagal: " . $conn_wa->connect_error);
+} else {
+    $conn_wa->set_charset("utf8mb4");
 }
 ?>
