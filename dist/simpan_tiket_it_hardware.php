@@ -81,12 +81,19 @@ if (isset($_POST['simpan'])) {
             }
         }
 
-        // 2. Kirim ke grup WA
-      $row_grup = mysqli_fetch_assoc(mysqli_query($conn, "SELECT setting_value FROM web_settings WHERE setting_key='wa_group_it' LIMIT 1"));
-
+        // 2. Kirim ke grup WA (dengan Fallback ke nomor default jika grup kosong)
+        $row_grup = mysqli_fetch_assoc(mysqli_query($conn, "SELECT setting_value FROM web_settings WHERE setting_key='wa_group_it' LIMIT 1"));
         $id_grup = $row_grup['setting_value'] ?? '';
-        if ($id_grup) {
+
+        if (!empty($id_grup)) {
             sendWA($id_grup, $pesan_wa);
+        } else {
+            // Jika grup kosong, kirim ke nomor default (Admin/Test)
+            $row_def = mysqli_fetch_assoc(mysqli_query($conn, "SELECT setting_value FROM web_settings WHERE setting_key='wa_number' LIMIT 1"));
+            $no_def = $row_def['setting_value'] ?? '';
+            if (!empty($no_def)) {
+                sendWA($no_def, $pesan_wa);
+            }
         }
 
         echo "

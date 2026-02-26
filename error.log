@@ -842,3 +842,17 @@ Stack trace:
 [26-Feb-2026 09:01:44 Asia/Jakarta] WA gagal: Koneksi ke gateway database bermasalah.
 [26-Feb-2026 09:02:02 Asia/Jakarta] WA gagal: Koneksi ke gateway database bermasalah.
 [26-Feb-2026 09:02:37 Asia/Jakarta] WA gagal: Koneksi ke gateway database bermasalah.
+[26-Feb-2026 09:31:25 Asia/Jakarta] WA Debug: ID Grup IT kosong di settings.
+[26-Feb-2026 10:16:45 Asia/Jakarta] PHP Warning:  mysqli::__construct(): (HY000/1045): Access denied for user 'simrs'@'192.20.20.253' (using password: NO) in C:\xampp\htdocs\BexMedia\dist\koneksi_wa.php on line 10
+[26-Feb-2026 10:16:45 Asia/Jakarta] Koneksi WA Gateway Gagal: Access denied for user 'simrs'@'192.20.20.253' (using password: NO)
+[26-Feb-2026 10:16:45 Asia/Jakarta] WA gagal: Koneksi ke gateway database bermasalah.
+[26-Feb-2026 10:24:06 Asia/Jakarta] WA Debug: ID Grup IT kosong di settings.
+[26-Feb-2026 10:33:11 Asia/Jakarta] WA Debug: ID Grup IT kosong di settings. Mengirim ke nomor default.
+[26-Feb-2026 10:38:26 Asia/Jakarta] WA Debug: ID Grup IT kosong di settings. Mengirim ke nomor default.
+[26-Feb-2026 10:38:26 Asia/Jakarta] WA gagal: Koneksi ke gateway database bermasalah.
+[26-Feb-2026 10:38:26 Asia/Jakarta] WA Debug: Gagal mengirim ke nomor default 6281342264881
+[26-Feb-2026 10:38:37 Asia/Jakarta] WA gagal: Koneksi ke gateway database bermasalah.
+[26-Feb-2026 10:38:38 Asia/Jakarta] WA gagal: Koneksi ke gateway database bermasalah.
+[26-Feb-2026 10:38:39 Asia/Jakarta] WA gagal: Koneksi ke gateway database bermasalah.
+[26-Feb-2026 10:39:09 Asia/Jakarta] WA gagal: Koneksi ke gateway database bermasalah.
+[26-Feb-2026 10:43:02 Asia/Jakarta] WA Debug: ID Grup IT kosong di settings. Mengirim ke nomor default.

@@ -80,11 +80,28 @@ if (isset($_POST['simpan'])) {
             }
         }
 
-        // 2. Kirim ke grup WA
+        // 2. Kirim ke grup WA (dengan Fallback ke nomor default jika grup kosong)
         $row_grup = mysqli_fetch_assoc(mysqli_query($conn, "SELECT setting_value FROM web_settings WHERE setting_key='wa_group_it' LIMIT 1"));
         $id_grup = $row_grup['setting_value'] ?? '';
+        
         if (!empty($id_grup)) {
-            sendWA($id_grup, $pesan_wa);
+            $status_grup = sendWA($id_grup, $pesan_wa);
+            if (!$status_grup) {
+                error_log("WA Debug: Gagal mengirim ke grup $id_grup");
+            }
+        } else {
+            // Jika grup kosong, kirim ke nomor default (Admin/Test)
+            error_log("WA Debug: ID Grup IT kosong di settings. Mengirim ke nomor default.");
+            $row_def = mysqli_fetch_assoc(mysqli_query($conn, "SELECT setting_value FROM web_settings WHERE setting_key='wa_number' LIMIT 1"));
+            $no_def = $row_def['setting_value'] ?? '';
+            if (!empty($no_def)) {
+                $status_def = sendWA($no_def, $pesan_wa);
+                if (!$status_def) {
+                    error_log("WA Debug: Gagal mengirim ke nomor default $no_def");
+                }
+            } else {
+                error_log("WA Debug: Nomor WA default juga kosong di settings.");
+            }
         }
 
         echo "

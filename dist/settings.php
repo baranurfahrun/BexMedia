@@ -73,9 +73,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_settings'])) {
         if (isset($_POST[$key])) {
             $val = $_POST[$key];
             $safe_val = mysqli_real_escape_string($conn, $val);
-            // Paksa Update langsung
-            $res = mysqli_query($conn, "UPDATE web_settings SET setting_value = '$safe_val' WHERE setting_key = '$key'");
-            if ($res && mysqli_affected_rows($conn) > 0) {
+            
+            // Cek apakah key sudah ada
+            $cek = mysqli_query($conn, "SELECT setting_key FROM web_settings WHERE setting_key = '$key'");
+            if (mysqli_num_rows($cek) > 0) {
+                $res = mysqli_query($conn, "UPDATE web_settings SET setting_value = '$safe_val' WHERE setting_key = '$key'");
+            } else {
+                $res = mysqli_query($conn, "INSERT INTO web_settings (setting_key, setting_value) VALUES ('$key', '$safe_val')");
+            }
+            
+            if ($res) {
                 $updated_count++;
                 $saved_keys[] = $key;
             }

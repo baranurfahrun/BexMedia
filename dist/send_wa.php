@@ -24,17 +24,19 @@ function sendWA($nomor, $pesan) {
         return false;
     }
 
-    // Format nomor: hilangkan karakter kecuali angka, @, dan - (penting untuk Group ID)
-    $nowa = preg_replace('/[^0-9@\-]/', '', $nomor);
-    
-    // Jika diawali 0, ubah ke 62
-    if (substr($nowa, 0, 1) == '0') {
-        $nowa = '62' . substr($nowa, 1);
-    }
-    
-    // Tambahkan suffix jika belum ada @
-    if (strpos($nowa, '@') === false) {
-        // Jika mengandung tanda hubung '-', biasanya itu Group ID
+    // Jika nomor sudah mengandung '@', asumsikan itu ID lengkap (misal: ID grup)
+    if (strpos($nomor, '@') !== false) {
+        $nowa = $nomor;
+    } else {
+        // Format nomor biasa: hilangkan karakter kecuali angka dan tanda hubung
+        $nowa = preg_replace('/[^0-9\-]/', '', $nomor);
+        
+        // Jika diawali 0, ubah ke 62
+        if (substr($nowa, 0, 1) == '0') {
+            $nowa = '62' . substr($nowa, 1);
+        }
+        
+        // Tambahkan suffix otomatis
         if (strpos($nowa, '-') !== false) {
             $nowa .= '@g.us';
         } else {
