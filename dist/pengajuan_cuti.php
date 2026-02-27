@@ -17,16 +17,15 @@ if (mysqli_num_rows($rAkses) == 0) {
   exit;
 }
 
-// === Ambil data user login ===
-$qUser = mysqli_query($conn, "SELECT id, nama, unit_kerja FROM users WHERE id='$user_id'");
-$userLogin = mysqli_fetch_assoc($qUser);
+// Data user sudah diambil secara otomatis di security.php ($nik_user, $nama_user, $jabatan_user, $unit_user)
 
 // === Dropdown Master Cuti & Delegasi ===
 $masterCuti = mysqli_query($conn, "SELECT * FROM master_cuti ORDER BY nama_cuti ASC");
-$delegasiList = mysqli_query($conn, "SELECT id, nama FROM users 
-                                     WHERE unit_kerja = '".$userLogin['unit_kerja']."' 
-                                     AND id <> '".$userLogin['id']."' 
-                                     ORDER BY nama ASC");
+$delegasiList = mysqli_query($conn, "SELECT id, nama_lengkap FROM users 
+                                     WHERE unit_kerja = '$unit_user' 
+                                     AND id <> '$user_id' 
+                                     AND status = 'active'
+                                     ORDER BY nama_lengkap ASC");
 
 // === Data jatah cuti user login (untuk validasi) ===
 $tahun = date('Y');
@@ -39,7 +38,7 @@ while ($row = mysqli_fetch_assoc($resCuti)) {
 
 // === Proses Simpan Pengajuan ===
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan'])) {
-  $karyawan_id    = $userLogin['id'];
+  $karyawan_id    = $user_id;
   $master_cuti_id = intval($_POST['master_cuti_id']);
   $delegasi_id    = intval($_POST['delegasi_id']);
   $alasan         = mysqli_real_escape_string($conn, $_POST['alasan']);
@@ -131,7 +130,7 @@ if ($stmt) {
 
 // === Ambil Data Pengajuan Cuti ===
 $dataPengajuan = mysqli_query($conn, "
-  SELECT p.*, u.nama AS nama_karyawan, mc.nama_cuti, d.nama AS nama_delegasi,
+  SELECT p.*, u.nama_lengkap AS nama_karyawan, mc.nama_cuti, d.nama_lengkap AS nama_delegasi,
          GROUP_CONCAT(DATE_FORMAT(pc.tanggal,'%d-%m-%Y') ORDER BY pc.tanggal SEPARATOR ', ') AS tanggal_cuti
   FROM pengajuan_cuti p
   JOIN users u ON p.karyawan_id = u.id
@@ -222,14 +221,14 @@ $dataPengajuan = mysqli_query($conn, "
     <div class="col-md-6">
       <div class="form-group">
         <label>Karyawan</label>
-        <input type="text" class="form-control" value="<?= htmlspecialchars($userLogin['nama']) ?>" readonly>
+        <input type="text" class="form-control" value="<?= h($nik_user) ?> - <?= h($nama_user) ?>" readonly style="background: #F8FAFC">
       </div>
       <div class="form-group">
         <label for="master_cuti_id">Jenis Cuti</label>
         <select name="master_cuti_id" id="master_cuti_id" class="form-control" required>
           <option value="">-- Pilih Jenis Cuti --</option>
           <?php while($mc = mysqli_fetch_assoc($masterCuti)): ?>
-            <option value="<?= $mc['id'] ?>"><?= htmlspecialchars($mc['nama_cuti']) ?></option>
+            <option value="<?= $mc['id'] ?>"><?= h($mc['nama_cuti']) ?></option>
           <?php endwhile; ?>
         </select>
       </div>
@@ -238,7 +237,7 @@ $dataPengajuan = mysqli_query($conn, "
         <select name="delegasi_id" id="delegasi_id" class="form-control" required>
           <option value="">-- Pilih Delegasi --</option>
           <?php while($d = mysqli_fetch_assoc($delegasiList)): ?>
-            <option value="<?= $d['id'] ?>"><?= htmlspecialchars($d['nama']) ?></option>
+            <option value="<?= $d['id'] ?>"><?= h($d['nama_lengkap']) ?></option>
           <?php endwhile; ?>
         </select>
       </div>
@@ -306,12 +305,12 @@ $dataPengajuan = mysqli_query($conn, "
                         <?php $no=1; while ($row = mysqli_fetch_assoc($dataPengajuan)): ?>
                           <tr>
                             <td><?= $no++ ?></td>
-                            <td><?= htmlspecialchars($row['nama_karyawan']) ?></td>
-                            <td><?= htmlspecialchars($row['nama_cuti']) ?></td>
-                            <td><?= htmlspecialchars($row['nama_delegasi'] ?? '-') ?></td>
-                            <td><?= htmlspecialchars($row['tanggal_cuti']) ?></td>
+                            <td><?= h($row['nama_karyawan']) ?></td>
+                            <td><?= h($row['nama_cuti']) ?></td>
+                            <td><?= h($row['nama_delegasi'] ?? '-') ?></td>
+                            <td><?= h($row['tanggal_cuti']) ?></td>
                             <td><?= $row['lama_hari'] ?> hari</td>
-                            <td><?= htmlspecialchars($row['alasan']) ?></td>
+                            <td><?= h($row['alasan']) ?></td>
 
                             <!-- Status Delegasi -->
                             <td>
@@ -320,7 +319,7 @@ $dataPengajuan = mysqli_query($conn, "
                                 <?= $row['status_delegasi'] ?>
                               </span>
                             </td>
-                            <td><?= htmlspecialchars($row['acc_delegasi_by'] ?? '-') ?></td>
+                            <td><?= h($row['acc_delegasi_by'] ?? '-') ?></td>
 
                             <!-- Status Atasan -->
                             <td>
@@ -329,7 +328,7 @@ $dataPengajuan = mysqli_query($conn, "
                                 <?= $row['status_atasan'] ?>
                               </span>
                             </td>
-                            <td><?= htmlspecialchars($row['acc_atasan_by'] ?? '-') ?></td>
+                            <td><?= h($row['acc_atasan_by'] ?? '-') ?></td>
 
                             <!-- Status HRD -->
                             <td>
@@ -338,7 +337,7 @@ $dataPengajuan = mysqli_query($conn, "
                                 <?= $row['status_hrd'] ?>
                               </span>
                             </td>
-                            <td><?= htmlspecialchars($row['acc_hrd_by'] ?? '-') ?></td>
+                            <td><?= h($row['acc_hrd_by'] ?? '-') ?></td>
 
                           <td class="text-center">
   <a href="cetak_cuti.php?id=<?= $row['id'] ?>" target="_blank" class="btn btn-sm btn-info" title="Cetak">
@@ -402,7 +401,7 @@ $dataPengajuan = mysqli_query($conn, "
               <tbody>
                 <?php foreach ($dataCuti as $cuti): ?>
                   <tr>
-                    <td><?= htmlspecialchars($cuti['nama_cuti']) ?></td>
+                    <td><?= h($cuti['nama_cuti']) ?></td>
                     <td><?= $cuti['lama_hari'] ?></td>
                     <td><?= $cuti['terpakai'] ?></td>
                     <td><?= $cuti['sisa_hari'] ?></td>
@@ -474,10 +473,3 @@ $dataPengajuan = mysqli_query($conn, "
 </script>
 </body>
 </html>
-
-
-
-
-
-
-

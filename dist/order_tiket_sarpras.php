@@ -16,9 +16,7 @@ if (mysqli_num_rows($result) == 0) {
   exit;
 }
 
-// === Ambil data user login ===
-$queryUser = mysqli_query($conn, "SELECT nik, nama_lengkap, jabatan, unit_kerja FROM users WHERE id = '$user_id'");
-$userData = mysqli_fetch_assoc($queryUser);
+// Data user sudah diambil secara otomatis di security.php ($nik_user, $nama_user, $jabatan_user, $unit_user)
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -167,15 +165,15 @@ $userData = mysqli_fetch_assoc($queryUser);
                     <div class="row">
                       <div class="form-group col-md-3">
                         <label>NIK</label>
-                        <input type="text" name="nik" value="<?= htmlspecialchars($userData['nik'] ?? ''); ?>" class="form-control" <?= empty($userData['nik']) ? '' : 'readonly'; ?>>
+                        <input type="text" name="nik" value="<?php echo h($nik_user); ?>" class="form-control" readonly style="background: #F8FAFC">
                       </div>
                       <div class="form-group col-md-3">
                         <label>Nama</label>
-                        <input type="text" name="nama" value="<?= htmlspecialchars($userData['nama_lengkap']); ?>" class="form-control" readonly>
+                        <input type="text" name="nama" value="<?php echo h($nama_user); ?>" class="form-control" readonly style="background: #F8FAFC">
                       </div>
                       <div class="form-group col-md-3">
                         <label>Jabatan</label>
-                        <input type="text" name="jabatan" value="<?= htmlspecialchars($userData['jabatan'] ?? ''); ?>" class="form-control" <?= empty($userData['jabatan']) ? '' : 'readonly'; ?>>
+                        <input type="text" name="jabatan" value="<?php echo h($jabatan_user); ?>" class="form-control" readonly style="background: #F8FAFC">
                       </div>
                       <div class="form-group col-md-3">
                         <label>Unit Kerja</label>

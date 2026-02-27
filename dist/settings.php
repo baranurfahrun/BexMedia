@@ -5,9 +5,9 @@ syncMenus();
 
 // Handle AJAX Request for Access Data (MUST BE AT TOP)
 if (isset($_GET['get_access'])) {
-    $target = $_GET['get_access'];
+    $target_id = (int)$_GET['get_access'];
     $data = [];
-    $res = safe_query("SELECT menu_id FROM web_access WHERE username = ?", [$target]);
+    $res = safe_query("SELECT menu_id FROM akses_menu WHERE user_id = ?", [$target_id]);
     while($r = mysqli_fetch_assoc($res)) $data[] = (int)$r['menu_id'];
     header('Content-Type: application/json');
     echo json_encode($data);
@@ -161,18 +161,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['activate_user'])) {
 // --- PART 4: UPDATE ACCESS RIGHTS ---
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_access'])) {
     csrf_verify();
-    $target_user = $_POST['target_username'];
+    $target_id = (int)$_POST['target_user_id'];
     $menus = $_POST['menus'] ?? [];
     
     // Reset access
-    safe_query("DELETE FROM web_access WHERE username = ?", [$target_user]);
+    safe_query("DELETE FROM akses_menu WHERE user_id = ?", [$target_id]);
     
     // Insert new access
     foreach ($menus as $mid) {
-        safe_query("INSERT INTO web_access (username, menu_id) VALUES (?, ?)", [$target_user, (int)$mid]);
+        safe_query("INSERT INTO akses_menu (user_id, menu_id) VALUES (?, ?)", [$target_id, (int)$mid]);
     }
-    write_log("UPDATE_ACCESS", "Administrator memperbarui hak akses untuk user: $target_user");
+    write_log("UPDATE_ACCESS", "Administrator memperbarui hak akses untuk user ID: $target_id");
     $status_msg = "Hak akses berhasil diperbarui!";
+}
+
+// --- PART 4.5: TOGGLE USER STATUS ---
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['toggle_status'])) {
+    csrf_verify();
+    $uid = (int)$_POST['user_id'];
+    $new_status = $_POST['new_status'];
+    if (in_array($new_status, ['active', 'pending'])) {
+        $res = safe_query("UPDATE users SET status = ? WHERE id = ?", [$new_status, $uid]);
+        if ($res) {
+            write_log("TOGGLE_STATUS", "Administrator mengubah status User ID $uid menjadi $new_status");
+            $status_msg = "Status pengguna berhasil diperbarui!";
+            
+            $kw = isset($_GET['keyword']) ? "&keyword=".urlencode($_GET['keyword']) : "";
+            header("Location: settings.php?tab=userlist&saved=1" . $kw);
+            exit;
+        }
+    }
 }
 
 // Ambil Data Profil
@@ -583,10 +601,28 @@ if (isset($conn) && $conn !== false) {
                                     </div>
                                 </div>
 
-                                <div class="form-group">
-                                    <label>Username (Read-only)</label>
-                                    <input type="text" value="<?php echo h($current_user); ?>" readonly style="background: #F8FAFC">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>NIK / NIP (HR Data)</label>
+                                        <input type="text" value="<?php echo h($nik_user); ?>" readonly style="background: #F8FAFC">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Username (Read-only)</label>
+                                        <input type="text" value="<?php echo h($current_user); ?>" readonly style="background: #F8FAFC">
+                                    </div>
                                 </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Jabatan / Position</label>
+                                        <input type="text" value="<?php echo h($jabatan_user); ?>" readonly style="background: #F8FAFC">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Unit Kerja</label>
+                                        <input type="text" value="<?php echo h($unit_user); ?>" readonly style="background: #F8FAFC">
+                                    </div>
+                                </div>
+
                                 <div class="form-group">
                                     <label>Full Name</label>
                                     <input type="text" name="nama_lengkap" value="<?php echo h($user_full_name); ?>" <?php echo ($_SESSION['login_source'] ?? 'BEXMEDIA') !== 'BEXMEDIA' ? 'readonly' : ''; ?>>
@@ -935,35 +971,52 @@ if (isset($conn) && $conn !== false) {
                         <!-- TAB: ACCESS RIGHTS -->
                         <div id="access" class="tab-content">
                             <div class="form-section">
-                                <h3>User Access Control</h3>
-                                <p style="color: #64748B; font-size: 0.9rem; margin-bottom: 20px;">
-                                    Klik tombol <strong>Akses</strong> untuk mengatur izin menu bagi setiap pengguna.
-                                </p>
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px;">
+                                    <div>
+                                        <h3>User Access Control</h3>
+                                        <p style="color: #64748B; font-size: 0.9rem; margin-top: 5px;">
+                                            Atur izin menu bagi setiap pengguna aktif.
+                                        </p>
+                                    </div>
+                                    <form method="GET" style="display: flex; gap: 8px;">
+                                        <input type="hidden" name="tab" value="access">
+                                        <div style="position: relative;">
+                                            <input type="text" name="kw_access" value="<?php echo h($_GET['kw_access'] ?? ''); ?>" placeholder="Cari Nama/Jabatan..." style="padding: 10px 14px 10px 38px; border: 1px solid #E2E8F0; border-radius: 12px; font-size: 0.85rem; width: 220px; transition: all 0.3s;">
+                                            <i data-lucide="search" size="16" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94A3B8;"></i>
+                                        </div>
+                                        <button type="submit" class="btn-save" style="padding: 10px 20px; font-size: 0.85rem; border-radius: 12px;">Cari</button>
+                                    </form>
+                                </div>
                                 
-                                <div style="overflow-x: auto;">
-                                    <table class="log-table">
-                                        <thead>
+                                <div style="overflow-x: auto; background: #FAFBFC; border-radius: 16px; border: 1px solid #F1F5F9;">
+                                    <table class="log-table" style="margin: 0;">
+                                        <thead style="background: #1E293B;">
                                             <tr>
-                                                <th>Nama Lengkap</th>
-                                                <th>Username</th>
-                                                <th>Jabatan</th>
-                                                <th>Unit Kerja</th>
-                                                <th>Action</th>
+                                                <th style="color: white; padding: 14px; border-radius: 16px 0 0 0;">Nama Lengkap</th>
+                                                <th style="color: white;">NIK/NIP</th>
+                                                <th style="color: white;">Jabatan</th>
+                                                <th style="color: white;">Unit Kerja</th>
+                                                <th style="color: white; border-radius: 0 16px 0 0;">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <?php
-                                            $user_list = mysqli_query($conn, "SELECT id, nama_lengkap, AES_DECRYPT(username, 'bex') as uname, nik, jabatan, unit_kerja FROM users WHERE status = 'active'");
+                                            $kw_a = isset($_GET['kw_access']) ? mysqli_real_escape_string($conn, trim($_GET['kw_access'])) : '';
+                                            $where_a = "WHERE status = 'active'";
+                                            if (!empty($kw_a)) {
+                                                $where_a .= " AND (nama_lengkap LIKE '%$kw_a%' OR jabatan LIKE '%$kw_a%' OR nik LIKE '%$kw_a%')";
+                                            }
+                                            $user_list = mysqli_query($conn, "SELECT id, nama_lengkap, nik, jabatan, unit_kerja FROM users $where_a ORDER BY nama_lengkap ASC");
                                             while ($ul = mysqli_fetch_assoc($user_list)):
                                             ?>
-                                            <tr>
+                                            <tr style="background: white;">
                                                 <td><strong><?php echo h($ul['nama_lengkap']); ?></strong></td>
-                                                <td><code><?php echo h($ul['uname']); ?></code></td>
-                                                <td><?php echo h($ul['jabatan']); ?></td>
-                                                <td><?php echo h($ul['unit_kerja']); ?></td>
+                                                <td><span style="font-family: monospace; font-size: 0.85rem;"><?php echo h($ul['nik'] ?? '-'); ?></span></td>
+                                                <td style="font-size: 0.85rem; color: #475569;"><?php echo h($ul['jabatan']); ?></td>
+                                                <td style="font-size: 0.85rem; color: #475569;"><?php echo h($ul['unit_kerja']); ?></td>
                                                 <td>
-                                                    <button type="button" class="btn-save" style="padding: 6px 12px; font-size: 0.75rem; display: flex; align-items: center; gap: 5px;" onclick="openAccessModal('<?php echo h($ul['uname']); ?>', '<?php echo addslashes($ul['nama_lengkap']); ?>')">
-                                                        <i data-lucide="shield" size="14"></i> Akses
+                                                    <button type="button" class="btn-save" style="padding: 8px 16px; font-size: 0.75rem; display: flex; align-items: center; gap: 8px; border-radius: 10px;" onclick="openAccessModal(<?php echo $ul['id']; ?>, '<?php echo addslashes($ul['nama_lengkap']); ?>')">
+                                                        <i data-lucide="shield" size="14"></i> Atur Akses
                                                     </button>
                                                 </td>
                                             </tr>
@@ -977,45 +1030,110 @@ if (isset($conn) && $conn !== false) {
                         <!-- TAB: USER LIST -->
                         <div id="userlist" class="tab-content">
                             <div class="form-section">
-                                <h3>User Account List</h3>
-                                <p style="color: #64748B; font-size: 0.9rem; margin-bottom: 20px;">
-                                    Daftar seluruh akun yang terdaftar di sistem beserta status aktif saat ini.
-                                </p>
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px;">
+                                    <div>
+                                        <h3>User Account List</h3>
+                                        <p style="color: #64748B; font-size: 0.9rem; margin-top: 5px;">
+                                            Daftar seluruh akun yang terdaftar di sistem beserta status aktif saat ini.
+                                        </p>
+                                    </div>
+                                    <form method="GET" style="display: flex; gap: 8px;">
+                                        <input type="hidden" name="tab" value="userlist">
+                                        <div style="position: relative;">
+                                            <input type="text" name="keyword" value="<?php echo h($_GET['keyword'] ?? ''); ?>" placeholder="Cari NIK/Nama..." style="padding: 10px 14px 10px 38px; border: 1px solid #E2E8F0; border-radius: 12px; font-size: 0.85rem; width: 240px; transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#E2E8F0'">
+                                            <i data-lucide="search" size="16" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94A3B8;"></i>
+                                        </div>
+                                        <button type="submit" class="btn-save" style="padding: 10px 20px; font-size: 0.85rem; border-radius: 12px;">
+                                            Cari
+                                        </button>
+                                        <?php if(isset($_GET['keyword'])): ?>
+                                            <a href="settings.php?tab=userlist" style="padding: 10px; background: #F1F5F9; border-radius: 12px; color: #64748B; display: flex; align-items: center;" title="Reset Search">
+                                                <i data-lucide="x" size="16"></i>
+                                            </a>
+                                        <?php endif; ?>
+                                    </form>
+                                </div>
                                 
-                                <div style="overflow-x: auto;">
-                                    <table class="log-table">
-                                        <thead>
+                                <div style="overflow-x: auto; background: #FAFBFC; border-radius: 16px; border: 1px solid #F1F5F9;">
+                                    <table class="log-table" style="margin: 0;">
+                                        <thead style="background: #1E293B;">
                                             <tr>
-                                                <th>Nama Lengkap</th>
-                                                <th>Username</th>
-                                                <th>Jabatan</th>
-                                                <th>Status Akun</th>
-                                                <th>Status Login</th>
-                                                <th>Last Activity</th>
+                                                <th style="color: white; padding: 14px; text-align: center; border-radius: 16px 0 0 0;">No</th>
+                                                <th style="color: white;">NIK/NIP</th>
+                                                <th style="color: white;">Nama</th>
+                                                <th style="color: white;">Jabatan</th>
+                                                <th style="color: white;">Unit Kerja</th>
+                                                <th style="color: white;">Email</th>
+                                                <th style="color: white; text-align: center;">Status</th>
+                                                <th style="color: white; text-align: center; border-radius: 0 16px 0 0;">Aksi</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <?php
-                                            $all_users = mysqli_query($conn, "SELECT id, nama_lengkap, AES_DECRYPT(username, 'bex') as uname, jabatan, last_activity, status FROM users ORDER BY last_activity DESC");
-                                            while ($au = mysqli_fetch_assoc($all_users)):
-                                                // Status Online: Aktif dalam 5 menit terakhir
-                                                $is_online = (!empty($au['last_activity']) && strtotime($au['last_activity']) > (time() - 300));
-                                                $status_label = $is_online ? "Online" : "Offline";
-                                                $status_badge = $is_online ? "badge-success" : "badge-offline";
-                                                
-                                                // Status Akun
-                                                $acc_status = ucfirst($au['status']);
-                                                $acc_badge = ($au['status'] == 'active') ? "badge-success" : "badge-warn";
+                                            $kw = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
+                                            $where = "";
+                                            if (!empty($kw)) {
+                                                $kw_safe = mysqli_real_escape_string($conn, $kw);
+                                                $where = "WHERE (nik LIKE '%$kw_safe%' OR nama_lengkap LIKE '%$kw_safe%' OR email LIKE '%$kw_safe%')";
+                                            }
+
+                                            $query_str = "SELECT id, nik, nama_lengkap, AES_DECRYPT(username, 'bex') as uname, jabatan, unit_kerja, email, last_activity, status FROM users $where ORDER BY nama_lengkap ASC";
+                                            $all_users = mysqli_query($conn, $query_str);
+                                            
+                                            $no = 1;
+                                            if (mysqli_num_rows($all_users) == 0):
                                             ?>
-                                            <tr>
-                                                <td><strong><?php echo h($au['nama_lengkap']); ?></strong></td>
-                                                <td><code style="background: #F8FAFC; padding: 2px 6px; border-radius: 4px;"><?php echo h($au['uname']); ?></code></td>
-                                                <td><?php echo h($au['jabatan']); ?></td>
-                                                <td><span class="badge <?php echo $acc_badge; ?>"><?php echo $acc_status; ?></span></td>
-                                                <td><span class="badge <?php echo $status_badge; ?>"><?php echo $status_label; ?></span></td>
-                                                <td style="font-size: 0.75rem; color: #94A3B8;"><?php echo $au['last_activity'] ? $au['last_activity'] : 'Never'; ?></td>
-                                            </tr>
-                                            <?php endwhile; ?>
+                                                <tr><td colspan="8" style="text-align:center; padding: 40px; color: #94A3B8;">Tidak ada data ditemukan.</td></tr>
+                                            <?php 
+                                            else:
+                                                while ($au = mysqli_fetch_assoc($all_users)):
+                                                    // Status Akun
+                                                    $acc_status = ($au['status'] == 'active') ? "Aktif" : "Non-Aktif";
+                                                    $acc_badge = ($au['status'] == 'active') ? "badge-success" : "badge-warn";
+                                                    
+                                                    // Online status - keep separate badge if needed or just use in title
+                                                    $is_online = (!empty($au['last_activity']) && strtotime($au['last_activity']) > (time() - 300));
+                                                    $online_color = $is_online ? "#10B981" : "#CBD5E1";
+                                                    $online_title = $is_online ? "Online (Active: ".$au['last_activity'].")" : "Offline (Last: ".($au['last_activity'] ?? 'Never').")";
+                                                ?>
+                                                <tr style="background: white;">
+                                                    <td style="text-align: center; color: #94A3B8; font-weight: 600;"><?php echo $no++; ?></td>
+                                                    <td style="font-family: monospace; font-size: 0.85rem;"><?php echo h($au['nik'] ?? '-'); ?></td>
+                                                    <td>
+                                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                                            <div style="width: 8px; height: 8px; border-radius: 50%; background: <?php echo $online_color; ?>;" title="<?php echo $online_title; ?>"></div>
+                                                            <strong><?php echo h($au['nama_lengkap']); ?></strong>
+                                                        </div>
+                                                    </td>
+                                                    <td><span style="font-size: 0.85rem; color: #475569;"><?php echo h($au['jabatan'] ?? '-'); ?></span></td>
+                                                    <td><span style="font-size: 0.85rem; color: #475569;"><?php echo h($au['unit_kerja'] ?? '-'); ?></span></td>
+                                                    <td style="font-size: 0.8rem; color: #64748B;"><?php echo h($au['email'] ?? '-'); ?></td>
+                                                    <td style="text-align: center;">
+                                                        <span class="badge <?php echo $acc_badge; ?>" style="padding: 6px 12px; border-radius: 20px;"><?php echo $acc_status; ?></span>
+                                                    </td>
+                                                    <td style="text-align: center;">
+                                                        <form method="POST" id="formStatus_<?php echo $au['id']; ?>">
+                                                            <?php echo csrf_field(); ?>
+                                                            <input type="hidden" name="toggle_status" value="1">
+                                                            <input type="hidden" name="user_id" value="<?php echo $au['id']; ?>">
+                                                            <input type="hidden" name="new_status" value="<?php echo ($au['status'] == 'active' ? 'pending' : 'active'); ?>">
+                                                            
+                                                            <?php if ($au['status'] == 'active'): ?>
+                                                                <button type="button" class="btn-save" style="background: #fb7185; border-radius: 8px; padding: 6px 12px; font-size: 0.75rem; transition: background 0.3s;" onmouseover="this.style.background='#e11d48'" onmouseout="this.style.background='#fb7185'" onclick="confirmToggleStatus(<?php echo $au['id']; ?>, '<?php echo addslashes($au['nama_lengkap']); ?>', 'nonaktifkan')">
+                                                                    <i data-lucide="user-x" size="14" style="vertical-align: middle; margin-right: 4px;"></i> Nonaktifkan
+                                                                </button>
+                                                            <?php else: ?>
+                                                                <button type="button" class="btn-save" style="background: #4ade80; border-radius: 8px; padding: 6px 14px; font-size: 0.75rem; transition: background 0.3s;" onmouseover="this.style.background='#16a34a'" onmouseout="this.style.background='#4ade80'" onclick="confirmToggleStatus(<?php echo $au['id']; ?>, '<?php echo addslashes($au['nama_lengkap']); ?>', 'aktifkan')">
+                                                                    <i data-lucide="user-check" size="14" style="vertical-align: middle; margin-right: 4px;"></i> Aktifkan
+                                                                </button>
+                                                            <?php endif; ?>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                                <?php 
+                                                endwhile;
+                                            endif; 
+                                            ?>
                                         </tbody>
                                     </table>
                                 </div>
@@ -1030,15 +1148,15 @@ if (isset($conn) && $conn !== false) {
                                     Daftar pengguna baru yang menunggu aktivasi akun untuk dapat mengakses sistem.
                                 </p>
                                 
-                                <div style="overflow-x: auto;">
-                                    <table class="log-table">
-                                        <thead>
+                                <div style="overflow-x: auto; background: #FAFBFC; border-radius: 16px; border: 1px solid #F1F5F9;">
+                                    <table class="log-table" style="margin: 0;">
+                                        <thead style="background: #1E293B;">
                                             <tr>
-                                                <th>Nama Lengkap</th>
-                                                <th>NIK</th>
-                                                <th>Unit Kerja</th>
-                                                <th>Email</th>
-                                                <th>Action</th>
+                                                <th style="color: white; padding: 14px; border-radius: 16px 0 0 0;">Nama Lengkap</th>
+                                                <th style="color: white;">NIK</th>
+                                                <th style="color: white;">Unit Kerja</th>
+                                                <th style="color: white;">Email</th>
+                                                <th style="color: white; border-radius: 0 16px 0 0;">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -1049,13 +1167,13 @@ if (isset($conn) && $conn !== false) {
                                                 <tr><td colspan="5" style="text-align:center; padding: 40px; color: #94A3B8;">Tidak ada akun yang menunggu konfirmasi.</td></tr>
                                             <?php else: ?>
                                                 <?php while ($pu = mysqli_fetch_assoc($pending_users)): ?>
-                                                <tr>
+                                                <tr style="background: white;">
                                                     <td><strong><?php echo h($pu['nama_lengkap']); ?></strong></td>
                                                     <td><?php echo h($pu['nik']); ?></td>
-                                                    <td><?php echo h($pu['unit_kerja']); ?></td>
-                                                    <td><?php echo h($pu['email']); ?></td>
+                                                    <td><?php echo h($pu['unit_kerja'] ?? '-'); ?></td>
+                                                    <td><?php echo h($pu['email'] ?? '-'); ?></td>
                                                     <td>
-                                                        <button type="button" class="btn-save" style="padding: 6px 12px; font-size: 0.75rem; background: #10B981;" onclick="activateUser(<?php echo $pu['id']; ?>, '<?php echo addslashes($pu['nama_lengkap']); ?>')">Aktifkan</button>
+                                                        <button type="button" class="btn-save" style="padding: 6px 14px; font-size: 0.75rem; background: #10B981; border-radius: 8px;" onclick="activateUser(<?php echo $pu['id']; ?>, '<?php echo addslashes($pu['nama_lengkap']); ?>')">Aktifkan</button>
                                                     </td>
                                                 </tr>
                                                 <?php endwhile; ?>
@@ -1159,7 +1277,7 @@ if (isset($conn) && $conn !== false) {
                         </div>
                         <form method="POST">
                             <input type="hidden" name="csrf_token" value="<?php echo csrf_token(); ?>">
-                            <input type="hidden" name="target_username" id="targetUsername">
+                            <input type="hidden" name="target_user_id" id="targetUserId">
                             <input type="hidden" name="update_access" value="1">
                             
                             <p style="color:#64748B; font-size:0.9rem">Beri tanda centang pada menu yang boleh diakses oleh user ini.</p>
@@ -1263,17 +1381,17 @@ if (isset($conn) && $conn !== false) {
         // ACCESS MODAL LOGIC
         const allMenus = <?php 
             $menus = [];
-            $res_m = mysqli_query($conn, "SELECT id, display_name FROM web_menus ORDER BY display_name");
+            $res_m = mysqli_query($conn, "SELECT id, nama_menu as display_name FROM menu ORDER BY nama_menu");
             while($m = mysqli_fetch_assoc($res_m)) $menus[] = $m;
             echo json_encode($menus);
         ?>;
 
-        function openAccessModal(username, fullName) {
-            document.getElementById('targetUsername').value = username;
+        function openAccessModal(userId, fullName) {
+            document.getElementById('targetUserId').value = userId;
             document.getElementById('modalTitle').innerText = "Hak Akses: " + fullName;
             
             // Get current access (AJAX)
-            fetch('?get_access=' + encodeURIComponent(username))
+            fetch('?get_access=' + encodeURIComponent(userId))
                 .then(res => res.json())
                 .then(data => {
                     const grid = document.getElementById('menuGrid');
@@ -1401,6 +1519,27 @@ if (isset($conn) && $conn !== false) {
                     btn.disabled = false;
                     btn.innerHTML = originalHTML;
                     lucide.createIcons();
+                }
+            });
+        }
+
+        function confirmToggleStatus(uid, name, action) {
+            const isDeactivate = (action === 'nonaktifkan');
+            Swal.fire({
+                title: isDeactivate ? 'Nonaktifkan Akun?' : 'Aktifkan Akun?',
+                html: `Apakah Anda yakin ingin <b>${action}</b> akun <br><span style="color:var(--primary); font-weight:700;">${name}</span>?`,
+                icon: isDeactivate ? 'warning' : 'question',
+                showCancelButton: true,
+                confirmButtonColor: isDeactivate ? '#EF4444' : '#10B981',
+                cancelButtonColor: '#64748B',
+                confirmButtonText: isDeactivate ? 'Ya, Nonaktifkan!' : 'Ya, Aktifkan!',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                showClass: { popup: 'animate__animated animate__zoomIn' },
+                hideClass: { popup: 'animate__animated animate__fadeOut' }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('formStatus_' + uid).submit();
                 }
             });
         }

@@ -17,8 +17,7 @@ if (mysqli_num_rows($result) == 0) {
 }
 
 $user_id = $_SESSION['user_id'];
-$queryUser = mysqli_query($conn, "SELECT nik, nama_lengkap, jabatan, unit_kerja FROM users WHERE id = '$user_id'");
-$userData = mysqli_fetch_assoc($queryUser);
+// Data user sudah diambil secara otomatis di security.php ($nik_user, $nama_user, $jabatan_user, $unit_user)
 
 $keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
 ?>
@@ -175,15 +174,15 @@ $keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
                     <div class="row">
                       <div class="form-group col-md-4">
                         <label for="nik">NIK</label>
-                        <input type="text" name="nik" class="form-control" value="<?= htmlspecialchars($userData['nik'] ?? ''); ?>" <?= empty($userData['nik']) ? '' : 'readonly'; ?>>
+                        <input type="text" name="nik" class="form-control" value="<?php echo h($nik_user); ?>" readonly style="background: #F8FAFC">
                       </div>
                       <div class="form-group col-md-4">
                         <label for="nama">Nama</label>
-                        <input type="text" name="nama" class="form-control" value="<?= $userData['nama_lengkap']; ?>" readonly>
+                        <input type="text" name="nama" class="form-control" value="<?php echo h($nama_user); ?>" readonly style="background: #F8FAFC">
                       </div>
                       <div class="form-group col-md-4">
                         <label for="jabatan">Jabatan</label>
-                        <input type="text" name="jabatan" class="form-control" value="<?= htmlspecialchars($userData['jabatan'] ?? ''); ?>" <?= empty($userData['jabatan']) ? '' : 'readonly'; ?>>
+                        <input type="text" name="jabatan" class="form-control" value="<?php echo h($jabatan_user); ?>" readonly style="background: #F8FAFC">
                       </div>
                       <div class="form-group col-md-4">
                         <label for="unit_kerja">Unit Kerja</label>

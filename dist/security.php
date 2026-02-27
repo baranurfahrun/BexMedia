@@ -23,19 +23,25 @@ $user_id_logged = $_SESSION['user_id'] ?? 0;
 $nama_user      = 'User';
 $foto_user      = '';
 $jabatan_user   = '';
+$nik_user       = '';
+$unit_user      = '';
 
 if ($user_id_logged) {
-    $_qUser = mysqli_query($conn, "SELECT nama_lengkap, photo, jabatan, AES_DECRYPT(username, 'bex') as uname FROM users WHERE id = $user_id_logged LIMIT 1");
+    $_qUser = mysqli_query($conn, "SELECT nama_lengkap, photo, jabatan, nik, unit_kerja, AES_DECRYPT(username, 'bex') as uname FROM users WHERE id = $user_id_logged LIMIT 1");
     if ($_rUser = mysqli_fetch_assoc($_qUser)) {
         // Use Full Name for display in header as requested
         $nama_user    = !empty($_rUser['nama_lengkap']) ? $_rUser['nama_lengkap'] : ($_rUser['uname'] ?? 'User');
         $foto_user    = !empty($_rUser['photo']) ? "images/" . $_rUser['photo'] : '';
         $jabatan_user = $_rUser['jabatan'] ?? '';
+        $nik_user     = $_rUser['nik'] ?? '';
+        $unit_user    = $_rUser['unit_kerja'] ?? '';
         
         // Persist to session for access in legacy components (like navbar.php)
         $_SESSION['nama_user']    = $nama_user;
         $_SESSION['foto_user']    = $foto_user;
         $_SESSION['jabatan_user'] = $jabatan_user;
+        $_SESSION['nik_user']     = $nik_user;
+        $_SESSION['unit_user']    = $unit_user;
     }
 }
 

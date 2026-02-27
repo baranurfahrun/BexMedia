@@ -6,6 +6,12 @@ date_default_timezone_set('Asia/Jakarta');
 $user_id = $_SESSION['user_id'];
 $current_file = basename(__FILE__);
 
+// 📌 SYNC STATE VIA AJAX
+if (isset($_POST['action']) && $_POST['action'] == 'save_state') {
+    if(isset($_POST['tab'])) $_SESSION['ba_tab'] = $_POST['tab'];
+    echo "OK"; exit;
+}
+
 // Cek akses menu
 $query = "SELECT 1 FROM akses_menu 
           JOIN menu ON akses_menu.menu_id = menu.id 
@@ -71,14 +77,20 @@ function get_query_string($exclude = []) {
     }
     return http_build_query($params);
 }
+
+// 📌 DETEKSI TAB AKTIF & CLEAN URL
+if (isset($_GET['tab'])) {
+    $_SESSION['ba_tab'] = $_GET['tab'];
+    $clean_url = "berita_acara_it.php?" . get_query_string(['tab']);
+    header("Location: $clean_url"); exit;
+}
+$active_tab = $_SESSION['ba_tab'] ?? 'hardware';
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <link rel="icon" href="../images/logo_final.png">
-    
-  
   <meta charset="UTF-8" />
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no" name="viewport" />
   <title>BexMedia - Berita Acara IT</title>
@@ -123,6 +135,34 @@ function get_query_string($exclude = []) {
       padding: 5px 10px;
       font-size: 12px;
     }
+
+    /* 💎 Premium Empty State */
+    .empty-state-custom {
+      padding: 60px 40px;
+      text-align: center;
+      background: #fdfdfd;
+      border: 1px dashed #e4e6fc;
+      border-radius: 10px;
+      margin: 20px 0;
+    }
+    .empty-state-custom i {
+      font-size: 70px;
+      color: #e4e6fc;
+      display: block;
+      margin-bottom: 25px;
+    }
+    .empty-state-custom h5 {
+      color: #6c757d;
+      font-weight: 700;
+      margin-bottom: 12px;
+      letter-spacing: 0.5px;
+    }
+    .empty-state-custom p { color: #abb1b6; font-size: 14px; }
+    
+    .tab-badge { margin-left:8px; background: rgba(0,0,0,0.08); padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; transition: all 0.3s; }
+    .nav-link.active .tab-badge { background: #ffa426; color: #fff; box-shadow: 0 2px 5px rgba(255, 164, 38, 0.3); }
+    .nav-tabs .nav-link { border-radius: 10px 10px 0 0; font-weight: 600; padding: 12px 20px; color: #6c757d; }
+    .nav-tabs .nav-link.active { color: #6777ef; border-bottom-color: #fff; }
   </style>
 </head>
 
@@ -132,7 +172,6 @@ function get_query_string($exclude = []) {
     <?php include 'navbar.php'; ?>
     <?php include 'sidebar.php'; ?>
 
-    
     <div class="main-content">
       <?php 
       $breadcrumb = "Technical Support / <strong>Berita Acara It</strong>";
@@ -141,47 +180,51 @@ function get_query_string($exclude = []) {
       <section class="section">
         <div class="section-body">
 
-          <div class="card">
+          <div class="card shadow-sm" style="border-radius: 15px;">
             <div class="card-header d-flex justify-content-between align-items-center">
               <h4><i class="fas fa-tools text-warning mr-2"></i>Data Berita Acara IT</h4>
 
              <form class="form-inline" method="GET" action="<?= $current_file ?>">
-  <div class="form-group mr-2">
-    <label for="start_date" class="mr-2 mb-0 font-weight-bold">Dari</label>
-    <input type="date" id="start_date" name="start_date" class="form-control" value="<?= htmlspecialchars($start_date) ?>" required />
-  </div>
-  <div class="form-group mr-2">
-    <label for="end_date" class="mr-2 mb-0 font-weight-bold">Sampai</label>
-    <input type="date" id="end_date" name="end_date" class="form-control" value="<?= htmlspecialchars($end_date) ?>" required />
-  </div>
-  <button type="submit" class="btn btn-primary mr-2"><i class="fas fa-filter"></i> Filter</button>
+                <div class="form-group mr-2">
+                  <label for="start_date" class="mr-2 mb-0 font-weight-bold">Dari</label>
+                  <input type="date" id="start_date" name="start_date" class="form-control" value="<?= htmlspecialchars($start_date) ?>" required />
+                </div>
+                <div class="form-group mr-2">
+                  <label for="end_date" class="mr-2 mb-0 font-weight-bold">Sampai</label>
+                  <input type="date" id="end_date" name="end_date" class="form-control" value="<?= htmlspecialchars($end_date) ?>" required />
+                </div>
+                <button type="submit" class="btn btn-primary mr-2 shadow-sm"><i class="fas fa-filter"></i> Filter</button>
 
-  <?php if ($start_date && $end_date): ?>
-    <a href="cetak_berita_acara_it.php?start_date=<?= urlencode($start_date) ?>&end_date=<?= urlencode($end_date) ?>" 
-       target="_blank" 
-       class="btn btn-success" 
-       title="Cetak Laporan Periode">
-      <i class="fas fa-print"></i> Cetak Laporan Periode
-    </a>
-  <?php endif; ?>
-</form>
-
+                <?php if ($start_date && $end_date): ?>
+                  <a href="cetak_berita_acara_it.php?start_date=<?= urlencode($start_date) ?>&end_date=<?= urlencode($end_date) ?>" 
+                     target="_blank" 
+                     class="btn btn-success shadow-sm" 
+                     title="Cetak Laporan Periode">
+                    <i class="fas fa-print"></i> Cetak Laporan Periode
+                  </a>
+                <?php endif; ?>
+              </form>
             </div>
 
             <div class="card-body">
               <ul class="nav nav-tabs" id="myTab" role="tablist">
                 <li class="nav-item">
-                  <a class="nav-link active" id="hardware-tab" data-toggle="tab" href="#hardware" role="tab">BA IT Hardware</a>
+                  <a class="nav-link <?= ($active_tab == 'hardware') ? 'active' : '' ?>" id="hardware-tab" data-toggle="tab" href="#hardware" role="tab">
+                    <i class="fas fa-microchip mr-2"></i>BA IT Hardware <span class="tab-badge"><?= $total_hardware ?></span>
+                  </a>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link" id="software-tab" data-toggle="tab" href="#software" role="tab">BA IT Software</a>
+                  <a class="nav-link <?= ($active_tab == 'software') ? 'active' : '' ?>" id="software-tab" data-toggle="tab" href="#software" role="tab">
+                    <i class="fas fa-desktop mr-2"></i>BA IT Software <span class="tab-badge"><?= $total_software ?></span>
+                  </a>
                 </li>
               </ul>
 
               <div class="tab-content mt-4" id="myTabContent">
 
                 <!-- BA IT Hardware Tab -->
-                <div class="tab-pane fade show active" id="hardware" role="tabpanel">
+                <div class="tab-pane fade <?= ($active_tab == 'hardware') ? 'show active' : '' ?>" id="hardware" role="tabpanel">
+                  <?php if(mysqli_num_rows($result_hardware) > 0): ?>
                   <div class="table-responsive-custom">
                     <table class="table table-bordered table-striped table-hover table-sm">
                       <thead>
@@ -205,13 +248,12 @@ function get_query_string($exclude = []) {
                       </thead>
                       <tbody>
                         <?php 
-                        if(mysqli_num_rows($result_hardware) > 0):
                           $no = $start_hardware + 1;
                           while($row = mysqli_fetch_assoc($result_hardware)): 
                         ?>
                           <tr>
                             <td class="text-center"><?= $no++; ?></td>
-                            <td><?= htmlspecialchars($row['nomor_ba']); ?></td>
+                            <td><strong><?= htmlspecialchars($row['nomor_ba']); ?></strong></td>
                             <td><?= htmlspecialchars($row['nomor_tiket']); ?></td>
                             <td><?= date('d-m-Y H:i', strtotime($row['tanggal'])); ?></td>
                             <td><?= htmlspecialchars($row['nik']); ?></td>
@@ -227,19 +269,13 @@ function get_query_string($exclude = []) {
                             <td class="text-center">
                               <a href="cetak_berita_acara.php?id=<?= $row['id'] ?>" 
                                  target="_blank" 
-                                 class="btn btn-info btn-sm btn-cetak" 
+                                 class="btn btn-info btn-sm btn-cetak shadow-sm" 
                                  title="Cetak BA">
                                 <i class="fas fa-print"></i> Cetak
                               </a>
                             </td>
                           </tr>
-                        <?php 
-                          endwhile;
-                        else: ?>
-                          <tr>
-                            <td colspan="15" class="text-center">Data berita acara hardware belum tersedia.</td>
-                          </tr>
-                        <?php endif; ?>
+                        <?php endwhile; ?>
                       </tbody>
                     </table>
                   </div>
@@ -257,31 +293,22 @@ function get_query_string($exclude = []) {
                             <span>&laquo;</span>
                           </a>
                         </li>
-
                         <?php
                         $start_page = max(1, $page_hardware - 2);
                         $end_page = min($total_pages_hardware, $page_hardware + 2);
-
                         if($start_page > 1): ?>
                           <li class="page-item"><a class="page-link" href="?<?= get_query_string(['page_hardware']) ?>&page_hardware=1">1</a></li>
-                          <?php if($start_page > 2): ?>
-                            <li class="page-item disabled"><span class="page-link">...</span></li>
-                          <?php endif;
+                          <?php if($start_page > 2): ?><li class="page-item disabled"><span class="page-link">...</span></li><?php endif;
                         endif;
-
                         for($i = $start_page; $i <= $end_page; $i++): ?>
                           <li class="page-item <?= ($i == $page_hardware) ? 'active' : '' ?>">
                             <a class="page-link" href="?<?= get_query_string(['page_hardware']) ?>&page_hardware=<?= $i ?>"><?= $i ?></a>
                           </li>
                         <?php endfor;
-
                         if($end_page < $total_pages_hardware): 
-                          if($end_page < $total_pages_hardware - 1): ?>
-                            <li class="page-item disabled"><span class="page-link">...</span></li>
-                          <?php endif; ?>
+                          if($end_page < $total_pages_hardware - 1): ?><li class="page-item disabled"><span class="page-link">...</span></li><?php endif; ?>
                           <li class="page-item"><a class="page-link" href="?<?= get_query_string(['page_hardware']) ?>&page_hardware=<?= $total_pages_hardware ?>"><?= $total_pages_hardware ?></a></li>
                         <?php endif; ?>
-
                         <li class="page-item <?= ($page_hardware >= $total_pages_hardware) ? 'disabled' : '' ?>">
                           <a class="page-link" href="?<?= get_query_string(['page_hardware']) ?>&page_hardware=<?= $page_hardware + 1 ?>">
                             <span>&raquo;</span>
@@ -291,10 +318,18 @@ function get_query_string($exclude = []) {
                     </nav>
                   </div>
                   <?php endif; ?>
+                  <?php else: ?>
+                    <div class="empty-state-custom">
+                       <i class="fas fa-folder-open"></i>
+                       <h5>Data Hardware Belum Ada</h5>
+                       <p>Wah, belum ada data berita acara hardware yang tercatat <?= ($start_date && $end_date) ? "pada periode ini" : "di sistem" ?>.</p>
+                    </div>
+                  <?php endif; ?>
                 </div>
 
                 <!-- BA IT Software Tab -->
-                <div class="tab-pane fade" id="software" role="tabpanel">
+                <div class="tab-pane fade <?= ($active_tab == 'software') ? 'show active' : '' ?>" id="software" role="tabpanel">
+                  <?php if(mysqli_num_rows($result_software) > 0): ?>
                   <div class="table-responsive-custom">
                     <table class="table table-bordered table-striped table-hover table-sm">
                       <thead>
@@ -318,13 +353,12 @@ function get_query_string($exclude = []) {
                       </thead>
                       <tbody>
                         <?php 
-                        if(mysqli_num_rows($result_software) > 0):
                           $no = $start_software + 1;
                           while($row = mysqli_fetch_assoc($result_software)): 
                         ?>
                           <tr>
                             <td class="text-center"><?= $no++; ?></td>
-                            <td><?= htmlspecialchars($row['nomor_ba']); ?></td>
+                            <td><strong><?= htmlspecialchars($row['nomor_ba']); ?></strong></td>
                             <td><?= htmlspecialchars($row['nomor_tiket']); ?></td>
                             <td><?= date('d-m-Y H:i', strtotime($row['tanggal'])); ?></td>
                             <td><?= htmlspecialchars($row['nik']); ?></td>
@@ -340,19 +374,13 @@ function get_query_string($exclude = []) {
                             <td class="text-center">
                               <a href="cetak_ba_software.php?id=<?= $row['id'] ?>" 
                                  target="_blank" 
-                                 class="btn btn-info btn-sm btn-cetak" 
+                                 class="btn btn-info btn-sm btn-cetak shadow-sm" 
                                  title="Cetak BA">
                                 <i class="fas fa-print"></i> Cetak
                               </a>
                             </td>
                           </tr>
-                        <?php 
-                          endwhile;
-                        else: ?>
-                          <tr>
-                            <td colspan="15" class="text-center">Data berita acara software belum tersedia.</td>
-                          </tr>
-                        <?php endif; ?>
+                        <?php endwhile; ?>
                       </tbody>
                     </table>
                   </div>
@@ -370,31 +398,22 @@ function get_query_string($exclude = []) {
                             <span>&laquo;</span>
                           </a>
                         </li>
-
                         <?php
                         $start_page = max(1, $page_software - 2);
                         $end_page = min($total_pages_software, $page_software + 2);
-
                         if($start_page > 1): ?>
                           <li class="page-item"><a class="page-link" href="?<?= get_query_string(['page_software']) ?>&page_software=1">1</a></li>
-                          <?php if($start_page > 2): ?>
-                            <li class="page-item disabled"><span class="page-link">...</span></li>
-                          <?php endif;
+                          <?php if($start_page > 2): ?><li class="page-item disabled"><span class="page-link">...</span></li><?php endif;
                         endif;
-
                         for($i = $start_page; $i <= $end_page; $i++): ?>
                           <li class="page-item <?= ($i == $page_software) ? 'active' : '' ?>">
                             <a class="page-link" href="?<?= get_query_string(['page_software']) ?>&page_software=<?= $i ?>"><?= $i ?></a>
                           </li>
                         <?php endfor;
-
                         if($end_page < $total_pages_software): 
-                          if($end_page < $total_pages_software - 1): ?>
-                            <li class="page-item disabled"><span class="page-link">...</span></li>
-                          <?php endif; ?>
+                          if($end_page < $total_pages_software - 1): ?><li class="page-item disabled"><span class="page-link">...</span></li><?php endif; ?>
                           <li class="page-item"><a class="page-link" href="?<?= get_query_string(['page_software']) ?>&page_software=<?= $total_pages_software ?>"><?= $total_pages_software ?></a></li>
                         <?php endif; ?>
-
                         <li class="page-item <?= ($page_software >= $total_pages_software) ? 'disabled' : '' ?>">
                           <a class="page-link" href="?<?= get_query_string(['page_software']) ?>&page_software=<?= $page_software + 1 ?>">
                             <span>&raquo;</span>
@@ -403,6 +422,13 @@ function get_query_string($exclude = []) {
                       </ul>
                     </nav>
                   </div>
+                  <?php endif; ?>
+                  <?php else: ?>
+                    <div class="empty-state-custom">
+                       <i class="fas fa-file-invoice"></i>
+                       <h5>Data Software Belum Ada</h5>
+                       <p>Wah, belum ada data berita acara software yang tercatat <?= ($start_date && $end_date) ? "pada periode ini" : "di sistem" ?>.</p>
+                    </div>
                   <?php endif; ?>
                 </div>
 
@@ -420,32 +446,27 @@ function get_query_string($exclude = []) {
 <script src="assets/modules/popper.js"></script>
 <script src="assets/modules/bootstrap/js/bootstrap.min.js"></script>
 <script src="assets/modules/nicescroll/jquery.nicescroll.min.js"></script>
-<script src="assets/modules/moment.min.js"></script>
 <script src="assets/js/stisla.js"></script>
 <script src="assets/js/scripts.js"></script>
-<script src="assets/js/custom.js"></script>
 
 <script>
-// Simpan tab aktif
-$('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-  localStorage.setItem('activeBATab', $(e.target).attr('href'));
-});
-
-// Restore tab aktif
 $(document).ready(function() {
-  var activeTab = localStorage.getItem('activeBATab');
-  if (activeTab) {
-    $('#myTab a[href="' + activeTab + '"]').tab('show');
-  }
+  // 💎 UNIVERSAL TAB PERSISTENCE 💎
+  $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+    var target = $(e.target).attr("href").replace('#', '');
+    $.post('berita_acara_it.php', { action: 'save_state', tab: target });
+    
+    // Sync URL history tanpa reload
+    var url = new URL(window.location.href);
+    url.searchParams.set('tab', target);
+    window.history.replaceState(null, null, url.href);
+  });
+
+  // Handle Active Tab via PHP Variable
+  var activeTab = "<?= $active_tab ?>";
+  $('#myTab a[href="#' + activeTab + '"]').tab('show');
 });
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
-

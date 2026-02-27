@@ -778,6 +778,17 @@ if(isset($_GET['page']) || isset($_GET['limit']) || isset($_GET['search'])) $act
           showConfirmButton: false
         });
     });
+    // Reset Form
+    $('button[type="reset"]').on('click', function() {
+        $('#no-barang-input-wrapper').hide();
+        $('#no-barang-display').show().text('<?= $next_no_barang ?>');
+        $('#is_manual').val('0');
+        $('#btn-apply-manual').hide();
+        $('#label-no-barang').text('Nomor Barang Otomatis (akan digenerate saat simpan):');
+        $('#btn-toggle-manual').html('<i class="fas fa-edit"></i> Atur Manual').removeClass('btn-secondary').addClass('btn-ice-blue');
+        $('#no_barang_manual').val('<?= $next_no_barang ?>');
+    });
+
     // 💎 UNIVERSAL TAB PERSISTENCE 💎
     $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
         var target = $(e.target).attr("href").replace('#', '');
