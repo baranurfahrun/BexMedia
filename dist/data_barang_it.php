@@ -23,29 +23,47 @@ function generateNoBarang($conn) {
   $query = "SELECT no_barang FROM data_barang_it ORDER BY id DESC LIMIT 1";
   $result = mysqli_query($conn, $query);
   
+  $suffix = "INV-IT"; // Default suffix
+  $tail = date('Y');  // Default tail (tahun)
+  
   if (mysqli_num_rows($result) > 0) {
     $row = mysqli_fetch_assoc($result);
     $last_no = $row['no_barang'];
     
-    // Ambil angka dari format 00001/INV-IT/2026
+    // Ambil angka, suffix, dan tail dari format: 00001/SUFFIX/TAIL
     $parts = explode('/', $last_no);
     $number = intval($parts[0]);
     $new_number = $number + 1;
+    
+    // Pakai suffix dari data terakhir (misal: INV-IT-tes)
+    if (isset($parts[1]) && !empty($parts[1])) {
+        $suffix = $parts[1];
+    }
+    
+    // Pakai tail dari data terakhir (misal: 2026565 atau 2026)
+    if (isset($parts[2]) && !empty($parts[2])) {
+        $tail = $parts[2];
+    }
   } else {
     // Jika belum ada data, mulai dari 1
     $new_number = 1;
   }
   
-  // Format: 00001/INV-IT/2026
-  $no_barang = sprintf("%05d", $new_number) . "/INV-IT/" . date('Y');
+  // Format: 00001/{SUFFIX}/{TAIL}
+  $no_barang = sprintf("%05d", $new_number) . "/" . $suffix . "/" . $tail;
   
   return $no_barang;
 }
 
 // ✅ Proses Simpan
 if (isset($_POST['simpan'])) {
-  // Auto generate nomor barang
-  $no_barang    = generateNoBarang($conn);
+  // Gunakan nomor manual jika flag manual aktif DAN input tidak kosong
+  if (isset($_POST['is_manual']) && $_POST['is_manual'] == '1' && !empty($_POST['no_barang_manual'])) {
+    $no_barang = mysqli_real_escape_string($conn, $_POST['no_barang_manual']);
+  } else {
+    // Mode otomatis
+    $no_barang = generateNoBarang($conn);
+  }
   
   $nama_barang  = mysqli_real_escape_string($conn, $_POST['nama_barang']);
   $kategori     = mysqli_real_escape_string($conn, $_POST['kategori']);
@@ -300,17 +318,34 @@ $rekap_kondisi = mysqli_query($conn, "
                 <!-- Input Barang -->
                 <div class="tab-pane fade <?php echo (!isset($_GET['page']) && !isset($_GET['limit']) && !isset($_GET['search']) && !isset($_SESSION['flash_message'])) ? 'show active' : ''; ?>" id="input" role="tabpanel">
                   
-                  <!-- Preview Nomor Barang Otomatis -->
-                  <div class="no-barang-preview">
-                    <div class="label">
-                      <i class="fas fa-barcode"></i> Nomor Barang Otomatis (akan digenerate saat simpan):
-                    </div>
-                    <div class="value">
-                      <?= $next_no_barang ?>
-                    </div>
-                  </div>
-
                   <form method="POST">
+                    <!-- Preview Nomor Barang Otomatis -->
+                    <div class="no-barang-preview">
+                      <input type="hidden" name="is_manual" id="is_manual" value="0">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <div class="w-100">
+                          <div class="label">
+                            <i class="fas fa-barcode"></i> <span id="label-no-barang">Nomor Barang Otomatis (akan digenerate saat simpan):</span>
+                          </div>
+                          <div id="no-barang-display" class="value">
+                            <?= $next_no_barang ?>
+                          </div>
+                          <div id="no-barang-input-wrapper" style="display:none;">
+                            <input type="text" name="no_barang_manual" id="no_barang_manual" class="form-control form-control-lg font-weight-bold text-primary" value="<?= $next_no_barang ?>" style="font-family: 'Courier New', monospace; letter-spacing: 1px; border: 2px solid #3498db;">
+                            <small class="text-muted mt-2 d-block"><i class="fas fa-info-circle"></i> Anda sedang dalam mode manual. Anda bisa mengubah nomor barang di atas.</small>
+                          </div>
+                        </div>
+                        <div class="text-nowrap ml-3 d-flex flex-column" style="gap: 5px;">
+                          <button type="button" id="btn-toggle-manual" class="btn btn-sm btn-ice-blue w-100">
+                            <i class="fas fa-edit"></i> Atur Manual
+                          </button>
+                          <button type="button" id="btn-apply-manual" class="btn btn-sm btn-success w-100" style="display:none;">
+                            <i class="fas fa-check"></i> Gunakan
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
                     <!-- No Barang dihapus karena auto generate -->
                     
                     <div class="form-row">
@@ -336,7 +371,7 @@ $rekap_kondisi = mysqli_query($conn, "
                       </div>
                       <div class="form-group col-md-4">
                         <label>Spesifikasi</label>
-                        <input type="text" name="merk" class="form-control" placeholder="Contoh: Intel Core i5, RAM 8GB">
+                        <input type="text" name="spesifikasi" class="form-control" placeholder="Contoh: Intel Core i5, RAM 8GB">
                       </div>
                       <div class="form-group col-md-4">
                         <label>IP Address</label>
@@ -623,8 +658,68 @@ $rekap_kondisi = mysqli_query($conn, "
       toast.fadeIn(300).delay(3000).fadeOut(500);
     }
 
-    // TIDAK PERLU auto-switch lagi karena sudah di-handle di PHP dengan class 'active'
-    // Tab sudah langsung render dengan benar tanpa flicker!
+    // Toggle Manual Nomor Barang
+    $('#btn-toggle-manual').on('click', function() {
+      var wrapper = $('#no-barang-input-wrapper');
+      var display = $('#no-barang-display');
+      var label = $('#label-no-barang');
+      var isManual = $('#is_manual');
+      var btn = $(this);
+      
+      if (wrapper.is(':hidden')) {
+        wrapper.show();
+        display.hide();
+        isManual.val('1');
+        label.text('Atur Nomor Barang Secara Manual:');
+        btn.html('<i class="fas fa-magic"></i> Pakai Otomatis');
+        btn.removeClass('btn-ice-blue').addClass('btn-secondary');
+        $('#btn-apply-manual').fadeIn();
+        $('#no_barang_manual').focus();
+      } else {
+        wrapper.hide();
+        display.show();
+        isManual.val('0');
+        label.text('Nomor Barang Otomatis (akan digenerate saat simpan):');
+        btn.html('<i class="fas fa-edit"></i> Atur Manual');
+        btn.removeClass('btn-secondary').addClass('btn-ice-blue');
+        $('#btn-apply-manual').hide();
+        $('#no_barang_manual').val('<?= $next_no_barang ?>');
+        $('#no-barang-display').text('<?= $next_no_barang ?>');
+      }
+    });
+
+    // Tombol Gunakan (Apply Manual) - HANYA UNTUK LOCK TAMPILAN, BUKAN SIMPAN DB
+    $('#btn-apply-manual').on('click', function() {
+        var manualVal = $('#no_barang_manual').val();
+        if (manualVal.trim() == '') {
+            alert('Nomor barang tidak boleh kosong!');
+            return;
+        }
+        $('#no-barang-display').text(manualVal).show();
+        $('#no-barang-input-wrapper').hide();
+        $('#btn-apply-manual').hide();
+        $('#btn-toggle-manual').html('<i class="fas fa-edit"></i> Ganti Format').removeClass('btn-secondary').addClass('btn-ice-blue');
+        
+        // Kasih notif kecil
+        Swal.fire({
+          icon: 'success',
+          title: 'Format Diterapkan',
+          text: 'Silakan isi data barang di bawah lalu klik Simpan Data Barang.',
+          timer: 2000,
+          showConfirmButton: false
+        });
+    });
+
+    // Reset Form
+    $('button[type="reset"]').on('click', function() {
+        $('#no-barang-input-wrapper').hide();
+        $('#no-barang-display').show().text('<?= $next_no_barang ?>');
+        $('#is_manual').val('0');
+        $('#btn-apply-manual').hide();
+        $('#label-no-barang').text('Nomor Barang Otomatis (akan digenerate saat simpan):');
+        $('#btn-toggle-manual').html('<i class="fas fa-edit"></i> Atur Manual').removeClass('btn-secondary').addClass('btn-ice-blue');
+        $('#no_barang_manual').val('<?= $next_no_barang ?>');
+    });
   });
 
   // Fungsi untuk mengubah limit data per halaman

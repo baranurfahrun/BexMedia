@@ -11,10 +11,12 @@ $id = intval($_GET['id']);
 $hapus = mysqli_query($conn, "DELETE FROM data_barang_ac WHERE id='$id'");
 
 if ($hapus) {
-    echo "<script>alert('Data berhasil dihapus'); window.location='barang_ac.php';</script>";
+    $_SESSION['flash_message'] = "✅ Data AC berhasil dihapus!";
 } else {
-    echo "<script>alert('Gagal menghapus data'); window.location='barang_ac.php';</script>";
+    $_SESSION['flash_message'] = "❌ Gagal menghapus data: " . mysqli_error($conn);
 }
+header("Location: data_barang_ac.php?tab=data");
+exit;
 ?>
 
 
