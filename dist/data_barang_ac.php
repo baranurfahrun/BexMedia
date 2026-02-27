@@ -19,8 +19,7 @@ if (isset($_POST['action']) && $_POST['action'] == 'save_state') {
     if(isset($_POST['format'])) $_SESSION['ac_format'] = $_POST['format'];
     if(isset($_POST['mode']))   $_SESSION['ac_mode']   = $_POST['mode'];
     if(isset($_POST['tab']))    $_SESSION['ac_tab']    = $_POST['tab'];
-    echo "OK";
-    exit;
+    echo "OK"; exit;
 }
 
 // 📌 GENERATOR KODE
@@ -67,16 +66,20 @@ if (isset($_POST['simpan'])) {
             VALUES ('$user_id', '$kode_ac', '$lokasi', '$merk', '$tipe', '$kapasitas', '$no_seri', '$tahun_beli', '$kondisi', '$status', '$keterangan', '$now')";
     if (mysqli_query($conn, $sql)) {
         $_SESSION['flash_message'] = "✅ Data AC berhasil disimpan dengan Kode: <strong>$kode_ac</strong>";
-        header("Location: data_barang_ac.php?tab=data"); exit;
+        $_SESSION['ac_tab'] = 'data'; 
+        header("Location: data_barang_ac.php"); exit;
     }
 }
 
 $lokasi_query = mysqli_query($conn, "SELECT nama_unit FROM unit_kerja ORDER BY nama_unit ASC");
 $data_ac_query = mysqli_query($conn, "SELECT * FROM data_barang_ac ORDER BY id DESC");
 $rekap_kondisi = mysqli_query($conn, "SELECT kondisi, COUNT(*) AS jumlah FROM data_barang_ac GROUP BY kondisi");
-// 📌 DETEKSI TAB AKTIF (Prioritas GET, lalu SESSION)
-$active_tab = $_GET['tab'] ?? $_SESSION['ac_tab'] ?? 'input';
-if (isset($_GET['tab'])) $_SESSION['ac_tab'] = $_GET['tab']; // Update session jika ada di GET
+// 📌 DETEKSI TAB AKTIF & CLEAN URL (PENTING: Cegah Poisoned Refresh)
+if (isset($_GET['tab'])) {
+    $_SESSION['ac_tab'] = $_GET['tab'];
+    header("Location: data_barang_ac.php"); exit;
+}
+$active_tab = $_SESSION['ac_tab'] ?? 'input';
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -95,6 +98,19 @@ if (isset($_GET['tab'])) $_SESSION['ac_tab'] = $_GET['tab']; // Update session j
     .no-barang-preview .value { font-size: 20px; font-weight: bold; color: #1976d2; font-family: 'Courier New', monospace; }
     .btn-ice-blue { background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); border: none; color: #fff; box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3); border-radius: 8px; font-weight: 600; transition: all 0.3s; }
     .btn-ice-blue:hover { background: linear-gradient(135deg, #2980b9 0%, #3498db 100%); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4); color: #fff; }
+    
+    /* 📊 Report Styling */
+    .stat-card { border: none !important; border-radius: 12px !important; transition: all 0.3s ease; position: relative; overflow: hidden; min-height: 110px; }
+    .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important; }
+    .stat-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 40px; opacity: 0.3; color: #fff; }
+    .stat-value { font-size: 24px; font-weight: 800; color: #fff !important; margin-top: 5px; }
+    .stat-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.8) !important; }
+    
+    /* Forced Colors */
+    .bg-stat-total { background: linear-gradient(135deg, #6777ef 0%, #394eea 100%) !important; }
+    .bg-stat-baik { background: linear-gradient(135deg, #47c363 0%, #32af4e 100%) !important; }
+    .bg-stat-servis { background: linear-gradient(135deg, #ffa426 0%, #f18c16 100%) !important; }
+    .bg-stat-rusak { background: linear-gradient(135deg, #fc544b 0%, #f03a30 100%) !important; }
   </style>
 </head>
 <body>
@@ -125,15 +141,17 @@ if (isset($_GET['tab'])) $_SESSION['ac_tab'] = $_GET['tab']; // Update session j
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="w-100">
                                 <div class="label"><i class="fas fa-barcode"></i> <span id="label-no-barang"><?= ($current_mode == 'manual') ? 'Atur Nomor Barang Secara Manual:' : 'Nomor Barang Otomatis (akan digenerate saat simpan):' ?></span></div>
-                                <div id="no-barang-display" class="value" style="<?= ($current_mode == 'manual' && isset($_SESSION['ac_format'])) ? '' : (($current_mode == 'manual') ? 'display:none;' : '') ?>"><?= $next_no_barang ?></div>
-                                <div id="no-barang-input-wrapper" style="display:none;">
+                                <div id="no-barang-display" class="value" style="<?= ($current_mode == 'manual') ? 'display:none;' : '' ?>"><?= $next_no_barang ?></div>
+                                <div id="no-barang-input-wrapper" style="<?= ($current_mode == 'manual') ? '' : 'display:none;' ?>">
                                     <input type="text" id="no_barang_manual_field" class="form-control form-control-lg font-weight-bold text-primary" value="<?= $next_no_barang ?>" style="font-family: 'Courier New', monospace; border: 2px solid #3498db;">
                                 </div>
                                 <input type="hidden" name="no_barang_final" id="no_barang_final" value="<?= $next_no_barang ?>">
                             </div>
                             <div class="text-nowrap ml-3 d-flex flex-column" style="gap: 5px;">
-                                <button type="button" id="btn-toggle-manual" class="btn btn-sm btn-ice-blue w-100"><i class="fas fa-edit"></i> <?= ($current_mode == 'manual') ? 'Ganti Format' : 'Atur Manual' ?></button>
-                                <button type="button" id="btn-apply-manual" class="btn btn-sm btn-success w-100" style="display:none;"><i class="fas fa-check"></i> Gunakan</button>
+                                <button type="button" id="btn-toggle-manual" class="btn btn-sm <?= ($current_mode == 'manual') ? 'btn-secondary' : 'btn-ice-blue' ?> w-100">
+                                    <i class="fas <?= ($current_mode == 'manual') ? 'fa-magic' : 'fa-edit' ?>"></i> <?= ($current_mode == 'manual') ? 'Pakai Otomatis' : 'Atur Manual' ?>
+                                </button>
+                                <button type="button" id="btn-apply-manual" class="btn btn-sm btn-success w-100" style="<?= ($current_mode == 'manual' && !isset($_SESSION['ac_format'])) ? '' : 'display:none;' ?>"><i class="fas fa-check"></i> Gunakan</button>
                             </div>
                         </div>
                     </div>
@@ -195,11 +213,90 @@ if (isset($_GET['tab'])) $_SESSION['ac_tab'] = $_GET['tab']; // Update session j
                   </div>
                 </div>
                 <div class="tab-pane fade <?= ($active_tab == 'laporan') ? 'show active' : '' ?>" id="laporan" role="tabpanel">
-                  <div class="card"><div class="card-header bg-success text-white"><h5>Rekap Kondisi</h5></div><div class="card-body"><ul class="list-group">
-                    <?php mysqli_data_seek($rekap_kondisi, 0); while($kon = mysqli_fetch_assoc($rekap_kondisi)): ?>
-                    <li class="list-group-item d-flex justify-content-between align-items-center"><?= $kon['kondisi'] ?> <span class="badge badge-success badge-pill"><?= $kon['jumlah'] ?></span></li>
-                    <?php endwhile; ?>
-                  </ul></div></div>
+                  <?php
+                    $total_ac = mysqli_num_rows($data_ac_query);
+                    $stats = ['Baik' => 0, 'Perlu Servis' => 0, 'Rusak Berat' => 0];
+                    mysqli_data_seek($rekap_kondisi, 0);
+                    while($row = mysqli_fetch_assoc($rekap_kondisi)) {
+                      $k = $row['kondisi'] ?: 'Belum Terdata';
+                      $stats[$k] = $row['jumlah'];
+                    }
+                  ?>
+                  <!-- 📊 Statistik Cards -->
+                  <div class="row">
+                    <!-- Total AC -->
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                      <div class="card" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%) !important; border: none !important; border-radius: 15px !important; position: relative; overflow: hidden; min-height: 115px; margin-bottom: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                        <div class="card-body p-4">
+                          <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: rgba(255,255,255,0.8) !important; margin-bottom: 5px;">Total Unit AC</div>
+                          <div style="font-size: 26px; font-weight: 800; color: #ffffff !important;"><?= $total_ac ?> <span style="font-size: 14px; font-weight: 400;">Unit</span></div>
+                          <div style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 45px; opacity: 0.2; color: #fff;"><i class="fas fa-wind"></i></div>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Baik -->
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                      <div class="card" style="background: linear-gradient(135deg, #47c363 0%, #32af4e 100%) !important; border: none !important; border-radius: 15px !important; position: relative; overflow: hidden; min-height: 115px; margin-bottom: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                        <div class="card-body p-4">
+                          <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: rgba(255,255,255,0.8) !important; margin-bottom: 5px;">Kondisi Baik</div>
+                          <div style="font-size: 26px; font-weight: 800; color: #ffffff !important;"><?= $stats['Baik'] ?> <span style="font-size: 14px; font-weight: 400;">Unit</span></div>
+                          <div style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 45px; opacity: 0.2; color: #fff;"><i class="fas fa-check-circle"></i></div>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Servis -->
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                      <div class="card" style="background: linear-gradient(135deg, #ffa426 0%, #f18c16 100%) !important; border: none !important; border-radius: 15px !important; position: relative; overflow: hidden; min-height: 115px; margin-bottom: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                        <div class="card-body p-4">
+                          <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: rgba(255,255,255,0.8) !important; margin-bottom: 5px;">Perlu Servis</div>
+                          <div style="font-size: 26px; font-weight: 800; color: #ffffff !important;"><?= $stats['Perlu Servis'] ?> <span style="font-size: 14px; font-weight: 400;">Unit</span></div>
+                          <div style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 45px; opacity: 0.2; color: #fff;"><i class="fas fa-tools"></i></div>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Rusak -->
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                      <div class="card" style="background: linear-gradient(135deg, #fc544b 0%, #f03a30 100%) !important; border: none !important; border-radius: 15px !important; position: relative; overflow: hidden; min-height: 115px; margin-bottom: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                        <div class="card-body p-4">
+                          <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: rgba(255,255,255,0.8) !important; margin-bottom: 5px;">Rusak Berat</div>
+                          <div style="font-size: 26px; font-weight: 800; color: #ffffff !important;"><?= $stats['Rusak Berat'] ?> <span style="font-size: 14px; font-weight: 400;">Unit</span></div>
+                          <div style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 45px; opacity: 0.2; color: #fff;"><i class="fas fa-exclamation-triangle"></i></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 📉 Visualisasi Data -->
+                  <div class="row mt-4">
+                    <div class="col-md-6">
+                      <div class="card">
+                        <div class="card-header bg-white"><h4><i class="fas fa-chart-pie text-primary"></i> Persentase Kondisi</h4></div>
+                        <div class="card-body" style="min-height: 350px;">
+                          <canvas id="kondisiChart"></canvas>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="card">
+                        <div class="card-header bg-white"><h4><i class="fas fa-list text-success"></i> Rincian Jumlah</h4></div>
+                        <div class="card-body p-0">
+                          <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                              <thead class="bg-light"><tr><th>Status Kondisi</th><th>Jumlah</th><th>Status</th></tr></thead>
+                              <tbody>
+                                <tr><td>Baik</td><td><?= $stats['Baik'] ?></td><td><span class="badge badge-success">Optimal</span></td></tr>
+                                <tr><td>Perlu Servis</td><td><?= $stats['Perlu Servis'] ?></td><td><span class="badge badge-warning">Waspada</span></td></tr>
+                                <tr><td>Rusak Berat</td><td><?= $stats['Rusak Berat'] ?></td><td><span class="badge badge-danger">Kritis</span></td></tr>
+                                <?php if(isset($stats['Belum Terdata'])): ?>
+                                <tr><td>Belum Terdata</td><td><?= $stats['Belum Terdata'] ?></td><td><span class="badge badge-secondary">N/A</span></td></tr>
+                                <?php endif; ?>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -250,8 +347,9 @@ if (isset($_GET['tab'])) $_SESSION['ac_tab'] = $_GET['tab']; // Update session j
 <script src="assets/modules/jquery.min.js"></script>
 <script src="assets/modules/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script src="assets/modules/nicescroll/jquery.nicescroll.min.js"></script>
-<!-- 💎 SWEETALERT2 FOR PREMIUM POPUPS 💎 -->
+<!-- 💎 SWEETALERT2 & CHART.JS 💎 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="assets/js/stisla.js"></script>
 <script src="assets/js/scripts.js"></script>
 <script>
@@ -336,7 +434,7 @@ $(function(){
             text: r,
             confirmButtonColor: '#3498db'
         }).then(() => {
-            window.location.href = 'data_barang_ac.php?tab=data';
+            location.reload();
         });
     });
   });
@@ -361,23 +459,38 @@ $(function(){
       });
   });
 
-  // 💎 SMART TAB PERSISTENCE (AJAX + SESSION) 💎
+  // 💎 UNIVERSAL TAB PERSISTENCE 💎
   $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
       var target = $(e.target).attr("href").replace('#', '');
-      
-      // Simpan ke Session via AJAX agar saat refresh tetap di tab ini
       $.post('data_barang_ac.php', { action: 'save_state', tab: target });
-      
-      // Update URL tanpa reload (opsional tapi bagus buat bookmark)
-      var url = new URL(window.location.href);
-      url.searchParams.set('tab', target);
-      window.history.replaceState(null, null, url.href);
   });
 
   $('button[type="reset"]').on('click', function() {
       $('#no-barang-input-wrapper').hide(); $('#no-barang-display').show();
       $('#label-no-barang').text('Nomor Barang Otomatis (akan digenerate saat simpan):');
       $('#btn-toggle-manual').html('<i class="fas fa-edit"></i> Atur Manual').removeClass('btn-secondary').addClass('btn-ice-blue');
+  });
+
+  // 📉 INITIALIZE CHART
+  var ctx = document.getElementById('kondisiChart').getContext('2d');
+  new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+          labels: ['Baik', 'Perlu Servis', 'Rusak Berat'<?= isset($stats['Belum Terdata']) ? ", 'Belum Terdata'" : "" ?>],
+          datasets: [{
+              data: [<?= $stats['Baik'] ?>, <?= $stats['Perlu Servis'] ?>, <?= $stats['Rusak Berat'] ?><?= isset($stats['Belum Terdata']) ? ", ".$stats['Belum Terdata'] : "" ?>],
+              backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#6c757d'],
+              hoverOffset: 10
+          }]
+      },
+      options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+              legend: { position: 'bottom' }
+          },
+          cutout: '70%'
+      }
   });
 });
 </script>

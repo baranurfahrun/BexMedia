@@ -7,6 +7,12 @@ $user_id = $_SESSION['user_id'];
 
 $current_file = basename(__FILE__); // 
 
+// 📌 SYNC STATE VIA AJAX
+if (isset($_POST['action']) && $_POST['action'] == 'save_state') {
+    if(isset($_POST['tab'])) $_SESSION['it_tab'] = $_POST['tab'];
+    echo "OK"; exit;
+}
+
 // Cek apakah user boleh mengakses halaman ini
 $query = "SELECT 1 FROM akses_menu 
           JOIN menu ON akses_menu.menu_id = menu.id 
@@ -135,6 +141,15 @@ $rekap_kondisi = mysqli_query($conn, "
   FROM data_barang_it 
   GROUP BY kondisi
 ");
+
+// 📌 DETEKSI TAB AKTIF & CLEAN URL
+if (isset($_GET['tab'])) {
+    $_SESSION['it_tab'] = $_GET['tab'];
+    header("Location: data_barang_it.php"); exit;
+}
+$active_tab = $_SESSION['it_tab'] ?? 'input';
+// Override active tab jika ada pencarian/pagination
+if(isset($_GET['page']) || isset($_GET['limit']) || isset($_GET['search'])) $active_tab = 'data';
 ?>
 
 <!DOCTYPE html>
@@ -262,13 +277,13 @@ $rekap_kondisi = mysqli_query($conn, "
   }
 
   .btn-ice-blue:hover {
-    background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
-    transform: translateY(-2px);
     box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
     color: #fff;
   }
 
-
+  /* 📊 Report Styling */
+  .stat-card { border: none !important; border-radius: 12px !important; transition: all 0.3s ease; position: relative; overflow: hidden; min-height: 110px; }
+  .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important; }
 </style>
 
 </head>
@@ -300,15 +315,15 @@ $rekap_kondisi = mysqli_query($conn, "
             </div>
             <div class="card-body">
               <!-- Nav tabs -->
-           <ul class="nav nav-tabs" id="dataTab" role="tablist">
+            <ul class="nav nav-tabs" id="dataTab" role="tablist">
   <li class="nav-item">
-    <a class="nav-link <?php echo (!isset($_GET['page']) && !isset($_GET['limit']) && !isset($_GET['search']) && !isset($_SESSION['flash_message'])) ? 'active' : ''; ?>" id="input-tab" data-toggle="tab" href="#input" role="tab">Input Barang</a>
+    <a class="nav-link <?= ($active_tab == 'input') ? 'active' : '' ?>" id="input-tab" data-toggle="tab" href="#input" role="tab">Input Barang</a>
   </li>
   <li class="nav-item">
-    <a class="nav-link <?php echo (isset($_GET['page']) || isset($_GET['limit']) || isset($_GET['search']) || isset($_SESSION['flash_message'])) ? 'active' : ''; ?>" id="data-tab" data-toggle="tab" href="#data" role="tab">Data Barang</a>
+    <a class="nav-link <?= ($active_tab == 'data') ? 'active' : '' ?>" id="data-tab" data-toggle="tab" href="#data" role="tab">Data Barang</a>
   </li>
   <li class="nav-item">
-    <a class="nav-link" id="laporan-tab" data-toggle="tab" href="#laporan" role="tab">Laporan</a>
+    <a class="nav-link <?= ($active_tab == 'laporan') ? 'active' : '' ?>" id="laporan-tab" data-toggle="tab" href="#laporan" role="tab">Laporan</a>
   </li>
 </ul>
 
@@ -316,7 +331,7 @@ $rekap_kondisi = mysqli_query($conn, "
               <!-- Tab panes -->
               <div class="tab-content mt-3">
                 <!-- Input Barang -->
-                <div class="tab-pane fade <?php echo (!isset($_GET['page']) && !isset($_GET['limit']) && !isset($_GET['search']) && !isset($_SESSION['flash_message'])) ? 'show active' : ''; ?>" id="input" role="tabpanel">
+                <div class="tab-pane fade <?= ($active_tab == 'input') ? 'show active' : '' ?>" id="input" role="tabpanel">
                   
                   <form method="POST">
                     <!-- Preview Nomor Barang Otomatis -->
@@ -416,7 +431,7 @@ $rekap_kondisi = mysqli_query($conn, "
                 </div>
 
                 <!-- Data Barang -->
-                <div class="tab-pane fade <?php echo (isset($_GET['page']) || isset($_GET['limit']) || isset($_GET['search']) || isset($_SESSION['flash_message'])) ? 'show active' : ''; ?>" id="data" role="tabpanel">
+                <div class="tab-pane fade <?= ($active_tab == 'data') ? 'show active' : '' ?>" id="data" role="tabpanel">
                   
                   <!-- Search & Actions -->
                   <div class="row mb-3">
@@ -590,42 +605,94 @@ $rekap_kondisi = mysqli_query($conn, "
 
 
                 <!-- Tab Laporan -->
-<div class="tab-pane fade" id="laporan" role="tabpanel">
+<div class="tab-pane fade <?= ($active_tab == 'laporan') ? 'show active' : '' ?>" id="laporan" role="tabpanel">
+  <?php
+    $stats_kondisi = ['Baik' => 0, 'Rusak Ringan' => 0, 'Rusak Berat' => 0];
+    mysqli_data_seek($rekap_kondisi, 0);
+    while($row = mysqli_fetch_assoc($rekap_kondisi)) {
+      $k = $row['kondisi'] ?: 'Belum Terdata';
+      $stats_kondisi[$k] = $row['jumlah'];
+    }
+  ?>
+  <!-- 📊 Statistik Cards -->
   <div class="row">
-    <div class="col-md-6">
-      <div class="card">
-        <div class="card-header bg-primary text-white">
-          <h5 class="mb-0">Rekap per Kategori</h5>
-        </div>
-        <div class="card-body">
-          <ul class="list-group">
-            <?php mysqli_data_seek($rekap_kategori, 0); ?>
-            <?php while ($kat = mysqli_fetch_assoc($rekap_kategori)) : ?>
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <?= htmlspecialchars($kat['kategori']) ?>
-                <span class="badge badge-primary badge-pill"><?= $kat['jumlah'] ?></span>
-              </li>
-            <?php endwhile; ?>
-          </ul>
+    <!-- Total IT -->
+    <div class="col-lg-3 col-md-6 col-sm-6">
+      <div class="card" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%) !important; border: none !important; border-radius: 15px !important; position: relative; overflow: hidden; min-height: 115px; margin-bottom: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+        <div class="card-body p-4">
+          <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: rgba(255,255,255,0.8) !important; margin-bottom: 5px;">Total Barang IT</div>
+          <div style="font-size: 26px; font-weight: 800; color: #ffffff !important;"><?= $total_data ?> <span style="font-size: 14px; font-weight: 400;">Unit</span></div>
+          <div style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 45px; opacity: 0.2; color: #fff;"><i class="fas fa-desktop"></i></div>
         </div>
       </div>
     </div>
-
-    <div class="col-md-6">
-      <div class="card">
-        <div class="card-header bg-success text-white">
-          <h5 class="mb-0">Rekap per Kondisi</h5>
+    <!-- Baik -->
+    <div class="col-lg-3 col-md-6 col-sm-6">
+      <div class="card" style="background: linear-gradient(135deg, #47c363 0%, #32af4e 100%) !important; border: none !important; border-radius: 15px !important; position: relative; overflow: hidden; min-height: 115px; margin-bottom: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+        <div class="card-body p-4">
+          <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: rgba(255,255,255,0.8) !important; margin-bottom: 5px;">Kondisi Baik</div>
+          <div style="font-size: 26px; font-weight: 800; color: #ffffff !important;"><?= $stats_kondisi['Baik'] ?> <span style="font-size: 14px; font-weight: 400;">Unit</span></div>
+          <div style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 45px; opacity: 0.2; color: #fff;"><i class="fas fa-check-circle"></i></div>
         </div>
-        <div class="card-body">
-          <ul class="list-group">
-            <?php mysqli_data_seek($rekap_kondisi, 0); ?>
-            <?php while ($kon = mysqli_fetch_assoc($rekap_kondisi)) : ?>
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <?= htmlspecialchars($kon['kondisi']) ?>
-                <span class="badge badge-success badge-pill"><?= $kon['jumlah'] ?></span>
-              </li>
-            <?php endwhile; ?>
-          </ul>
+      </div>
+    </div>
+    <!-- Rusak Ringan -->
+    <div class="col-lg-3 col-md-6 col-sm-6">
+      <div class="card" style="background: linear-gradient(135deg, #ffa426 0%, #f18c16 100%) !important; border: none !important; border-radius: 15px !important; position: relative; overflow: hidden; min-height: 115px; margin-bottom: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+        <div class="card-body p-4">
+          <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: rgba(255,255,255,0.8) !important; margin-bottom: 5px;">Rusak Ringan</div>
+          <div style="font-size: 26px; font-weight: 800; color: #ffffff !important;"><?= $stats_kondisi['Rusak Ringan'] ?> <span style="font-size: 14px; font-weight: 400;">Unit</span></div>
+          <div style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 45px; opacity: 0.2; color: #fff;"><i class="fas fa-tools"></i></div>
+        </div>
+      </div>
+    </div>
+    <!-- Rusak Berat -->
+    <div class="col-lg-3 col-md-6 col-sm-6">
+      <div class="card" style="background: linear-gradient(135deg, #fc544b 0%, #f03a30 100%) !important; border: none !important; border-radius: 15px !important; position: relative; overflow: hidden; min-height: 115px; margin-bottom: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+        <div class="card-body p-4">
+          <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: rgba(255,255,255,0.8) !important; margin-bottom: 5px;">Rusak Berat</div>
+          <div style="font-size: 26px; font-weight: 800; color: #ffffff !important;"><?= $stats_kondisi['Rusak Berat'] ?> <span style="font-size: 14px; font-weight: 400;">Unit</span></div>
+          <div style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 45px; opacity: 0.2; color: #fff;"><i class="fas fa-exclamation-triangle"></i></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 📉 Visualisasi Data (Chart) -->
+  <div class="row mt-2">
+    <div class="col-md-7">
+      <div class="card">
+        <div class="card-header bg-white"><h4><i class="fas fa-chart-pie text-primary"></i> Sebaran Kategori Barang</h4></div>
+        <div class="card-body" style="min-height: 380px;">
+          <canvas id="itCategoryChart"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-5">
+      <div class="card">
+        <div class="card-header bg-white"><h4><i class="fas fa-list text-success"></i> Rincian Kategori</h4></div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="bg-light"><tr><th>Kategori</th><th>Jumlah</th><th>Porsi</th></tr></thead>
+              <tbody>
+                <?php 
+                  $cat_labels = []; $cat_counts = [];
+                  mysqli_data_seek($rekap_kategori, 0); 
+                  while($kat = mysqli_fetch_assoc($rekap_kategori)): 
+                    $cat_labels[] = $kat['kategori'];
+                    $cat_counts[] = $kat['jumlah'];
+                    $porsi = ($total_data > 0) ? round(($kat['jumlah'] / $total_data) * 100, 1) : 0;
+                ?>
+                <tr>
+                  <td><strong><?= htmlspecialchars($kat['kategori']) ?></strong></td>
+                  <td><?= $kat['jumlah'] ?> Unit</td>
+                  <td><span class="badge badge-info"><?= $porsi ?>%</span></td>
+                </tr>
+                <?php endwhile; ?>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -646,6 +713,8 @@ $rekap_kondisi = mysqli_query($conn, "
   <script src="assets/modules/popper.js"></script>
   <script src="assets/modules/bootstrap/js/bootstrap.min.js"></script>
   <script src="assets/modules/nicescroll/jquery.nicescroll.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="assets/modules/moment.min.js"></script>
   <script src="assets/js/stisla.js"></script>
   <script src="assets/js/scripts.js"></script>
@@ -709,17 +778,35 @@ $rekap_kondisi = mysqli_query($conn, "
           showConfirmButton: false
         });
     });
-
-    // Reset Form
-    $('button[type="reset"]').on('click', function() {
-        $('#no-barang-input-wrapper').hide();
-        $('#no-barang-display').show().text('<?= $next_no_barang ?>');
-        $('#is_manual').val('0');
-        $('#btn-apply-manual').hide();
-        $('#label-no-barang').text('Nomor Barang Otomatis (akan digenerate saat simpan):');
-        $('#btn-toggle-manual').html('<i class="fas fa-edit"></i> Atur Manual').removeClass('btn-secondary').addClass('btn-ice-blue');
-        $('#no_barang_manual').val('<?= $next_no_barang ?>');
+    // 💎 UNIVERSAL TAB PERSISTENCE 💎
+    $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+        var target = $(e.target).attr("href").replace('#', '');
+        $.post('data_barang_it.php', { action: 'save_state', tab: target });
     });
+
+    // 📉 INITIALIZE IT CHART
+    var itCtx = document.getElementById('itCategoryChart').getContext('2d');
+    if (itCtx) {
+        new Chart(itCtx, {
+            type: 'doughnut',
+            data: {
+                labels: <?= json_encode($cat_labels) ?>,
+                datasets: [{
+                    data: <?= json_encode($cat_counts) ?>,
+                    backgroundColor: ['#6777ef', '#ffa426', '#47c363', '#3498db', '#fc544b'],
+                    hoverOffset: 15
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                },
+                cutout: '65%'
+            }
+        });
+    }
   });
 
   // Fungsi untuk mengubah limit data per halaman
