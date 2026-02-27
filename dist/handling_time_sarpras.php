@@ -89,6 +89,26 @@ function hitungDurasi($mulai, $selesai) {
       background-color: #000 !important;
       color: #fff !important;
     }
+
+    /* Custom Nav Tabs Ice Blue */
+    .nav-tabs {
+      border-bottom: 2px solid #ebeefd;
+    }
+    .nav-tabs .nav-item .nav-link {
+      color: #78828a;
+      font-weight: 600;
+      border: none;
+      padding: 10px 20px;
+    }
+    .nav-tabs .nav-item .nav-link.active {
+      color: #3498db !important;
+      background: transparent;
+      border-bottom: 3px solid #3498db;
+    }
+    .nav-tabs .nav-item .nav-link:hover {
+      color: #3498db;
+      border: none;
+    }
   </style>
 </head>
 <body>

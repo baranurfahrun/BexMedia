@@ -107,6 +107,11 @@ if (isset($_POST['simpan'])) {
             }
         }
 
+        if (isset($_POST['ajax'])) {
+            echo json_encode(['status' => 'success', 'nomor_tiket' => $nomor_tiket]);
+            exit;
+        }
+
         echo "
         <html>
         <head>

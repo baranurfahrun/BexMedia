@@ -34,6 +34,44 @@ $userData = mysqli_fetch_assoc($queryUser);
   <link rel="stylesheet" href="assets/modules/fontawesome/css/all.min.css">
   <link rel="stylesheet" href="assets/css/style.css">
   <link rel="stylesheet" href="assets/css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    .swal2-popup {
+        font-family: 'Outfit', sans-serif !important;
+        border-radius: 24px !important;
+        padding: 2em !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(10px) !important;
+    }
+    .swal2-title {
+        color: #0B192E !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.02em !important;
+    }
+    .swal2-html-container {
+        color: #475569 !important;
+        line-height: 1.6 !important;
+    }
+    .swal2-confirm {
+        background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%) !important;
+        border-radius: 12px !important;
+        padding: 12px 30px !important;
+        font-weight: 600 !important;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3) !important;
+    }
+    .sr-number {
+        display: inline-block;
+        background: #F1F5F9;
+        padding: 8px 16px;
+        border-radius: 8px;
+        color: #3B82F6;
+        font-weight: 700;
+        margin-top: 10px;
+        border: 1px solid #E2E8F0;
+        letter-spacing: 0.05em;
+    }
+  </style>
 
   <style>
     .table thead th {
@@ -48,6 +86,43 @@ $userData = mysqli_fetch_assoc($queryUser);
     .table-responsive-custom {
       width: 100%;
       overflow-x: auto;
+    }
+
+    /* Custom Ice Blue Button */
+    .btn-ice-blue {
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+      border: none;
+      color: #fff !important;
+      box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+      border-radius: 8px;
+      padding: 10px 25px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .btn-ice-blue:hover {
+      background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+    }
+
+    /* Custom Nav Tabs Ice Blue */
+    .nav-tabs {
+      border-bottom: 2px solid #ebeefd;
+    }
+    .nav-tabs .nav-item .nav-link {
+      color: #78828a;
+      font-weight: 600;
+      border: none;
+      padding: 10px 20px;
+    }
+    .nav-tabs .nav-item .nav-link.active {
+      color: #3498db !important;
+      background: transparent;
+      border-bottom: 3px solid #3498db;
+    }
+    .nav-tabs .nav-item .nav-link:hover {
+      color: #3498db;
     }
   </style>
 </head>
@@ -86,7 +161,9 @@ $userData = mysqli_fetch_assoc($queryUser);
 
                 <!-- =================== FORM ORDER =================== -->
                 <div class="tab-pane fade show active" id="order" role="tabpanel">
-                  <form method="POST" action="simpan_tiket_sarpras.php">
+                  <form method="POST" action="simpan_tiket_sarpras.php" id="form-order-sarpras">
+                    <input type="hidden" name="ajax" value="1">
+                    <input type="hidden" name="simpan" value="1">
                     <div class="row">
                       <div class="form-group col-md-3">
                         <label>NIK</label>
@@ -146,7 +223,7 @@ $userData = mysqli_fetch_assoc($queryUser);
                         <textarea name="kendala" class="form-control" rows="3" placeholder="Tuliskan kendala atau permintaan..." required></textarea>
                       </div>
                     </div>
-                    <button type="submit" name="simpan" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Submit Request</button>
+                    <button type="submit" name="simpan" class="btn btn-ice-blue"><i class="fas fa-paper-plane"></i> Submit Request</button>
                   </form>
                 </div>
 
@@ -192,15 +269,28 @@ if (mysqli_num_rows($queryTiket) > 0) {
     // Tombol validasi/tolak tetap ada
     $statusLower = strtolower($row['status']);
     $validasiLower = strtolower($row['status_validasi']);
-    if (($statusLower == 'selesai' || $statusLower == 'tidak bisa diperbaiki') && $validasiLower == 'belum validasi') {
+
+    if ($validasiLower == 'belum validasi') {
       echo "
-      <form method='POST' action='validasi_tiket_sarpras.php' style='display:inline-block;'>
+      <div class='d-flex gap-1'>
+        <form method='POST' action='validasi_tiket_sarpras.php' class='form-validasi' style='display:inline-block; margin-right: 5px;'>
+          <input type='hidden' name='tiket_id' value='{$row['id']}'>
+          <input type='hidden' name='ajax' value='1'>
+          <button type='submit' name='validasi' class='btn btn-success btn-sm'>Terima</button>
+        </form>
+        <form method='POST' action='validasi_tiket_sarpras.php' class='form-validasi' style='display:inline-block;'>
+          <input type='hidden' name='tiket_id' value='{$row['id']}'>
+          <input type='hidden' name='ajax' value='1'>
+          <button type='submit' name='tolak' class='btn btn-danger btn-sm'>Tolak</button>
+        </form>
+      </div>";
+    } elseif ($validasiLower == 'diterima' && $statusLower == 'diproses') {
+      echo "
+      <form method='POST' action='selesai_tiket.php' class='form-selesai'>
         <input type='hidden' name='tiket_id' value='{$row['id']}'>
-        <button type='submit' name='validasi' class='btn btn-success btn-sm' title='Validasi'><i class='fas fa-check'></i></button>
-      </form>
-      <form method='POST' action='validasi_tiket_sarpras.php' style='display:inline-block;'>
-        <input type='hidden' name='tiket_id' value='{$row['id']}'>
-        <button type='submit' name='tolak' class='btn btn-danger btn-sm' title='Tolak'><i class='fas fa-times'></i></button>
+        <input type='hidden' name='tipe' value='sarpras'>
+        <input type='hidden' name='ajax' value='1'>
+        <button type='submit' class='btn btn-primary btn-sm w-100'><i class='fas fa-check-double'></i> Selesai</button>
       </form>";
     } else {
       echo "-";
@@ -210,7 +300,7 @@ if (mysqli_num_rows($queryTiket) > 0) {
 
     // Tambah kolom Cetak Tiket
     echo "<td class='text-center'>
-      <a href='cetak_tiket_sarpras.php?id={$row['id']}' target='_blank' class='btn btn-primary btn-sm' title='Print Request'>
+      <a href='cetak_tiket_sarpras.php?id={$row['id']}' target='_blank' class='btn btn-ice-blue btn-sm' title='Print Request'>
         <i class='fas fa-print'></i>
       </a>
     </td>";
@@ -258,6 +348,7 @@ function validasiColor($status_validasi) {
 
 <!-- JS -->
 <script src="assets/modules/jquery.min.js"></script>
+<script src="assets/modules/sweetalert/sweetalert.min.js"></script>
 <script src="assets/modules/popper.js"></script>
 <script src="assets/modules/bootstrap/js/bootstrap.min.js"></script>
 <script src="assets/modules/nicescroll/jquery.nicescroll.min.js"></script>
@@ -266,5 +357,140 @@ function validasiColor($status_validasi) {
 <script src="assets/js/scripts.js"></script>
 <script src="assets/js/custom.js"></script>
 
+<!-- Script auto-tab -->
+<script>
+  $(document).ready(function() {
+    var hash = window.location.hash;
+    if (hash) {
+      $('.nav-tabs a[href="' + hash + '"]').tab('show');
+    }
+
+    // AJAX Selesai Tiket
+    $('.form-selesai').on('submit', function(e) {
+      e.preventDefault();
+      var form = $(this);
+      
+      swal({
+        title: "Konfirmasi Selesai?",
+        text: "Pastikan pengerjaan sudah benar-benar tuntas sebelum menandai Selesai.",
+        icon: "warning",
+        buttons: ["Batal", "Ya, Selesai!"],
+        dangerMode: true,
+      }).then((confirm) => {
+        if (confirm) {
+          $.ajax({
+            type: "POST",
+            url: form.attr('action'),
+            data: form.serialize(),
+            success: function(response) {
+              if(response.trim() == "success") {
+                swal("Berhasil!", "Tiket telah ditandai sebagai Selesai.", "success")
+                .then(() => {
+                  window.location.hash = 'tiket-saya';
+                  location.reload();
+                });
+              } else {
+                swal("Gagal!", "Gagal memperbarui status tiket.", "error");
+              }
+            },
+            error: function() {
+              swal("Error!", "Terjadi kesalahan sistem.", "error");
+            }
+          });
+        }
+      });
+    });
+
+    // AJAX Validasi Tiket
+    $('.form-validasi').on('submit', function(e) {
+      e.preventDefault();
+      var form = $(this);
+      var btn = form.find('button[type="submit"]');
+      var actionName = btn.attr('name') == 'validasi' ? 'Terima' : 'Tolak';
+      
+      swal({
+        title: "Konfirmasi " + actionName + "?",
+        text: "Anda akan melakukan validasi " + actionName + " pada tiket ini.",
+        icon: "info",
+        buttons: ["Batal", "Ya, Lanjutkan!"],
+      }).then((confirm) => {
+        if (confirm) {
+          // Tambahkan name as data since serialize() doesn't include the clicked button name
+          var formData = form.serialize() + '&' + btn.attr('name') + '=1';
+          
+          $.ajax({
+            type: "POST",
+            url: form.attr('action'),
+            data: formData,
+            success: function(response) {
+              if(response.trim() == "success") {
+                swal("Berhasil!", "Tiket berhasil divalidasi.", "success")
+                .then(() => {
+                  window.location.hash = 'tiket-saya';
+                  location.reload();
+                });
+              } else {
+                swal("Gagal!", response, "error");
+              }
+            },
+            error: function() {
+              swal("Error!", "Terjadi kesalahan sistem.", "error");
+            }
+          });
+        }
+      });
+    });
+
+    // AJAX Submit Tiket Sarpras
+    $('#form-order-sarpras').on('submit', function(e) {
+      e.preventDefault();
+      var form = $(this);
+      
+      Swal.fire({
+        title: 'Submit Request?',
+        text: 'Pastikan data yang diisi sudah benar.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Kirim!',
+        cancelButtonText: 'Batal'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          Swal.fire({
+            title: 'Memproses...',
+            text: 'Mohon tunggu sebentar.',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+          });
+
+          $.ajax({
+            type: "POST",
+            url: form.attr('action'),
+            data: form.serialize(),
+            dataType: "json",
+            success: function(response) {
+              if(response.status == "success") {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'SUCCESS!',
+                    html: 'Sarpras Service Request berhasil disimpan & dikirim ke Telegram & WA.<br><div class="sr-number">' + response.nomor_tiket + '</div>',
+                    confirmButtonText: 'OKE MANTAP!',
+                    allowOutsideClick: false
+                }).then(() => {
+                    window.location.hash = 'tiket-saya';
+                    location.reload();
+                });
+              } else {
+                Swal.fire("Gagal!", response.message || "Terjadi kesalahan.", "error");
+              }
+            },
+            error: function() {
+              Swal.fire("Error!", "Terjadi kesalahan sistem.", "error");
+            }
+          });
+        }
+      });
+    });
+  });
+</script>
 </body>
 </html>

@@ -13,9 +13,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $status = 'Ditolak';
   }
 
+  $status_utama = ($status == 'Diterima') ? 'Diproses' : 'Ditolak';
+
   // Proses update status validasi dan waktu validasi
   $update = mysqli_query($conn, "UPDATE tiket_it_hardware 
-    SET status_validasi = '$status', waktu_validasi = '$waktu_validasi' 
+    SET status_validasi = '$status', 
+        status = '$status_utama',
+        waktu_validasi = '$waktu_validasi' 
     WHERE id = $tiket_id");
 
   // Kirim notifikasi ke Telegram jika update berhasil
@@ -74,7 +78,36 @@ $pesan .= "⏰ Waktu: $waktu_validasi";
     }
   }
 
-  header("Location: order_tiket_it_hardware.php");
+  if (isset($_POST['ajax'])) {
+    echo $update ? "success" : "Gagal: " . mysqli_error($conn);
+    exit;
+  }
+
+  if ($update) {
+    echo "
+    <html>
+    <head>
+      <script src='assets/modules/jquery.min.js'></script>
+      <script src='assets/modules/sweetalert/sweetalert.min.js'></script>
+    </head>
+    <body style='font-family: \"Inter\", sans-serif;'>
+      <script>
+        $(document).ready(function() {
+          swal({
+            title: 'Berhasil!',
+            text: 'Tiket hardware berhasil divalidasi ($status) & notifikasi terkirim.',
+            icon: 'success',
+            button: 'Mantap',
+          }).then(function() {
+            window.location.href = 'order_tiket_it_hardware.php#tiket-saya';
+          });
+        });
+      </script>
+    </body>
+    </html>";
+  } else {
+    echo "<script>alert('Gagal: " . mysqli_error($conn) . "'); window.history.back();</script>";
+  }
   exit;
 }
 ?>

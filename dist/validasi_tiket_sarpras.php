@@ -16,8 +16,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    $status_utama = ($status == 'Diterima') ? 'Diproses' : 'Ditolak';
+
     $update = mysqli_query($conn, "UPDATE tiket_sarpras 
-        SET status_validasi = '$status', waktu_validasi = '$now' 
+        SET status_validasi = '$status', 
+            status = '$status_utama',
+            waktu_validasi = '$now' 
         WHERE id = '$tiket_id'");
 
     if ($update) {
@@ -64,9 +68,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 curl_close($ch);
             }
         }
-        echo "<script>alert('Tiket berhasil divalidasi ($status) & notifikasi terkirim.'); window.location.href='order_tiket_sarpras.php';</script>";
+        if (isset($_POST['ajax'])) {
+            echo "success";
+            exit;
+        }
+
+        echo "
+        <html>
+        <head>
+          <script src='assets/modules/jquery.min.js'></script>
+          <script src='assets/modules/sweetalert/sweetalert.min.js'></script>
+        </head>
+        <body style='font-family: \"Inter\", sans-serif;'>
+          <script>
+            $(document).ready(function() {
+              swal({
+                title: 'Berhasil!',
+                text: 'Tiket sarpras berhasil divalidasi ($status) & notifikasi terkirim.',
+                icon: 'success',
+                button: 'Mantap',
+              }).then(function() {
+                window.location.href = 'order_tiket_sarpras.php#tiket-saya';
+              });
+            });
+          </script>
+        </body>
+        </html>";
     } else {
-        echo "<script>alert('Gagal validasi tiket: " . mysqli_error($conn) . "'); window.history.back();</script>";
+        echo "<script>alert('Gagal: " . mysqli_error($conn) . "'); window.history.back();</script>";
     }
 } else {
     echo "<script>alert('Akses tidak valid.'); window.location.href='order_tiket_sarpras.php';</script>";

@@ -93,6 +93,25 @@ function is_group_active($files) {
         height: 18px;
         stroke-width: 2px;
     }
+
+    /* Active Sidebar Styles - Ice Blue */
+    .nav-item.active {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%) !important;
+        color: white !important;
+        box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2) !important;
+    }
+
+    .dropdown-item.active {
+        color: #3498db !important;
+        background-color: rgba(52, 152, 219, 0.1) !important;
+        font-weight: 700 !important;
+        padding-left: 22px !important;
+    }
+
+    .dropdown-item.active::before {
+        width: 4px !important;
+        background: #3498db !important;
+    }
 </style>
 <aside>
     <div class="logo-section">
@@ -137,19 +156,19 @@ function is_group_active($files) {
                 <i data-lucide="chevron-down"></i>
             </div>
             <div class="dropdown-content">
-                <a href="order_tiket_it_software.php" class="dropdown-item">Software Service Request</a>
-                <a href="order_tiket_it_hardware.php" class="dropdown-item">Hardware Service Request</a>
-                <a href="order_tiket_sarpras.php" class="dropdown-item">Sarpras Service Request</a>
-                <a href="handling_time.php" class="dropdown-item">Handling Time IT</a>
-                <a href="maintenance_rutin.php" class="dropdown-item">Maintenance Rutin</a>
-                <a href="data_barang_it.php" class="dropdown-item">Inventaris Aset IT</a>
-                <a href="data_barang_ac.php" class="dropdown-item">Inventaris Aset Sarpras</a>
-                <a href="berita_acara_it.php" class="dropdown-item">Berita Acara Kerusakan</a>
-                <a href="off_duty.php" class="dropdown-item">Off-Duty Request</a>
-                <a href="data_off_duty.php" class="dropdown-item">Data Off-Duty</a>
-                <a href="acc_edit_data.php" class="dropdown-item">ACC Edit Data</a>
-                <a href="spo_it.php" class="dropdown-item">SPO IT Departemen</a>
-                <a href="koneksi_bridging.php" class="dropdown-item">Koneksi Bridging</a>
+                <a href="order_tiket_it_software.php" class="dropdown-item <?php echo ($current_page == 'order_tiket_it_software.php') ? 'active' : ''; ?>">Software Service Request</a>
+                <a href="order_tiket_it_hardware.php" class="dropdown-item <?php echo ($current_page == 'order_tiket_it_hardware.php') ? 'active' : ''; ?>">Hardware Service Request</a>
+                <a href="order_tiket_sarpras.php" class="dropdown-item <?php echo ($current_page == 'order_tiket_sarpras.php') ? 'active' : ''; ?>">Sarpras Service Request</a>
+                <a href="handling_time.php" class="dropdown-item <?php echo in_array($current_page, ['handling_time.php', 'handling_time_software.php', 'handling_time_hardware_pdf.php', 'handling_time_software_pdf.php', 'handling_time_sarpras.php', 'handling_time_sarpras_pdf.php']) ? 'active' : ''; ?>">Handling Time Support</a>
+                <a href="maintenance_rutin.php" class="dropdown-item <?php echo ($current_page == 'maintenance_rutin.php') ? 'active' : ''; ?>">Maintenance Rutin</a>
+                <a href="data_barang_it.php" class="dropdown-item <?php echo ($current_page == 'data_barang_it.php') ? 'active' : ''; ?>">Inventaris Aset IT</a>
+                <a href="data_barang_ac.php" class="dropdown-item <?php echo ($current_page == 'data_barang_ac.php') ? 'active' : ''; ?>">Inventaris Aset Sarpras</a>
+                <a href="berita_acara_it.php" class="dropdown-item <?php echo ($current_page == 'berita_acara_it.php') ? 'active' : ''; ?>">Berita Acara Kerusakan</a>
+                <a href="off_duty.php" class="dropdown-item <?php echo ($current_page == 'off_duty.php') ? 'active' : ''; ?>">Off-Duty Request</a>
+                <a href="data_off_duty.php" class="dropdown-item <?php echo ($current_page == 'data_off_duty.php') ? 'active' : ''; ?>">Data Off-Duty</a>
+                <a href="acc_edit_data.php" class="dropdown-item <?php echo ($current_page == 'acc_edit_data.php') ? 'active' : ''; ?>">ACC Edit Data</a>
+                <a href="spo_it.php" class="dropdown-item <?php echo ($current_page == 'spo_it.php') ? 'active' : ''; ?>">SPO IT Departemen</a>
+                <a href="koneksi_bridging.php" class="dropdown-item <?php echo ($current_page == 'koneksi_bridging.php') ? 'active' : ''; ?>">Koneksi Bridging</a>
             </div>
         </div>
 
