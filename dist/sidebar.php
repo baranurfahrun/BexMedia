@@ -173,6 +173,27 @@ function is_group_active($files) {
     .btn-bio:hover { background: #bae6fd; transform: translateY(-2px); }
     .btn-tte-info { background: #f0fdf4; color: #15803d; }
     .btn-tte-info:hover { background: #dcfce7; transform: translateY(-2px); }
+
+    /* 🧊 Sidebar Active State - Soft Ice Blue Premium */
+    .nav-item.active, .dropdown-item.active {
+        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3) !important;
+        border-radius: 12px !important;
+        position: relative;
+    }
+
+    .nav-item.active i, .dropdown-item.active i,
+    .nav-item.active svg, .dropdown-item.active svg {
+        color: #ffffff !important;
+        stroke: #ffffff !important;
+    }
+
+    /* Remove indicator for active dropdown items */
+    .dropdown-item.active::before {
+        display: none !important;
+    }
 </style>
 <aside>
     <div class="logo-section">
@@ -233,7 +254,7 @@ function is_group_active($files) {
                 <?php if (in_array('izin_keluar.php', $allowed_files)): ?><a href="izin_keluar.php" class="dropdown-item">Izin Keluar Kantor</a><?php endif; ?>
                 <?php if (in_array('izin_pulang_cepat.php', $allowed_files)): ?><a href="izin_pulang_cepat.php" class="dropdown-item">Izin Pulang Cepat</a><?php endif; ?>
                 <?php if (in_array('ganti_jadwal_dinas.php', $allowed_files)): ?><a href="ganti_jadwal_dinas.php" class="dropdown-item <?php echo ($current_page == 'ganti_jadwal_dinas.php') ? 'active' : ''; ?>">Ganti Jadwal Dinas</a><?php endif; ?>
-                <?php if (in_array('off_duty.php', $allowed_files)): ?><a href="off_duty.php" class="dropdown-item">Off-Duty Request</a><?php endif; ?>
+                <?php if (in_array('off_duty.php', $allowed_files)): ?><a href="off_duty.php" class="dropdown-item <?php echo ($current_page == 'off_duty.php') ? 'active' : ''; ?>">Off-Duty Request</a><?php endif; ?>
                 <?php if (in_array('lembur.php', $allowed_files)): ?><a href="lembur.php" class="dropdown-item">Lembur Request</a><?php endif; ?>
                 <?php if (in_array('edit_data_simrs.php', $allowed_files)): ?><a href="edit_data_simrs.php" class="dropdown-item">Request Edit SIMRS</a><?php endif; ?>
                 <?php if (in_array('hapus_data.php', $allowed_files)): ?><a href="hapus_data.php" class="dropdown-item">Request Hapus SIMRS</a><?php endif; ?>

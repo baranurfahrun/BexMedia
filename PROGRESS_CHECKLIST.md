@@ -28,16 +28,24 @@ Berikut adalah daftar menu dan fitur yang telah dikerjakan/diperbaiki dalam sesi
 
 ---
 
-## � Module Ganti Jadwal Dinas
+## 🟢 Module Ganti Jadwal Dinas
 - [x] **Premium UI/UX**: Revamp `ganti_jadwal_dinas.php` dengan desain Premium & Layout seimbang.
-- [x] **Multi-Stage Approval**: Implementasi alur konfirmasi (Rekan Pengganti -> Atasan -> HRD).
-- [x] **Approval Pages**: Pembuatan halaman `data_ganti_jadwal_pengganti.php`, `atasan.php`, dan `hrd.php`.
+- [x] **Multi-Stage Approval**: Implementasi alur konfirmasi (Rekan Pengganti -> Atasan -> HRD) **FIXED**.
+- [x] **Approval Pages**: Pembuatan halaman `data_ganti_jadwal_pengganti.php`, `data_ganti_jadwal_atasan.php`, dan `data_ganti_jadwal_hrd.php`.
 - [x] **Premium Cetak System**: Revamp `cetak_ganti_jadwal.php` menjadi format HTML (A4 Portrait) dengan TTE & QR Code.
-- [x] **Sidebar Integration**: Penambahan menu approval baru di sidebar.
+- [x] **Sidebar Integration**: Penambahan menu approval baru di sidebar dengan status active Ice Blue.
 
 ---
 
-## �🟡 Module Umum & Security
+## � Module Off-Duty Request
+- [x] **Premium UI/UX**: Revamp `off_duty.php` dengan tema Soft Ice Blue **FIXED**.
+- [x] **Tab System**: Implementasi sistem tab "Form Laporan" & "Laporan Saya".
+- [x] **Database & Logic**: Pengecekan tabel database dan alur simpan data (Fix nama_lengkap).
+- [x] **Monitoring Page**: Sinkronisasi halaman `data_off_duty.php` (Command Center) dengan tema Ice Blue.
+
+---
+
+## 🟡 Module Umum & Security
 - [x] **Global Soft Ice Blue Theme**: Implementasi tema premium "Soft Ice Blue" secara global (index.css & custom.css).
 - [x] **Premium Sidebar Active**: Refactor status menu aktif di sidebar menggunakan gradasi Ice Blue & Auto-Detection Script.
 - [x] **Standardization UI**: Sinkronisasi modul IT Software, IT Hardware, dan Sarpras ke tema Soft Ice Blue.

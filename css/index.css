@@ -179,10 +179,22 @@ aside {
     color: var(--text-main);
 }
 
-.nav-item.active {
-    background: var(--grad-premium);
-    color: white;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+/* Sidebar Sidebar Active State - Soft Ice Blue Premium */
+.nav-item.active,
+.dropdown-item.active {
+    background: var(--grad-premium) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 15px rgba(14, 165, 233, 0.25) !important;
+    border-radius: 12px !important;
+}
+
+.nav-item.active i,
+.dropdown-item.active i,
+.nav-item.active svg,
+.dropdown-item.active svg {
+    color: #ffffff !important;
+    stroke: #ffffff !important;
 }
 
 .sidebar-bottom {
@@ -282,9 +294,14 @@ aside {
 }
 
 .dropdown-item.active {
-    color: var(--ice-3) !important;
-    font-weight: 700;
-    background: rgba(59, 130, 246, 0.08);
+    background: var(--grad-premium) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+/* Remove indicator dot/border when active to keep it clean */
+.dropdown-item.active::before {
+    display: none !important;
 }
 
 /* Main Content Styling */

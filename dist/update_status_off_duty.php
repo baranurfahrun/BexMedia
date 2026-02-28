@@ -1,4 +1,5 @@
 <?php
+session_start();
 include 'security.php'; 
 include 'koneksi.php';
 date_default_timezone_set('Asia/Jakarta');
@@ -8,7 +9,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $status_validasi = $_POST['status_validasi'];
     $catatan_it = mysqli_real_escape_string($conn, $_POST['catatan_it']);
 
-    // Ambil user ID dari session sebagai validator
     $validator_id = $_SESSION['user_id'];
     $tanggal_validasi = date("Y-m-d H:i:s");
 
@@ -20,24 +20,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               WHERE id = $id";
 
     if (mysqli_query($conn, $query)) {
-        echo "<script>
-            alert('Status berhasil diperbarui.');
-            window.location.href='data_off_duty.php';
-        </script>";
+        $_SESSION['flash_message'] = "success:Status Off-Duty berhasil diperbarui.";
+        header("Location: data_off_duty.php");
+        exit;
     } else {
-        echo "<script>
-            alert('Gagal memperbarui status.');
-            window.history.back();
-        </script>";
+        $error = addslashes(mysqli_error($conn));
+        $_SESSION['flash_message'] = "error:Gagal memperbarui status: $error";
+        header("Location: data_off_duty.php");
+        exit;
     }
 } else {
     header("Location: data_off_duty.php");
     exit;
 }
-
-
-
-
-
-
-
+?>
