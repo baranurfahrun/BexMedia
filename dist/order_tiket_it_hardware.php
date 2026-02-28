@@ -36,6 +36,7 @@ $keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
   <link rel="stylesheet" href="assets/modules/fontawesome/css/all.min.css" />
   <link rel="stylesheet" href="assets/css/style.css" />
   <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/custom.css" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700&display=swap" rel="stylesheet">
   <style>
@@ -96,23 +97,6 @@ $keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
       color: #fff !important;
     }
 
-    /* Custom Ice Blue Button */
-    .btn-ice-blue {
-      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-      border: none;
-      color: #fff !important;
-      box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
-      border-radius: 8px;
-      padding: 10px 25px;
-      font-weight: 600;
-      transition: all 0.3s;
-    }
-
-    .btn-ice-blue:hover {
-      background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
-    }
 
     /* Custom Nav Tabs Ice Blue */
     .nav-tabs {
@@ -218,7 +202,7 @@ $keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
                         <textarea name="kendala" class="form-control" rows="3" required></textarea>
                       </div>
                     </div>
-                    <button type="submit" name="simpan" class="btn btn-ice-blue">Submit Request</button>
+                    <button type="submit" name="simpan" class="btn-ice">Submit Request</button>
                   </form>
                 </div>
 

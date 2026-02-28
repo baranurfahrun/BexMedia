@@ -56,7 +56,7 @@ if (isset($_GET['aksi'], $_GET['id'])) {
 
 // === Ambil data pengajuan cuti ===
 $sqlPengajuan = "
-  SELECT p.*, u.nama AS nama_karyawan, mc.nama_cuti, d.nama AS nama_delegasi,
+  SELECT p.*, u.nama_lengkap AS nama_karyawan, mc.nama_cuti, d.nama_lengkap AS nama_delegasi,
          p.acc_delegasi_by, p.acc_delegasi_time,
          GROUP_CONCAT(DATE_FORMAT(pc.tanggal,'%d-%m-%Y') ORDER BY pc.tanggal SEPARATOR ', ') AS tanggal_cuti
   FROM pengajuan_cuti p

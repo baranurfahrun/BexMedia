@@ -21,7 +21,7 @@ if (!$res || mysqli_num_rows($res) == 0) {
 
 // Ambil data master cuti & user untuk dropdown
 $masterCuti = mysqli_query($conn, "SELECT * FROM master_cuti ORDER BY nama_cuti ASC");
-$users      = mysqli_query($conn, "SELECT id, nama FROM users ORDER BY nama ASC");
+$users      = mysqli_query($conn, "SELECT id, nama_lengkap FROM users ORDER BY nama_lengkap ASC");
 
 // Proses Simpan Data (insert atau update jika sudah ada jatah untuk tahun/cuti/karyawan)
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan'])) {
@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan'])) {
 }
 
 // Ambil Data Jatah Cuti untuk Tabel (tampilkan sisa_hari)
-$dataJatah = mysqli_query($conn, "SELECT jatah_cuti.*, users.nama, master_cuti.nama_cuti
+$dataJatah = mysqli_query($conn, "SELECT jatah_cuti.*, users.nama_lengkap, master_cuti.nama_cuti
                                    FROM jatah_cuti
                                    JOIN users ON jatah_cuti.karyawan_id = users.id
                                    JOIN master_cuti ON jatah_cuti.cuti_id = master_cuti.id
@@ -92,6 +92,7 @@ $dataJatah = mysqli_query($conn, "SELECT jatah_cuti.*, users.nama, master_cuti.n
   <link rel="stylesheet" href="assets/modules/fontawesome/css/all.min.css">
   <link rel="stylesheet" href="assets/css/style.css">
   <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/custom.css">
   <style>
     .cuti-table { font-size: 13px; white-space: nowrap; }
     .cuti-table th, .cuti-table td { padding: 6px 10px; vertical-align: middle; }
@@ -150,7 +151,7 @@ $dataJatah = mysqli_query($conn, "SELECT jatah_cuti.*, users.nama, master_cuti.n
                       <select name="user_id" id="user_id" class="form-control" required>
                         <option value="">-- Pilih Karyawan --</option>
                         <?php mysqli_data_seek($users, 0); while($u = mysqli_fetch_assoc($users)): ?>
-                          <option value="<?= $u['id'] ?>"><?= htmlspecialchars($u['nama']) ?></option>
+                          <option value="<?= $u['id'] ?>"><?= htmlspecialchars($u['nama_lengkap']) ?></option>
                         <?php endwhile; ?>
                       </select>
                     </div>
@@ -169,7 +170,7 @@ $dataJatah = mysqli_query($conn, "SELECT jatah_cuti.*, users.nama, master_cuti.n
 
                     <div class="form-group">
                       <label for="lama_hari">Lama Hari</label>
-                      <input type="number" name="lama_hari" id="lama_hari" class="form-control" readonly required>
+                      <input type="number" name="lama_hari" id="lama_hari" class="form-control" required placeholder="Contoh: 12">
                     </div>
 
                     <div class="form-group">
@@ -177,7 +178,7 @@ $dataJatah = mysqli_query($conn, "SELECT jatah_cuti.*, users.nama, master_cuti.n
                       <input type="number" name="tahun" id="tahun" value="<?= date('Y') ?>" class="form-control" required>
                     </div>
 
-                    <button type="submit" name="simpan" class="btn btn-primary">
+                    <button type="submit" name="simpan" class="btn-ice">
                       <i class="fas fa-save"></i> Simpan
                     </button>
                   </form>
@@ -203,7 +204,7 @@ $dataJatah = mysqli_query($conn, "SELECT jatah_cuti.*, users.nama, master_cuti.n
                         while ($row = mysqli_fetch_assoc($dataJatah)): ?>
                           <tr>
                             <td><?= $no++ ?></td>
-                            <td><?= htmlspecialchars($row['nama']) ?></td>
+                            <td><?= htmlspecialchars($row['nama_lengkap']) ?></td>
                             <td><?= htmlspecialchars($row['nama_cuti']) ?></td>
                             <td><?= (int)$row['lama_hari'] ?> hari</td>
                             <td><?= isset($row['sisa_hari']) ? (int)$row['sisa_hari'] . ' hari' : '-'; ?></td>

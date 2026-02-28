@@ -91,12 +91,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan'])) {
                  '$lama_hari','$alasan',
                  'Menunggu Delegasi','Menunggu','Menunggu','Menunggu',
                  NULL,NULL,NULL)";
-      mysqli_query($conn, $sql);
+      if(!mysqli_query($conn, $sql)) throw new Exception(mysqli_error($conn));
       $pengajuan_id = mysqli_insert_id($conn);
 
       foreach ($tanggalArray as $tgl) {
         $tgl = mysqli_real_escape_string($conn, $tgl);
-        mysqli_query($conn, "INSERT INTO pengajuan_cuti_detail (pengajuan_id, tanggal) VALUES ('$pengajuan_id','$tgl')");
+        if(!mysqli_query($conn, "INSERT INTO pengajuan_cuti_detail (pengajuan_id, tanggal) VALUES ('$pengajuan_id','$tgl')")) {
+          throw new Exception(mysqli_error($conn));
+        }
       }
 
       mysqli_commit($conn);
@@ -156,6 +158,7 @@ $dataPengajuan = mysqli_query($conn, "
   <link rel="stylesheet" href="assets/modules/fontawesome/css/all.min.css">
   <link rel="stylesheet" href="assets/css/style.css">
   <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/custom.css">
   <style>
     .cuti-table { font-size: 13px; white-space: nowrap; }
     .cuti-table th, .cuti-table td { padding: 6px 10px; vertical-align: middle; }
@@ -241,39 +244,67 @@ $dataPengajuan = mysqli_query($conn, "
           <?php endwhile; ?>
         </select>
       </div>
+      <div class="form-group mb-0">
+        <label for="alasan" class="font-weight-bold" style="font-size: 0.85rem;">Alasan Pengajuan</label>
+        <textarea name="alasan" id="alasan" class="form-control" required placeholder="Tuliskan alasan atau keperluan cuti..." style="height: 145px;"></textarea>
+      </div>
     </div>
-
-    <!-- Kolom Kanan -->
     <div class="col-md-6">
-      <label for="tanggal">Tanggal Cuti</label>
-      <div id="tanggal-wrapper">
-        <div class="input-group mb-2">
-          <input type="date" name="tanggal[]" class="form-control" required>
+      <div class="card mb-3 border-primary shadow-sm" style="border-radius: 12px; overflow: hidden;">
+        <div class="card-header py-2 px-3 bg-light d-flex justify-content-between align-items-center" style="border-bottom: 1px solid #e2e8f0;">
+          <h6 class="text-primary mb-0" style="font-size: 0.85rem;"><i class="fas fa-calendar-check"></i> Pilih Rentang Pengajuan</h6>
+        </div>
+        <div class="card-body p-3">
+          <div class="row">
+            <div class="col-sm-6">
+              <div class="form-group mb-2">
+                <small class="text-muted font-weight-bold">Mulai Tanggal</small>
+                <input type="date" id="rangeMulai" class="form-control form-control-sm">
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <div class="form-group mb-2">
+                <small class="text-muted font-weight-bold">Sampai Tanggal</small>
+                <input type="date" id="rangeSampai" class="form-control form-control-sm">
+              </div>
+            </div>
+          </div>
+          <button type="button" id="btnApplyRange" class="btn-ice btn-sm btn-block mt-2" style="height: 38px;">
+            <i class="fas fa-magic"></i> Terapkan Rentang
+          </button>
+        </div>
+      </div>
+
+      <label class="mb-2 d-flex justify-content-between align-items-center">
+        <span class="font-weight-bold" style="font-size: 0.85rem;">Daftar Tanggal Terpilih</span>
+        <button type="button" id="btnAddTanggal" class="btn btn-outline-success btn-xs">
+          <i class="fas fa-plus"></i> Manual
+        </button>
+      </label>
+      
+      <div id="tanggal-wrapper" class="date-tag-wrapper">
+        <!-- Chips will appear here -->
+        <div class="text-muted w-100 text-center py-2 empty-msg" style="font-size: 0.75rem; font-style: italic;">Belum ada tanggal dipilih</div>
+      </div>
+
+      <div class="form-group mt-3">
+        <label for="lama_hari" class="font-weight-bold" style="font-size: 0.85rem;">Total Pengajuan</label>
+        <div class="input-group">
+          <input type="number" name="lama_hari" id="lama_hari" class="form-control font-weight-bold text-primary" readonly required style="background: #eff6ff; font-size: 1.1rem; border: 2px solid #3b82f6;">
           <div class="input-group-append">
-            <button type="button" class="btn btn-danger btn-remove-tanggal">&times;</button>
+            <span class="input-group-text bg-primary text-white border-primary">Hari</span>
           </div>
         </div>
       </div>
-      <button type="button" id="btnAddTanggal" class="btn btn-success btn-sm mb-3">
-        + Tambah Tanggal
-      </button>
-
-      <div class="form-group">
-        <label for="lama_hari">Jumlah Hari</label>
-        <input type="number" name="lama_hari" id="lama_hari" class="form-control" readonly required>
-      </div>
     </div>
   </div>
 
-  <!-- Full width -->
-  <div class="form-group">
-    <label for="alasan">Alasan</label>
-    <textarea name="alasan" id="alasan" class="form-control" required></textarea>
-  </div>
 
-  <button type="submit" name="simpan" class="btn btn-primary">
-    <i class="fas fa-paper-plane"></i> Ajukan
-  </button>
+  <div class="text-right mt-3">
+    <button type="submit" name="simpan" class="btn-ice">
+      <i class="fas fa-paper-plane"></i> Ajukan Cuti Sekarang
+    </button>
+  </div>
 </form>
 
                 </div>
@@ -439,24 +470,63 @@ $dataPengajuan = mysqli_query($conn, "
     $("#flashMsg").fadeOut("slow");
   }, 3000);
 
-  // Tambah input tanggal baru
+  // Tambah input tanggal manual (Premium SweetAlert2)
   $("#btnAddTanggal").click(function() {
-    var html = `
-      <div class="input-group mb-2">
-        <input type="date" name="tanggal[]" class="form-control" required>
-        <div class="input-group-append">
-          <button type="button" class="btn btn-danger btn-remove-tanggal">&times;</button>
-        </div>
-      </div>`;
-    $("#tanggal-wrapper").append(html);
+    Swal.fire({
+      title: 'Pilih Tanggal Manual',
+      html: '<input type="date" id="swal-date" class="form-control">',
+      showCancelButton: true,
+      confirmButtonText: 'Tambah',
+      cancelButtonText: 'Batal',
+      confirmButtonColor: '#3B82F6',
+      preConfirm: () => {
+        const date = Swal.getPopup().querySelector('#swal-date').value;
+        if (!date) {
+          Swal.showValidationMessage(`Pilih tanggal dulu bro!`);
+        }
+        return date;
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        addDateChip(result.value);
+      }
+    });
+  });
+
+  // Hapus chip tanggal
+  $(document).on("click", ".btn-remove-date", function() {
+    $(this).closest(".date-chip").remove();
+    if ($(".date-chip").length === 0) {
+      $("#tanggal-wrapper").append('<div class="text-muted w-100 text-center py-2 empty-msg" style="font-size: 0.75rem; font-style: italic;">Belum ada tanggal dipilih</div>');
+    }
     updateJumlahHari();
   });
 
-  // Hapus input tanggal
-  $(document).on("click", ".btn-remove-tanggal", function() {
-    $(this).closest(".input-group").remove();
+  function addDateChip(dateStr) {
+    if (!dateStr) return;
+    $(".empty-msg").remove();
+
+    // Cek duplikat
+    var exists = false;
+    $("input[name='tanggal[]']").each(function() {
+      if ($(this).val() === dateStr) exists = true;
+    });
+    if (exists) return;
+
+    // Formatting tanggal untuk tampilan
+    var d = new Date(dateStr);
+    var options = { day: '2-digit', month: 'short', year: 'numeric' };
+    var label = d.toLocaleDateString('id-ID', options);
+
+    var html = `
+      <div class="date-chip">
+        ${label}
+        <input type="hidden" name="tanggal[]" value="${dateStr}">
+        <button type="button" class="btn-remove-date">&times;</button>
+      </div>`;
+    $("#tanggal-wrapper").append(html);
     updateJumlahHari();
-  });
+  }
 
   // Hitung lama hari otomatis
   $(document).on("change", "input[name='tanggal[]']", function() {
@@ -469,6 +539,51 @@ $dataPengajuan = mysqli_query($conn, "
     }).length;
     $("#lama_hari").val(count);
   }
+
+  // --- Fitur Auto-Fill Rentang Tanggal ---
+  $("#btnApplyRange").click(function() {
+    var start = $("#rangeMulai").val();
+    var end = $("#rangeSampai").val();
+    
+    if (!start || !end) {
+      Swal.fire('Oops!', 'Pilih tanggal mulai & sampai dulu bro!', 'warning');
+      return;
+    }
+
+    var startDate = new Date(start);
+    var endDate = new Date(end);
+
+    if (endDate < startDate) {
+      Swal.fire('Eits!', 'Tanggal sampai gak boleh mendahului tanggal mulai!', 'error');
+      return;
+    }
+
+    const processRange = () => {
+      $("#tanggal-wrapper").empty();
+      var current = new Date(startDate);
+      while (current <= endDate) {
+        addDateChip(current.toISOString().split('T')[0]);
+        current.setDate(current.getDate() + 1);
+      }
+    };
+
+    // Konfirmasi Premium jika sudah ada data
+    if ($(".date-chip").length > 0) {
+      Swal.fire({
+        title: 'Ganti Tanggal?',
+        text: "Daftar tanggal yang sudah dipilih akan diganti dengan rentang baru ini.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3B82F6',
+        confirmButtonText: 'Ya, Ganti!',
+        cancelButtonText: 'Batal'
+      }).then((result) => {
+        if (result.isConfirmed) processRange();
+      });
+    } else {
+      processRange();
+    }
+  });
 });
 </script>
 </body>

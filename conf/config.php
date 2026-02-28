@@ -153,6 +153,32 @@ mysqli_query($conn, "CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )");
 
+// Leave Request Tables
+mysqli_query($conn, "CREATE TABLE IF NOT EXISTS pengajuan_cuti (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    karyawan_id INT NOT NULL,
+    cuti_id INT NOT NULL,
+    delegasi_id INT,
+    tanggal_mulai DATE,
+    tanggal_selesai DATE,
+    lama_hari INT,
+    alasan TEXT,
+    status VARCHAR(50) DEFAULT 'Menunggu',
+    status_delegasi VARCHAR(50) DEFAULT 'Menunggu',
+    status_atasan VARCHAR(50) DEFAULT 'Menunggu',
+    status_hrd VARCHAR(50) DEFAULT 'Menunggu',
+    acc_delegasi_by VARCHAR(100),
+    acc_atasan_by VARCHAR(100),
+    acc_hrd_by VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)");
+
+mysqli_query($conn, "CREATE TABLE IF NOT EXISTS pengajuan_cuti_detail (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    pengajuan_id INT NOT NULL,
+    tanggal DATE NOT NULL
+)");
+
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS jabatan (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nama_jabatan VARCHAR(100) UNIQUE

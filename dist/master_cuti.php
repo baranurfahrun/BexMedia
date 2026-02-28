@@ -54,6 +54,7 @@ $dataCuti = mysqli_query($conn, "SELECT * FROM master_cuti ORDER BY id DESC");
   <link rel="stylesheet" href="assets/modules/fontawesome/css/all.min.css">
   <link rel="stylesheet" href="assets/css/style.css">
   <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/custom.css">
   <style>
     .cuti-table {
       font-size: 13px;
@@ -134,7 +135,7 @@ $dataCuti = mysqli_query($conn, "SELECT * FROM master_cuti ORDER BY id DESC");
                       <label for="keterangan">Keterangan</label>
                       <textarea name="keterangan" id="keterangan" class="form-control"></textarea>
                     </div>
-                    <button type="submit" name="simpan" class="btn btn-primary">
+                    <button type="submit" name="simpan" class="btn-ice">
                       <i class="fas fa-save"></i> Simpan
                     </button>
                   </form>

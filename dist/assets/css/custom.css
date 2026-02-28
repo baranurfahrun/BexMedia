@@ -1,8 +1,101 @@
 /**
- *
- * You can write your CSS code here, DO NOT touch the default JavaScript file
- * because it will make it harder for you to update.
- * 
+ * BexMedia Premium Theme Custom Styles
  */
 
-/*# sourceMappingURL=custom.css.map */
+/* 🧊 Ice Blue Premium Button System */
+.btn-ice {
+    background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 10px !important;
+    padding: 10px 24px !important;
+    font-weight: 700 !important;
+    font-size: 0.8rem;
+    letter-spacing: 0.3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px 0 rgba(0, 118, 255, 0.25);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    text-decoration: none !important;
+    white-space: nowrap;
+    outline: none !important;
+}
+
+.btn-ice:hover {
+    background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 118, 255, 0.35);
+    color: #ffffff !important;
+}
+
+.btn-ice:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(0, 118, 255, 0.2);
+}
+
+/* Icon animation within Ice Button */
+.btn-ice i {
+    font-size: 0.95rem;
+    transition: transform 0.3s ease;
+}
+
+.btn-ice:hover i {
+    transform: scale(1.15) rotate(5deg);
+}
+
+/* Ensure consistent card headers in Ice Blue theme */
+.card-header h4 i {
+    color: #3B82F6 !important;
+}
+
+/* 🏷️ Smart Date Tags Control (Compact View) */
+.date-tag-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 15px;
+    background: #f8fbff;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    min-height: 50px;
+    margin-bottom: 5px;
+}
+
+.date-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #334155;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    transition: all 0.2s;
+}
+
+.date-chip:hover {
+    border-color: #3B82F6;
+    background: #f0f7ff;
+}
+
+.date-chip .btn-remove-date {
+    cursor: pointer;
+    color: #94a3b8;
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 1rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+}
+
+.date-chip .btn-remove-date:hover {
+    color: #ef4444;
+}
