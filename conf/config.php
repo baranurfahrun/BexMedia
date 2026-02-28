@@ -168,10 +168,25 @@ mysqli_query($conn, "CREATE TABLE IF NOT EXISTS pengajuan_cuti (
     status_atasan VARCHAR(50) DEFAULT 'Menunggu',
     status_hrd VARCHAR(50) DEFAULT 'Menunggu',
     acc_delegasi_by VARCHAR(100),
+    acc_delegasi_time DATETIME NULL,
     acc_atasan_by VARCHAR(100),
+    acc_atasan_time DATETIME NULL,
     acc_hrd_by VARCHAR(100),
+    acc_hrd_time DATETIME NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )");
+
+// Patch for existing table
+$col_checks = [
+    'acc_delegasi_time' => 'acc_delegasi_by',
+    'acc_atasan_time'   => 'acc_atasan_by',
+    'acc_hrd_time'      => 'acc_hrd_by'
+];
+foreach ($col_checks as $col => $after) {
+    if (mysqli_num_rows(mysqli_query($conn, "SHOW COLUMNS FROM pengajuan_cuti LIKE '$col'")) == 0) {
+        mysqli_query($conn, "ALTER TABLE pengajuan_cuti ADD COLUMN $col DATETIME NULL AFTER $after");
+    }
+}
 
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS pengajuan_cuti_detail (
     id INT AUTO_INCREMENT PRIMARY KEY,

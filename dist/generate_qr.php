@@ -23,7 +23,7 @@ if (!$d) {
 }
 
 // URL verifikasi
-$url = "http://localhost/fixpoint/dist/verify_tte.php?token=" . $token;
+$url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]" . dirname($_SERVER['PHP_SELF']) . "/verify_tte.php?token=" . $token;
 
 // HEADER GAMBAR
 header("Content-Type: image/png");

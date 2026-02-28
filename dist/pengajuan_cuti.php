@@ -185,12 +185,6 @@ $dataPengajuan = mysqli_query($conn, "
       <section class="section">
         <div class="section-body">
 
-          <?php if (isset($_SESSION['flash_message'])): ?>
-            <div class="alert alert-info flash-center" id="flashMsg">
-              <?= $_SESSION['flash_message'] ?>
-            </div>
-            <?php unset($_SESSION['flash_message']); ?>
-          <?php endif; ?>
 
           <div class="card">
            <div class="card-header">
@@ -465,11 +459,7 @@ $dataPengajuan = mysqli_query($conn, "
 <script src="assets/js/scripts.js"></script>
 <script src="assets/js/custom.js"></script>
 <script>
- $(document).ready(function() {
-  setTimeout(function() {
-    $("#flashMsg").fadeOut("slow");
-  }, 3000);
-
+$(document).ready(function() {
   // Tambah input tanggal manual (Premium SweetAlert2)
   $("#btnAddTanggal").click(function() {
     Swal.fire({

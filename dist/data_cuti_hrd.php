@@ -17,21 +17,6 @@ if (mysqli_num_rows($result) == 0) {
   exit;
 }
 
-// === Pastikan kolom waktu ada ===
-$timeCols = [
-  'acc_delegasi_time' => 'acc_delegasi_by',
-  'acc_atasan_time'   => 'acc_atasan_by',
-  'acc_hrd_time'      => 'acc_hrd_by'
-];
-
-foreach ($timeCols as $col => $after) {
-    $check = mysqli_query($conn, "SHOW COLUMNS FROM `pengajuan_cuti` LIKE '".mysqli_real_escape_string($conn,$col)."'");
-    if ($check && mysqli_num_rows($check) == 0) {
-        $alter = "ALTER TABLE `pengajuan_cuti` ADD COLUMN `{$col}` DATETIME NULL AFTER `{$after}`";
-        mysqli_query($conn, $alter);
-    }
-}
-
 // === Proses ACC / Tolak HRD ===
 if (isset($_GET['aksi'], $_GET['id'])) {
   $id   = intval($_GET['id']);
@@ -179,18 +164,6 @@ $dataPengajuan = mysqli_query($conn, $sqlPengajuan);
         <div class="section-body">
 
           <!-- === Flash Message Tengah Layar === -->
-          <?php if (isset($_SESSION['flash_message'])): ?>
-            <?php
-              $flashType = $_SESSION['flash_type'] ?? 'info';
-              $icon = $flashType === 'success' ? 'fa-check-circle' :
-                      ($flashType === 'error' ? 'fa-times-circle' : 'fa-info-circle');
-            ?>
-            <div class="flash-center flash-<?= htmlspecialchars($flashType) ?>" id="flashMsg">
-              <i class="fas <?= $icon ?>"></i><br>
-              <?= $_SESSION['flash_message'] ?>
-            </div>
-            <?php unset($_SESSION['flash_message'], $_SESSION['flash_type']); ?>
-          <?php endif; ?>
 
           <div class="card">
             <div class="card-header">
@@ -244,9 +217,8 @@ $dataPengajuan = mysqli_query($conn, $sqlPengajuan);
                             <a href="data_cuti_hrd.php?aksi=tolak&id=<?= $row['id'] ?>" 
                                class="btn btn-sm btn-danger"
                                onclick="return confirm('Yakin Tolak cuti ini?')"><i class="fas fa-times"></i> Tolak</a>
-                          <?php else: ?>
-                            <em>-</em>
                           <?php endif; ?>
+                          <a href="cetak_cuti.php?id=<?= $row['id'] ?>" target="_blank" class="btn btn-sm btn-info" title="Cetak"><i class="fas fa-print"></i></a>
                         </td>
                       </tr>
                     <?php endwhile; ?>
@@ -272,11 +244,6 @@ $dataPengajuan = mysqli_query($conn, $sqlPengajuan);
 <script src="assets/js/stisla.js"></script>
 <script src="assets/js/scripts.js"></script>
 <script src="assets/js/custom.js"></script>
-<script>
-  $(document).ready(function() {
-    setTimeout(() => $("#flashMsg").fadeOut("slow"), 4000);
-  });
-</script>
 </body>
 </html>
 

@@ -133,18 +133,6 @@ $dataPengajuan = mysqli_query($conn, $sqlPengajuan) or die("Error ambil data: " 
       <section class="section">
         <div class="section-body">
 
-          <?php if (isset($_SESSION['flash_message'])): ?>
-            <?php
-              list($type, $msg) = explode(':', $_SESSION['flash_message'], 2);
-              $class = $type === 'success' ? 'flash-success' : 'flash-error';
-              $icon = $type === 'success' ? 'fa-check-circle' : 'fa-times-circle';
-            ?>
-            <div class="flash-center <?= $class ?>" id="flashMsg">
-              <i class="fas <?= $icon ?>"></i>
-              <div><?= $msg ?></div>
-            </div>
-            <?php unset($_SESSION['flash_message']); ?>
-          <?php endif; ?>
 
           <div class="card">
             <div class="card-header">
@@ -199,9 +187,8 @@ $dataPengajuan = mysqli_query($conn, $sqlPengajuan) or die("Error ambil data: " 
                             <a href="data_cuti_delegasi.php?aksi=tolak&id=<?= $row['id'] ?>" 
                                class="btn btn-sm btn-danger"
                                onclick="return confirm('Yakin Tolak cuti ini?')"><i class="fas fa-times"></i> Tolak</a>
-                          <?php else: ?>
-                            <em>-</em>
                           <?php endif; ?>
+                          <a href="cetak_cuti.php?id=<?= $row['id'] ?>" target="_blank" class="btn btn-sm btn-info" title="Cetak"><i class="fas fa-print"></i></a>
                         </td>
                       </tr>
                     <?php endwhile; ?>
@@ -220,13 +207,6 @@ $dataPengajuan = mysqli_query($conn, $sqlPengajuan) or die("Error ambil data: " 
 <!-- JS -->
 <script src="assets/modules/jquery.min.js"></script>
 <script src="assets/modules/bootstrap/js/bootstrap.min.js"></script>
-<script>
-  $(document).ready(function() {
-    setTimeout(function() {
-      $("#flashMsg").fadeOut("slow");
-    }, 4000);
-  });
-</script>
 </body>
 </html>
 

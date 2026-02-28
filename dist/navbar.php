@@ -636,6 +636,115 @@ date_default_timezone_set('Asia/Jakarta'); // WIB
 <script src="assets/modules/jquery.min.js"></script>
 <script src="assets/modules/popper.js"></script>
 <script src="assets/modules/bootstrap/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- Global Flash Message Bridge -->
+<?php if (isset($_SESSION['flash_message'])): ?>
+<script>
+  $(document).ready(function() {
+      <?php 
+      $msg = $_SESSION['flash_message'];
+      $type = 'info';
+      $text = '';
+      
+      if (is_array($msg)) {
+          $text = $msg['text'] ?? '';
+          $type = $msg['type'] ?? 'info';
+      } else {
+          if (strpos($msg, ':') !== false && (strpos($msg, 'success:') === 0 || strpos($msg, 'error:') === 0 || strpos($msg, 'warning:') === 0 || strpos($msg, 'info:') === 0)) {
+              list($type, $text) = explode(':', $msg, 2);
+          } else {
+              $text = $msg;
+              $type = 'success'; // Default to success if simple string
+              if (stripos($text, 'gagal') !== false || stripos($text, 'error') !== false || stripos($text, 'salah') !== false) $type = 'error';
+          }
+      }
+      ?>
+      Swal.fire({
+          icon: '<?= $type ?>',
+          title: '<?= $type === "success" ? "Berhasil!" : ($type === "error" ? "Terjadi Kesalahan" : "Informasi") ?>',
+          html: '<?= addslashes(str_replace("\n", "", $text)) ?>',
+          confirmButtonColor: '#6777ef',
+          timer: 5000,
+          timerProgressBar: true,
+          showClass: { popup: 'animate__animated animate__fadeInDown' },
+          hideClass: { popup: 'animate__animated animate__fadeOutUp' }
+      });
+  });
+</script>
+<?php unset($_SESSION['flash_message'], $_SESSION['flash_type']); ?>
+<?php endif; ?>
+
+<script>
+  // === Global Premium Confirmation Interceptor (Capture Phase) ===
+  // Menggunakan 'true' di addEventListener untuk menangkap event SEBELUM mencapai atribut onclick native.
+  document.addEventListener('click', function (e) {
+    const target = e.target.closest('a[onclick*="confirm("], button[onclick*="confirm("]');
+    
+    if (target && !target.dataset.swalDone) {
+      // Hentikan native confirm bawaan browser agar tidak muncul (double popup)
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      
+      // Ambil pesan dari string confirm('...') menggunakan regex
+      const onclickAttr = target.getAttribute('onclick') || '';
+      const match = onclickAttr.match(/confirm\(['"]?([^'"]+)['"]?\)/);
+      const message = match ? match[1] : 'Apakah Anda yakin ingin melakukan tindakan ini?';
+      
+      Swal.fire({
+        title: 'Konfirmasi Tindakan',
+        text: message,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#6777ef',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Ya, Lakukan!',
+        cancelButtonText: 'Batal',
+        padding: '2em',
+        background: '#fff',
+        customClass: {
+          popup: 'premium-swal-popup',
+          title: 'premium-swal-title',
+          confirmButton: 'premium-swal-confirm'
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Tandai sudah diproses agar saat klik manual berikutnya tidak dicegat lagi
+          target.dataset.swalDone = 'true';
+          
+          if (target.tagName === 'A') {
+            window.location.href = target.href;
+          } else {
+            // Untuk button/submit, trigger klik ulang
+            target.click();
+          }
+          
+          // Reset status setelah eksekusi (untuk interaksi berulang)
+          setTimeout(() => { delete target.dataset.swalDone; }, 500);
+        }
+      });
+    }
+  }, true);
+</script>
+
+<style>
+  .premium-swal-popup {
+    border-radius: 20px !important;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1) !important;
+    font-family: 'Public Sans', sans-serif !important;
+  }
+  .premium-swal-title {
+    color: #34395e !important;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+  }
+  .premium-swal-confirm {
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    padding: 12px 30px !important;
+    box-shadow: 0 4px 10px rgba(103, 119, 239, 0.3) !important;
+  }
+</style>
 
 <!-- Jam Digital -->
 <script>
