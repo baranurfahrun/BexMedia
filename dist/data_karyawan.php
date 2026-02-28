@@ -221,8 +221,8 @@ unset($_SESSION['flash_message']);
             transition: all 0.2s;
             text-decoration: none;
         }
-        .act-view  { background:#EFF6FF; color:var(--primary); }
-        .act-view:hover  { background:var(--primary); color:white; }
+        .act-edit  { background:#EFF6FF; color:#0284c7; }
+        .act-edit:hover  { background:#0284c7; color:white; transform:scale(1.1); }
         .act-print { background:#F0FDF4; color:#16A34A; }
         .act-print:hover { background:#16A34A; color:white; }
 
@@ -387,8 +387,8 @@ unset($_SESSION['flash_message']);
                             <td class="center" style="color:#94A3B8;font-weight:600;"><?= $no++ ?></td>
                             <td class="center no-print">
                                 <div style="display:flex;gap:6px;justify-content:center;">
-                                    <button class="act-btn act-view" onclick="showDetail(<?= $u['id'] ?>)" title="Lihat Detail">
-                                        <i data-lucide="eye" size="14"></i>
+                                    <button class="act-btn act-edit" onclick="openEdit(<?= $u['id'] ?>)" title="Edit Data Karyawan">
+                                        <i data-lucide="pencil" size="14"></i>
                                     </button>
                                     <a href="cetak_karyawan.php?id=<?= $u['id'] ?>" target="_blank" class="act-btn act-print" title="Cetak">
                                         <i data-lucide="printer" size="14"></i>
@@ -464,128 +464,292 @@ unset($_SESSION['flash_message']);
     </main>
 </div>
 
-<!-- Detail Modal -->
-<div class="modal-overlay" id="modalOverlay">
-    <div class="modal-box" id="modalBox">
+<!-- Edit Karyawan Modal -->
+<div class="modal-overlay" id="editModalOverlay">
+    <div class="modal-box" id="editModalBox" style="max-width:780px;">
         <div class="modal-header-row">
-            <div class="modal-title" id="modalKaryawanName">Detail Karyawan</div>
-            <button class="modal-close" onclick="closeModal()"><i data-lucide="x" size="16"></i></button>
+            <div class="modal-title" id="editModalTitle">✏️ Edit Data Karyawan</div>
+            <button class="modal-close" onclick="closeEditModal()"><i data-lucide="x" size="16"></i></button>
         </div>
-        <div id="modalContent">
+        <div id="editModalContent">
             <div style="text-align:center;padding:40px;color:#94A3B8;">
-                <i data-lucide="loader" size="32" style="animation:spin 1s linear infinite;display:inline-block;"></i>
-                <p style="margin-top:10px;">Memuat data...</p>
+                <div style="width:32px;height:32px;border:3px solid #E2E8F0;border-top-color:#0284c7;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px;"></div>
+                Memuat data...
             </div>
         </div>
     </div>
 </div>
 
-<style>@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}</style>
+<style>
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+/* 🔑 SweetAlert2 harus di atas semua modal */
+.swal2-container { z-index: 999999 !important; }
+
+.form-field-label { font-size:0.72rem; color:#64748B; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px; display:block; }
+.form-field-input {
+    width:100%; padding:9px 12px; border-radius:10px;
+    border:1.5px solid #E2E8F0; font-size:0.875rem;
+    font-family:'Outfit',sans-serif; color:#1E293B;
+    background:#F8FAFC; outline:none; box-sizing:border-box;
+    transition: all 0.2s;
+}
+.form-field-input:focus { border-color:#0284c7; background:white; box-shadow:0 0 0 3px rgba(2,132,199,0.1); }
+select.form-field-input { cursor:pointer; }
+.form-section-title {
+    font-size:0.78rem; font-weight:800; color:#0284c7;
+    text-transform:uppercase; letter-spacing:0.06em;
+    margin:20px 0 12px; padding-bottom:6px;
+    border-bottom: 2px solid #BAE6FD;
+}
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px 20px; }
+.form-grid.cols-3 { grid-template-columns:1fr 1fr 1fr; }
+.form-grid.cols-1 { grid-template-columns:1fr; }
+.btn-save-edit {
+    background:linear-gradient(135deg,#0ea5e9,#0284c7);
+    color:white; border:none; padding:11px 28px;
+    border-radius:12px; font-weight:700; font-size:0.88rem;
+    cursor:pointer; display:inline-flex; align-items:center; gap:8px;
+    font-family:'Outfit',sans-serif; transition:all 0.2s;
+}
+.btn-save-edit:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(2,132,199,0.3); }
+.swal-ice-popup { border-radius:20px!important; border:1px solid rgba(186,230,253,0.5)!important; }
+.swal2-title { color:#0c4a6e!important; font-weight:800!important; }
+.swal2-confirm { border-radius:10px!important; font-weight:700!important; }
+.swal2-timer-progress-bar { background:linear-gradient(to right,#0ea5e9,#0284c7)!important; }
+</style>
 
 <script>
 lucide.createIcons();
 
-// Flash hide
 var ft = document.getElementById('flashToast');
 if(ft) setTimeout(()=>ft.style.opacity='0', 3500);
 
-// Modal
-function showDetail(uid) {
-    document.getElementById('modalOverlay').classList.add('open');
-    document.getElementById('modalContent').innerHTML = `<div style="text-align:center;padding:40px;color:#94A3B8;"><div style="width:32px;height:32px;border:3px solid #E2E8F0;border-top-color:#3B82F6;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px;"></div>Memuat data...</div>`;
-    lucide.createIcons();
-
+// === Edit Modal ===
+function openEdit(uid) {
+    document.getElementById('editModalOverlay').classList.add('open');
+    document.getElementById('editModalContent').innerHTML = `<div style="text-align:center;padding:40px;color:#94A3B8;"><div style="width:32px;height:32px;border:3px solid #E2E8F0;border-top-color:#0284c7;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px;"></div>Memuat data karyawan...</div>`;
+    
     fetch('ajax_get_karyawan.php?id='+uid)
-        .then(r=>r.json())
-        .then(data => renderModal(data))
-        .catch(()=>{
-            // Fallback: render from PHP via inline fetch workaround
-            document.getElementById('modalContent').innerHTML = '<p style="color:#EF4444;text-align:center;">Gagal memuat data. Pastikan file ajax_get_karyawan.php tersedia.</p>';
+        .then(r => {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.text(); // text dulu, baru parse
+        })
+        .then(text => {
+            try {
+                const data = JSON.parse(text);
+                if (data.error) {
+                    document.getElementById('editModalContent').innerHTML = `<p style="color:#EF4444;text-align:center;padding:30px;"><b>Error:</b> ${data.msg || data.error}</p>`;
+                    return;
+                }
+                renderEditModal(data);
+            } catch(e) {
+                // JSON parse gagal — tampilkan raw response untuk debug
+                document.getElementById('editModalContent').innerHTML = `<pre style="color:#EF4444;font-size:0.75rem;padding:16px;overflow:auto;max-height:300px;">${text.substring(0,1000)}</pre>`;
+            }
+        })
+        .catch(err => {
+            document.getElementById('editModalContent').innerHTML = `<p style="color:#EF4444;text-align:center;padding:30px;">Gagal menghubungi server: ${err.message}</p>`;
         });
 }
 
-function renderModal(d) {
+function renderEditModal(d) {
     const u = d.user || {};
     const ip = d.info_pribadi || {};
     const k = d.kesehatan || {};
 
-    document.getElementById('modalKaryawanName').textContent = u.nama || 'Detail Karyawan';
+    document.getElementById('editModalTitle').innerHTML = `✏️ Edit: <span style="color:#0284c7">${u.nama||'Karyawan'}</span>`;
 
-    let html = `
-    <div class="info-section">
-        <h4>Informasi Dasar</h4>
-        <div class="info-grid">
-            <div class="info-row"><span class="info-label">NIK</span><span class="info-val">${u.nik||'-'}</span></div>
-            <div class="info-row"><span class="info-label">Jabatan</span><span class="info-val">${u.jabatan||'-'}</span></div>
-            <div class="info-row"><span class="info-label">Unit Kerja</span><span class="info-val">${u.unit_kerja||'-'}</span></div>
-            <div class="info-row"><span class="info-label">Email</span><span class="info-val">${u.email||'-'}</span></div>
-            <div class="info-row"><span class="info-label">No. HP</span><span class="info-val">${u.no_hp||'-'}</span></div>
-            <div class="info-row"><span class="info-label">Status</span><span class="info-val">${u.status||'-'}</span></div>
+    const html = `
+    <form id="formEditKaryawan" onsubmit="submitEditKaryawan(event, ${u.id||0})">
+        <div class="form-section-title">📋 Informasi Utama</div>
+        <div class="form-grid">
+            <div>
+                <label class="form-field-label">NIK</label>
+                <input type="text" name="nik" class="form-field-input" value="${escHtml(u.nik||'')}" placeholder="NIK Karyawan">
+            </div>
+            <div>
+                <label class="form-field-label">Nama Lengkap</label>
+                <input type="text" name="nama_lengkap" class="form-field-input" value="${escHtml(u.nama||'')}" required placeholder="Nama Lengkap">
+            </div>
+            <div>
+                <label class="form-field-label">Jabatan</label>
+                <input type="text" name="jabatan" class="form-field-input" value="${escHtml(u.jabatan||'')}" placeholder="Jabatan">
+            </div>
+            <div>
+                <label class="form-field-label">Unit Kerja</label>
+                <input type="text" name="unit_kerja" class="form-field-input" value="${escHtml(u.unit_kerja||'')}" placeholder="Unit Kerja">
+            </div>
+            <div>
+                <label class="form-field-label">Email</label>
+                <input type="email" name="email" class="form-field-input" value="${escHtml(u.email||'')}" placeholder="Kosongkan jika tidak ingin mengubah email">
+                ${!u.email ? '<small style="color:#94A3B8;font-size:0.72rem;">ℹ️ Belum ada email — isi untuk menambahkan</small>' : ''}
+            </div>
+            <div>
+                <label class="form-field-label">No. HP</label>
+                <input type="text" name="no_hp" class="form-field-input" value="${escHtml(u.no_hp||ip.no_hp||'')}" placeholder="0812xxxxxxxx">
+            </div>
+            <div>
+                <label class="form-field-label">Status Akun</label>
+                <select name="status" class="form-field-input">
+                    <option value="active" ${u.status==='active'?'selected':''}>Aktif</option>
+                    <option value="pending" ${u.status==='pending'?'selected':''}>Pending</option>
+                    <option value="blocked" ${u.status==='blocked'?'selected':''}>Nonaktif</option>
+                </select>
+            </div>
         </div>
-    </div>
-    <div class="info-section">
-        <h4>Data Pribadi</h4>
-        <div class="info-grid">
-            <div class="info-row"><span class="info-label">Jenis Kelamin</span><span class="info-val">${ip.jenis_kelamin||'-'}</span></div>
-            <div class="info-row"><span class="info-label">Tempat Lahir</span><span class="info-val">${ip.tempat_lahir||'-'}</span></div>
-            <div class="info-row"><span class="info-label">Tanggal Lahir</span><span class="info-val">${ip.tanggal_lahir||'-'}</span></div>
-            <div class="info-row"><span class="info-label">No. KTP</span><span class="info-val">${ip.no_ktp||'-'}</span></div>
-            <div class="info-row"><span class="info-label">Kota</span><span class="info-val">${ip.kota||'-'}</span></div>
-            <div class="info-row"><span class="info-label">Alamat</span><span class="info-val">${ip.alamat||'-'}</span></div>
+
+        <div class="form-section-title">👤 Data Pribadi</div>
+        <div class="form-grid cols-3">
+            <div>
+                <label class="form-field-label">Jenis Kelamin</label>
+                <select name="jenis_kelamin" class="form-field-input">
+                    <option value="">-- Pilih --</option>
+                    <option value="L" ${ip.jenis_kelamin==='L'?'selected':''}>Laki-laki</option>
+                    <option value="P" ${ip.jenis_kelamin==='P'?'selected':''}>Perempuan</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-field-label">Tempat Lahir</label>
+                <input type="text" name="tempat_lahir" class="form-field-input" value="${escHtml(ip.tempat_lahir||'')}" placeholder="Kota lahir">
+            </div>
+            <div>
+                <label class="form-field-label">Tanggal Lahir</label>
+                <input type="date" name="tanggal_lahir" class="form-field-input" value="${escHtml(ip.tanggal_lahir||'')}">
+            </div>
+            <div>
+                <label class="form-field-label">No. KTP</label>
+                <input type="text" name="no_ktp" class="form-field-input" value="${escHtml(ip.no_ktp||'')}" placeholder="16 digit NIK KTP">
+            </div>
+            <div>
+                <label class="form-field-label">Agama</label>
+                <select name="agama" class="form-field-input">
+                    <option value="">-- Pilih --</option>
+                    ${['Islam','Kristen','Katolik','Hindu','Buddha','Konghucu'].map(a=>`<option value="${a}" ${ip.agama===a?'selected':''}>${a}</option>`).join('')}
+                </select>
+            </div>
+            <div>
+                <label class="form-field-label">Status Nikah</label>
+                <select name="status_pernikahan" class="form-field-input">
+                    <option value="">-- Pilih --</option>
+                    ${['Belum Menikah','Menikah','Cerai'].map(s=>`<option value="${s}" ${ip.status_pernikahan===s?'selected':''}>${s}</option>`).join('')}
+                </select>
+            </div>
         </div>
-    </div>`;
-
-    if (k && Object.keys(k).length > 1) {
-        html += `<div class="info-section">
-        <h4>Data Kesehatan</h4>
-        <div class="info-grid">
-            <div class="info-row"><span class="info-label">Golongan Darah</span><span class="info-val">${k.gol_darah||'-'}</span></div>
-            <div class="info-row"><span class="info-label">Status Vaksinasi</span><span class="info-val">${k.status_vaksinasi||'-'}</span></div>
-            <div class="info-row"><span class="info-label">BPJS Kesehatan</span><span class="info-val">${k.no_bpjs_kesehatan||'-'}</span></div>
-            <div class="info-row"><span class="info-label">BPJS Ketenagakerjaan</span><span class="info-val">${k.no_bpjs_kerja||'-'}</span></div>
+        <div class="form-grid cols-1" style="margin-top:8px;">
+            <div>
+                <label class="form-field-label">Alamat</label>
+                <textarea name="alamat" class="form-field-input" rows="2" placeholder="Alamat lengkap...">${escHtml(ip.alamat||'')}</textarea>
+            </div>
         </div>
-        </div>`;
-    }
 
-    if (d.pekerjaan && d.pekerjaan.length) {
-        html += `<div class="info-section"><h4>Riwayat Pekerjaan</h4>`;
-        d.pekerjaan.forEach((p,i)=>{
-            html += `<div style="background:#F8FAFC;border-radius:10px;padding:12px 14px;margin-bottom:8px;font-size:0.85rem;">
-                <strong>${p.nama_perusahaan||'-'}</strong> — ${p.posisi||'-'}<br>
-                <span style="color:#64748B;">${p.tanggal_mulai||''} s/d ${p.tanggal_selesai||''}</span>
-            </div>`;
-        });
-        html += `</div>`;
-    }
+        <div class="form-section-title">🏥 Data Kesehatan</div>
+        <div class="form-grid">
+            <div>
+                <label class="form-field-label">Golongan Darah</label>
+                <select name="gol_darah" class="form-field-input">
+                    <option value="">-- Pilih --</option>
+                    ${['A','B','AB','O'].map(g=>`<option value="${g}" ${k.gol_darah===g?'selected':''}>${g}</option>`).join('')}
+                </select>
+            </div>
+            <div>
+                <label class="form-field-label">Status Vaksinasi</label>
+                <select name="status_vaksinasi" class="form-field-input">
+                    <option value="">-- Pilih --</option>
+                    ${['Belum','Vaksin 1','Vaksin 2','Booster'].map(v=>`<option value="${v}" ${k.status_vaksinasi===v?'selected':''}>${v}</option>`).join('')}
+                </select>
+            </div>
+            <div>
+                <label class="form-field-label">No. BPJS Kesehatan</label>
+                <input type="text" name="no_bpjs_kesehatan" class="form-field-input" value="${escHtml(k.no_bpjs_kesehatan||'')}" placeholder="No. BPJS">
+            </div>
+            <div>
+                <label class="form-field-label">No. BPJS Ketenagakerjaan</label>
+                <input type="text" name="no_bpjs_kerja" class="form-field-input" value="${escHtml(k.no_bpjs_kerja||'')}" placeholder="No. BPJS TK">
+            </div>
+        </div>
 
-    if (d.pendidikan && d.pendidikan.length) {
-        html += `<div class="info-section"><h4>Riwayat Pendidikan</h4>`;
-        d.pendidikan.forEach((pd)=>{
-            html += `<div style="background:#F8FAFC;border-radius:10px;padding:12px 14px;margin-bottom:8px;font-size:0.85rem;">
-                <strong>${pd.pendidikan_terakhir||'-'}</strong> — ${pd.jurusan||''}<br>
-                <span style="color:#64748B;">${pd.kampus||''}, lulus ${pd.tgl_lulus||''}</span>
-            </div>`;
-        });
-        html += `</div>`;
-    }
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;">
+            <button type="button" onclick="closeEditModal()" style="padding:11px 22px;border-radius:12px;border:1.5px solid #E2E8F0;background:white;color:#64748B;font-weight:600;font-size:0.88rem;cursor:pointer;font-family:'Outfit',sans-serif;">Batal</button>
+            <button type="submit" class="btn-save-edit">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                Simpan Perubahan
+            </button>
+        </div>
+    </form>`;
 
-    html += `<div style="text-align:right;margin-top:16px;">
-        <a href="cetak_karyawan.php?id=${u.id}" target="_blank" class="btn-prim" style="font-size:0.85rem;padding:9px 18px;">
-            <i data-lucide="printer" size="14"></i> Cetak Biodata
-        </a>
-    </div>`;
-
-    document.getElementById('modalContent').innerHTML = html;
+    document.getElementById('editModalContent').innerHTML = html;
     lucide.createIcons();
 }
 
-function closeModal() {
-    document.getElementById('modalOverlay').classList.remove('open');
+function submitEditKaryawan(e, uid) {
+    e.preventDefault();
+    const form = document.getElementById('formEditKaryawan');
+    const data = new FormData(form);
+    data.append('id', uid);
+
+    const btn = form.querySelector('button[type=submit]');
+    btn.disabled = true;
+    btn.innerHTML = '⟳ Menyimpan...';
+
+    fetch('update_karyawan.php', { method:'POST', body:data })
+        .then(r => r.text())
+        .then(text => {
+            btn.disabled = false;
+            let res;
+            try {
+                res = JSON.parse(text);
+            } catch(e) {
+                // Server returned non-JSON — tampilkan raw output
+                Swal.fire({
+                    icon:'error', title:'Server Error',
+                    html: `<pre style="text-align:left;font-size:0.75rem;max-height:200px;overflow:auto;">${text.substring(0,500)}</pre>`,
+                    confirmButtonColor:'#0284c7'
+                });
+                btn.innerHTML = 'Simpan Perubahan';
+                return;
+            }
+
+            btn.innerHTML = res.success ? '✓ Tersimpan!' : 'Simpan Perubahan';
+
+            if (res.success) {
+                closeEditModal();
+                Swal.fire({
+                    icon:'success', title:'Berhasil! ✅',
+                    text: res.message || 'Data karyawan berhasil diperbarui.',
+                    confirmButtonColor:'#0284c7',
+                    customClass:{popup:'swal-ice-popup'},
+                    timer:3000, timerProgressBar:true
+                }).then(() => location.reload());
+            } else {
+                Swal.fire({
+                    icon:'error', title:'Gagal Menyimpan',
+                    text: res.message || 'Terjadi kesalahan saat menyimpan data.',
+                    confirmButtonColor:'#0284c7',
+                    customClass:{popup:'swal-ice-popup'}
+                });
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btn.innerHTML = 'Simpan Perubahan';
+            Swal.fire({icon:'error', title:'Koneksi Bermasalah', text:'Gagal menghubungi server: ' + err.message, confirmButtonColor:'#0284c7'});
+        });
 }
-document.getElementById('modalOverlay').addEventListener('click', e => {
-    if(e.target === document.getElementById('modalOverlay')) closeModal();
+
+function closeEditModal() {
+    document.getElementById('editModalOverlay').classList.remove('open');
+}
+
+document.getElementById('editModalOverlay').addEventListener('click', e => {
+    if(e.target === document.getElementById('editModalOverlay')) closeEditModal();
 });
-document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+
+function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeEditModal(); });
 </script>
 </body>
 </html>

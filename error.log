@@ -862,3 +862,4 @@ Stack trace:
 [26-Feb-2026 11:55:39 Asia/Jakarta] WA Debug: ID Grup IT kosong di settings. Mengirim ke nomor default.
 [26-Feb-2026 16:01:43 Asia/Jakarta] WA Debug: ID Grup IT kosong di settings. Mengirim ke nomor default.
 [27-Feb-2026 07:33:04 Asia/Jakarta] WA Debug: ID Grup IT kosong di settings. Mengirim ke nomor default.
+[28-Feb-2026 13:41:19 Asia/Jakarta] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, bool given in C:\xampp\htdocs\BexMedia\dist\simpan_off_duty.php on line 102

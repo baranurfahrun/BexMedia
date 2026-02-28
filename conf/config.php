@@ -215,6 +215,27 @@ mysqli_query($conn, "CREATE TABLE IF NOT EXISTS pengajuan_ganti_jadwal (
     created_by VARCHAR(100)
 )");
 
+// Off-Duty Laporan Table
+mysqli_query($conn, "CREATE TABLE IF NOT EXISTS laporan_off_duty (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    no_tiket VARCHAR(50) UNIQUE,
+    nik VARCHAR(30),
+    nama VARCHAR(100),
+    jabatan VARCHAR(100),
+    unit_kerja VARCHAR(100),
+    kategori VARCHAR(100),
+    petugas VARCHAR(100) DEFAULT '-',
+    keterangan TEXT,
+    tanggal DATETIME,
+    user_id INT,
+    nama_input VARCHAR(100),
+    status_validasi VARCHAR(50) DEFAULT 'Menunggu',
+    catatan_it TEXT,
+    tanggal_validasi DATETIME NULL,
+    validator_id INT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)");
+
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS jabatan (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nama_jabatan VARCHAR(100) UNIQUE
@@ -361,6 +382,30 @@ function checkAccess() {
     $current_file = basename($_SERVER['PHP_SELF']);
     $username = $_SESSION['username'] ?? '';
     
+    // 0. Bypass untuk file AJAX/utility (tidak perlu dicek di web_menus)
+    $ajax_whitelist = [
+        'ajax_get_karyawan.php', 'update_karyawan.php',
+        'ajax_get_karyawan.php', 'ajax_generate_jadwal.php',
+        'ajax_get_employees_by_unit.php', 'ajax_save_jadwal_v2.php',
+        'ajax_add_unit.php', 'ajax_update_shifts.php', 'ajax_preview_nomor.php',
+        'ajax_test_db.php', 'get_petugas.php', 'get_petunjuk.php',
+        'get_online_users.php', 'get_capaian_ajax.php', 'get_capaian_imp.php',
+        'get_capaian_imut_rs.php', 'get_pph_persen.php',
+        'simpan_off_duty.php', 'update_status_off_duty.php',
+        'update_karyawan.php', 'kirim_wa.php', 'kirim_pesan.php',
+        'hapus_data.php', 'hapus_dokumen.php', 'hapus_barang.php',
+        'hapus_barang_ac.php', 'hapus_edaran.php', 'hapus_spo.php',
+        'hapus_undangan.php', 'proses_acc.php', 'ubah_status.php',
+        'ubah_status_it_hardware.php', 'ubah_status_it_software.php',
+        'ubah_status_sarpras.php', 'ubah_status_pelamar.php',
+        'batal_cuti.php', 'selesai_tiket.php', 'simpan_akses_menu.php',
+        'load_chat.php', 'cek_status_ajax.php', 'captcha.php',
+        'generate_qr.php', 'download_tte.php', 'proses_lihat_jawaban.php',
+        'simpan_jawaban.php', 'save_capaian.php', 'update_logbook.php',
+        'send_wa.php', 'send_wa_grup.php', 'notif_wa_finish.php',
+    ];
+    if (in_array($current_file, $ajax_whitelist)) return true;
+
     // 1. Bypass untuk Super Admin (Bara N.Fahrun / Sesuai Database)
     if ($username === 'admin' || $username === 'bara') return true; 
 

@@ -662,11 +662,17 @@ date_default_timezone_set('Asia/Jakarta'); // WIB
       ?>
       Swal.fire({
           icon: '<?= $type ?>',
-          title: '<?= $type === "success" ? "Berhasil!" : ($type === "error" ? "Terjadi Kesalahan" : "Informasi") ?>',
+          title: '<?php
+            if ($type === "success")  echo "Berhasil! ✅";
+            elseif ($type === "error")    echo "Terjadi Kesalahan ❌";
+            elseif ($type === "warning")  echo "Perhatian! ⚠️";
+            else echo "Informasi ℹ️";
+          ?>',
           html: '<?= addslashes(str_replace("\n", "", $text)) ?>',
-          confirmButtonColor: '#6777ef',
+          confirmButtonColor: '#0284c7',
           timer: 5000,
           timerProgressBar: true,
+          customClass: { popup: 'swal-ice-popup' },
           showClass: { popup: 'animate__animated animate__fadeInDown' },
           hideClass: { popup: 'animate__animated animate__fadeOutUp' }
       });
@@ -696,16 +702,12 @@ date_default_timezone_set('Asia/Jakarta'); // WIB
         text: message,
         icon: 'question',
         showCancelButton: true,
-        confirmButtonColor: '#6777ef',
-        cancelButtonColor: '#d33',
+        confirmButtonColor: '#0284c7',
+        cancelButtonColor: '#94a3b8',
         confirmButtonText: 'Ya, Lakukan!',
         cancelButtonText: 'Batal',
-        padding: '2em',
-        background: '#fff',
         customClass: {
-          popup: 'premium-swal-popup',
-          title: 'premium-swal-title',
-          confirmButton: 'premium-swal-confirm'
+          popup: 'swal-ice-popup'
         }
       }).then((result) => {
         if (result.isConfirmed) {
@@ -728,21 +730,30 @@ date_default_timezone_set('Asia/Jakarta'); // WIB
 </script>
 
 <style>
-  .premium-swal-popup {
+  /* 🧊 BexMedia Ice Blue - SweetAlert2 Premium Theme */
+  .swal-ice-popup, .premium-swal-popup {
     border-radius: 20px !important;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.1) !important;
-    font-family: 'Public Sans', sans-serif !important;
+    box-shadow: 0 20px 50px rgba(2, 132, 199, 0.15) !important;
+    font-family: 'Inter', 'Public Sans', sans-serif !important;
+    border: 1px solid rgba(186, 230, 253, 0.5) !important;
   }
-  .premium-swal-title {
-    color: #34395e !important;
-    font-size: 1.5rem !important;
+  .swal2-confirm {
+    border-radius: 10px !important;
     font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35) !important;
   }
-  .premium-swal-confirm {
-    border-radius: 8px !important;
+  .swal2-cancel {
+    border-radius: 10px !important;
     font-weight: 600 !important;
-    padding: 12px 30px !important;
-    box-shadow: 0 4px 10px rgba(103, 119, 239, 0.3) !important;
+  }
+  .swal2-title {
+    color: #0c4a6e !important;
+    font-weight: 800 !important;
+    font-size: 1.4rem !important;
+  }
+  .swal2-timer-progress-bar {
+    background: linear-gradient(to right, #0ea5e9, #0284c7) !important;
   }
 </style>
 

@@ -1,11 +1,13 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-session_start();
-include 'koneksi.php';
+// session & koneksi dihandle oleh config.php via koneksi.php
+include 'koneksi.php';  // session_start() ada di dalam config.php
 include 'send_wa.php'; 
 include 'send_wa_grup.php'; 
 date_default_timezone_set('Asia/Jakarta');
+
+// Aktifkan error reporting sementara untuk debug
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");

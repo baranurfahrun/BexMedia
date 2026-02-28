@@ -268,19 +268,22 @@ $userData = mysqli_fetch_assoc($queryUser);
 
     // Premium Confirmation for Sending Report
     $('#formOffDuty').on('submit', function(e) {
-      if ($(this).data('swal-done')) return true;
       e.preventDefault();
+      const $form = $(this);
       Swal.fire({
-        title: 'Kirim Laporan?',
+        title: 'Kirim Laporan Off-Duty?',
         text: 'Pastikan data kendala sudah diisi dengan benar.',
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#0284c7',
-        confirmButtonText: 'Ya, Kirim Sekarang',
-        cancelButtonText: 'Batal'
+        cancelButtonColor: '#94a3b8',
+        confirmButtonText: '<i class="fas fa-paper-plane"></i> Ya, Kirim!',
+        cancelButtonText: 'Batal',
+        customClass: { popup: 'swal-ice-popup' }
       }).then((result) => {
         if (result.isConfirmed) {
-          $(this).data('swal-done', true).submit();
+          // Gunakan native DOM .submit() agar tidak memicu jQuery event handler lagi
+          $form[0].submit();
         }
       });
     });
