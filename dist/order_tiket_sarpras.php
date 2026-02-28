@@ -109,7 +109,7 @@ if (mysqli_num_rows($result) == 0) {
   </style>
 </head>
 
-<body>
+<body class="ice-blue-theme">
 <div id="app">
   <div class="main-wrapper main-wrapper-1">
     <?php include 'navbar.php'; ?>
@@ -123,19 +123,19 @@ if (mysqli_num_rows($result) == 0) {
       ?>
       <section class="section">
         <div class="section-body">
-          <div class="card">
-            <div class="card-header">
-              <h4>Sarpras Service Request</h4>
+          <div class="card card-ice">
+            <div class="card-header bg-white">
+              <h4 class="mb-0"><i class="fas fa-building mr-2"></i>Sarpras Service Request</h4>
             </div>
-            <div class="card-body">
+            <div class="card-body px-4">
               
               <!-- Tabs -->
-              <ul class="nav nav-tabs" id="myTab" role="tablist">
+              <ul class="nav nav-tabs-ice" id="myTab" role="tablist">
                 <li class="nav-item">
-                  <a class="nav-link active" id="order-tab" data-toggle="tab" href="#order" role="tab">New Request</a>
+                  <a class="nav-link active" id="order-tab" data-toggle="tab" href="#order" role="tab"><i class="fas fa-plus-circle mr-2"></i>NEW REQUEST</a>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link" id="tiket-saya-tab" data-toggle="tab" href="#tiket-saya" role="tab">My Requests</a>
+                  <a class="nav-link" id="tiket-saya-tab" data-toggle="tab" href="#tiket-saya" role="tab"><i class="fas fa-list-ul mr-2"></i>MY REQUESTS</a>
                 </li>
               </ul>
 
@@ -148,25 +148,25 @@ if (mysqli_num_rows($result) == 0) {
                     <input type="hidden" name="simpan" value="1">
                     <div class="row">
                       <div class="form-group col-md-3">
-                        <label>NIK</label>
-                        <input type="text" name="nik" value="<?php echo h($nik_user); ?>" class="form-control" readonly style="background: #F8FAFC">
+                        <label class="text-uppercase small font-weight-bold text-muted">NIK</label>
+                        <input type="text" name="nik" value="<?php echo h($nik_user); ?>" class="form-control form-control-ice" readonly style="background: var(--ice-5) !important;">
                       </div>
                       <div class="form-group col-md-3">
-                        <label>Nama</label>
-                        <input type="text" name="nama" value="<?php echo h($nama_user); ?>" class="form-control" readonly style="background: #F8FAFC">
+                        <label class="text-uppercase small font-weight-bold text-muted">Nama</label>
+                        <input type="text" name="nama" value="<?php echo h($nama_user); ?>" class="form-control form-control-ice" readonly style="background: var(--ice-5) !important;">
                       </div>
                       <div class="form-group col-md-3">
-                        <label>Jabatan</label>
-                        <input type="text" name="jabatan" value="<?php echo h($jabatan_user); ?>" class="form-control" readonly style="background: #F8FAFC">
+                        <label class="text-uppercase small font-weight-bold text-muted">Jabatan</label>
+                        <input type="text" name="jabatan" value="<?php echo h($jabatan_user); ?>" class="form-control form-control-ice" readonly style="background: var(--ice-5) !important;">
                       </div>
                       <div class="form-group col-md-3">
-                        <label>Unit Kerja</label>
-                        <select name="unit_kerja" class="form-control" required>
+                        <label class="text-uppercase small font-weight-bold text-muted">Unit Kerja</label>
+                        <select name="unit_kerja" class="form-control form-control-ice" required>
                           <option value="">-- Pilih Unit Kerja --</option>
                           <?php
                           $unitResult = mysqli_query($conn, "SELECT nama_unit FROM unit_kerja ORDER BY nama_unit ASC");
                           while ($u = mysqli_fetch_assoc($unitResult)) {
-                            $selected = ($userData['unit_kerja'] == $u['nama_unit']) ? 'selected' : '';
+                            $selected = ($unit_user == $u['nama_unit']) ? 'selected' : '';
                             echo "<option value='{$u['nama_unit']}' $selected>{$u['nama_unit']}</option>";
                           }
                           ?>
@@ -174,8 +174,8 @@ if (mysqli_num_rows($result) == 0) {
                       </div>
 
                       <div class="form-group col-md-6">
-                        <label>Kategori Permintaan</label>
-                        <select name="kategori" class="form-control" required>
+                        <label class="text-uppercase small font-weight-bold text-muted">Kategori Permintaan</label>
+                        <select name="kategori" class="form-control form-control-ice" required>
                           <option value="">-- Pilih Kategori --</option>
                           <option value="Perbaikan AC">Perbaikan AC</option>
                           <option value="Pengecekan AC">Pengecekan AC</option>
@@ -186,23 +186,21 @@ if (mysqli_num_rows($result) == 0) {
                       </div>
 
                     <div class="form-group col-md-6">
-  <label>Lokasi / Ruangan</label>
-  <select name="lokasi" class="form-control" required>
-    <option value="">-- Pilih Lokasi / Unit --</option>
-    <?php
-    // Ambil data unit_kerja dari database
-    $queryUnit = mysqli_query($conn, "SELECT id, nama_unit FROM unit_kerja ORDER BY nama_unit ASC");
-    while ($unit = mysqli_fetch_assoc($queryUnit)) {
-        echo "<option value=\"" . htmlspecialchars($unit['nama_unit']) . "\">" . htmlspecialchars($unit['nama_unit']) . "</option>";
-    }
-    ?>
-  </select>
-</div>
-
+                      <label class="text-uppercase small font-weight-bold text-muted">Lokasi / Ruangan</label>
+                      <select name="lokasi" class="form-control form-control-ice" required>
+                        <option value="">-- Pilih Lokasi / Unit --</option>
+                        <?php
+                        $queryUnit = mysqli_query($conn, "SELECT id, nama_unit FROM unit_kerja ORDER BY nama_unit ASC");
+                        while ($unit = mysqli_fetch_assoc($queryUnit)) {
+                            echo "<option value=\"" . htmlspecialchars($unit['nama_unit']) . "\">" . htmlspecialchars($unit['nama_unit']) . "</option>";
+                        }
+                        ?>
+                      </select>
+                    </div>
 
                       <div class="form-group col-md-12">
-                        <label>Kendala / Laporan</label>
-                        <textarea name="kendala" class="form-control" rows="3" placeholder="Tuliskan kendala atau permintaan..." required></textarea>
+                        <label class="text-uppercase small font-weight-bold text-muted">Kendala / Laporan</label>
+                        <textarea name="kendala" class="form-control form-control-ice" rows="4" placeholder="Tuliskan kendala atau permintaan sarana prasarana..." required></textarea>
                       </div>
                     </div>
                     <button type="submit" name="simpan" class="btn-ice"><i class="fas fa-paper-plane"></i> Submit Request</button>
@@ -212,21 +210,21 @@ if (mysqli_num_rows($result) == 0) {
                 <!-- =================== DAFTAR TIKET =================== -->
                 <div class="tab-pane fade" id="tiket-saya" role="tabpanel">
                   <div class="table-responsive-custom">
-                    <table class="table table-bordered table-striped">
-                      <thead>
+                    <table class="table table-hover">
+                      <thead style="background: var(--ice-5);">
                         <tr>
-                          <th>No</th>
-                          <th>SR Number</th>
-                          <th>Date</th>
-                          <th>Category</th>
-                          <th>Issue</th>
-                          <th>Status</th>
-                          <th>Validation Status</th>
-                          <th>Validation Time</th>
-                          <th>Technician</th>
-                          <th>IT Remarks</th>
-                          <th>Action</th>
-                          <th>Print</th>
+                          <th class="text-center">NO</th>
+                          <th>SR NUMBER</th>
+                          <th>DATE</th>
+                          <th>CATEGORY</th>
+                          <th>ISSUE</th>
+                          <th>STATUS</th>
+                          <th>VAL STATUS</th>
+                          <th>VAL TIME</th>
+                          <th>TECHNICIAN</th>
+                          <th>REMARKS</th>
+                          <th>ACTION</th>
+                          <th class="text-center">PRINT</th>
                         </tr>
                       </thead>
                       <tbody>

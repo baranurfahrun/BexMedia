@@ -2,41 +2,26 @@
 session_start();
 include 'security.php';
 include 'koneksi.php';
-date_default_timezone_set('Asia/Jakarta');
+date_default_timezone_set('Asia/Makassar');
 
 $user_id = $_SESSION['user_id'] ?? 0;
 $current_file = basename(__FILE__);
 
-// === Cek akses menu ===
-$qAkses = "SELECT 1 FROM akses_menu 
-           JOIN menu ON akses_menu.menu_id = menu.id 
-           WHERE akses_menu.user_id = '$user_id' AND menu.file_menu = '$current_file'";
-$rAkses = mysqli_query($conn, $qAkses);
-if (mysqli_num_rows($rAkses) == 0) {
-  echo "<script>alert('Anda tidak memiliki akses ke halaman ini.'); window.location.href='dashboard.php';</script>";
-  exit;
-}
-
 // === Data user login ===
-$qUser = mysqli_query($conn, "SELECT id, nama, unit_kerja FROM users WHERE id='$user_id'");
+$qUser = mysqli_query($conn, "SELECT id, nama_lengkap, unit_kerja FROM users WHERE id='$user_id'");
 $userLogin = mysqli_fetch_assoc($qUser);
 
 // === Dropdown karyawan pengganti (unit kerja sama, kecuali diri sendiri) ===
-$delegasiList = mysqli_query($conn, "SELECT id, nama FROM users 
+$delegasiList = mysqli_query($conn, "SELECT id, nama_lengkap FROM users 
                                      WHERE unit_kerja = '".$userLogin['unit_kerja']."' 
                                      AND id <> '".$userLogin['id']."' 
-                                     ORDER BY nama ASC");
-
-// === Ambil jadwal dinas user login ===
-$jadwalQuery = mysqli_query($conn, "SELECT tanggal, jam_kerja_id FROM jadwal_dinas 
-                                    WHERE user_id='$user_id' 
-                                    ORDER BY tanggal ASC");
+                                     ORDER BY nama_lengkap ASC");
 
 // Mapping jam kerja
 $jamQuery = mysqli_query($conn, "SELECT * FROM jam_kerja ORDER BY jam_mulai");
 $jamList = [];
 while($j = mysqli_fetch_assoc($jamQuery)){
-    $jamList[$j['id']] = $j['nama_jam'] . " ({$j['jam_mulai']}-{$j['jam_selesai']})";
+    $jamList[$j['id']] = $j['nama_jam'] . " ({$j['jam_mulai']} - {$j['jam_selesai']})";
 }
 
 // === Proses simpan pengajuan ganti jadwal ===
@@ -45,25 +30,27 @@ if ($_SERVER['REQUEST_METHOD']=='POST' && isset($_POST['simpan'])){
     $tanggal = $_POST['tanggal'] ?? '';
     $jam_kerja_id = intval($_POST['jam_kerja_id']);
     $pengganti_id = intval($_POST['pengganti_id']);
-    $alasan = mysqli_real_escape_string($conn, $_POST['alasan']);
+    $alasan = $_POST['alasan'] ?? '';
 
     if(empty($tanggal) || $pengganti_id<=0 || $jam_kerja_id<=0 || empty($alasan)){
-        $_SESSION['flash_message'] = "Semua field wajib diisi!";
+        $_SESSION['flash_message'] = "error:Semua field wajib diisi!";
     } else {
         mysqli_begin_transaction($conn);
         try {
-            $sql = "INSERT INTO pengajuan_ganti_jadwal 
+            $stmt = $conn->prepare("INSERT INTO pengajuan_ganti_jadwal 
                     (karyawan_id, pengganti_id, tanggal, jam_kerja_id, alasan, 
-                     status, created_by, created_at)
-                    VALUES 
-                    ('$karyawan_id','$pengganti_id','$tanggal','$jam_kerja_id','$alasan',
-                     'Menunggu','{$userLogin['nama']}',NOW())";
-            mysqli_query($conn, $sql);
+                     status, status_pengganti, status_atasan, status_hrd, created_by, created_at)
+                    VALUES (?, ?, ?, ?, ?, 'Menunggu', 'Menunggu', 'Menunggu', 'Menunggu', ?, NOW())");
+            
+            $created_by = $userLogin['nama_lengkap'];
+            $stmt->bind_param("iisiss", $karyawan_id, $pengganti_id, $tanggal, $jam_kerja_id, $alasan, $created_by);
+            $stmt->execute();
+            
             mysqli_commit($conn);
-            $_SESSION['flash_message'] = "Pengajuan ganti jadwal berhasil disimpan.";
+            $_SESSION['flash_message'] = "success:✅ Pengajuan ganti jadwal berhasil disimpan.";
         } catch (Exception $e) {
             mysqli_rollback($conn);
-            $_SESSION['flash_message'] = "Gagal menyimpan data: ".$e->getMessage();
+            $_SESSION['flash_message'] = "error:Gagal menyimpan data: " . $e->getMessage();
         }
     }
 
@@ -71,26 +58,14 @@ if ($_SERVER['REQUEST_METHOD']=='POST' && isset($_POST['simpan'])){
     exit;
 }
 
-// Ambil nomor surat untuk dropdown
-$noSuratQuery = mysqli_query($conn, "
-    SELECT n.id, n.nomor_surat, u.nama_unit 
-    FROM no_surat n
-    LEFT JOIN unit_kerja u ON n.unit_id=u.id
-    ORDER BY n.id ASC
-");
-$noSuratList = [];
-while($ns = mysqli_fetch_assoc($noSuratQuery)) {
-    $noSuratList[] = $ns;
-}
-
-
 // === Ambil data pengajuan untuk tabel ===
 $dataPengajuan = mysqli_query($conn, "
-    SELECT p.*, u.nama AS nama_karyawan, d.nama AS nama_pengganti, j.nama_jam
+    SELECT p.*, u.nama_lengkap AS nama_karyawan, d.nama_lengkap AS nama_pengganti, j.nama_jam
     FROM pengajuan_ganti_jadwal p
     JOIN users u ON p.karyawan_id=u.id
     JOIN users d ON p.pengganti_id=d.id
     JOIN jam_kerja j ON p.jam_kerja_id=j.id
+    WHERE p.karyawan_id = '$user_id' OR p.pengganti_id = '$user_id'
     ORDER BY p.id DESC
 ");
 ?>
@@ -98,26 +73,22 @@ $dataPengajuan = mysqli_query($conn, "
 <html lang="id">
 <head>
     <link rel="icon" href="../images/logo_final.png">
-    
-  
-<meta charset="UTF-8">
-<title>Pengajuan Ganti Jadwal Dinas</title>
-<link rel="stylesheet" href="assets/modules/bootstrap/css/bootstrap.min.css">
-<link rel="stylesheet" href="assets/modules/fontawesome/css/all.min.css">
-<link rel="stylesheet" href="assets/css/style.css">
-<link rel="stylesheet" href="assets/css/components.css">
-<style>
-.flash-center {
-  position: fixed; top: 20%; left: 50%; transform: translate(-50%, -50%);
-  z-index: 1050; min-width: 300px; max-width: 90%; text-align: center;
-  padding: 15px; border-radius: 8px; font-weight: 500;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-}
-.ganti-table { font-size: 13px; white-space: nowrap; }
-.ganti-table th, .ganti-table td { padding: 6px 10px; vertical-align: middle; }
-</style>
+  <meta charset="UTF-8">
+  <title>BexMedia - Ganti Jadwal Dinas</title>
+  <link rel="stylesheet" href="assets/modules/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="assets/modules/fontawesome/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/custom.css">
+  <style>
+    .ganti-table { font-size: 13px; white-space: nowrap; }
+    .ganti-table th, .ganti-table td { padding: 12px 15px; vertical-align: middle; border-color: #f1f5f9; }
+    .form-group label { font-weight: 700; color: #334155; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; }
+    .form-group label i { color: #0ea5e9; font-size: 14px; }
+    .badge-soft-primary { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+  </style>
 </head>
-<body>
+<body class="ice-blue-theme">
 <div id="app">
   <div class="main-wrapper main-wrapper-1">
     <?php include 'navbar.php'; ?>
@@ -131,115 +102,141 @@ $dataPengajuan = mysqli_query($conn, "
       <section class="section">
         <div class="section-body">
 
-        <?php if(isset($_SESSION['flash_message'])): ?>
-            <div class="alert alert-info flash-center" id="flashMsg"><?= $_SESSION['flash_message']; ?></div>
-            <?php unset($_SESSION['flash_message']); ?>
-        <?php endif; ?>
+          <div class="card card-ice">
+            <div class="card-header">
+              <h4 class="mb-0">Pengajuan Ganti Jadwal Dinas</h4>
+            </div>
+            <div class="card-body px-4">
+              <ul class="nav nav-tabs-ice" id="gantiTab" role="tablist">
+                <li class="nav-item">
+                  <a class="nav-link active" id="input-tab" data-toggle="tab" href="#input" role="tab">
+                    <i class="fas fa-plus-circle mr-2"></i>INPUT PENGAJUAN
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" id="data-tab" data-toggle="tab" href="#data" role="tab">
+                    <i class="fas fa-history mr-2"></i>DATA PENGAJUAN
+                  </a>
+                </li>
+              </ul>
 
-        <div class="card">
-          <div class="card-header"><h4>Pengajuan Ganti Jadwal Dinas</h4></div>
-          <div class="card-body">
-            <ul class="nav nav-tabs" id="gantiTab" role="tablist">
-              <li class="nav-item"><a class="nav-link active" id="input-tab" data-toggle="tab" href="#input" role="tab">Input Pengajuan</a></li>
-              <li class="nav-item"><a class="nav-link" id="data-tab" data-toggle="tab" href="#data" role="tab">Data Pengajuan</a></li>
-            </ul>
+              <div class="tab-content mt-4">
+                <!-- Form Input -->
+                <div class="tab-pane fade show active" id="input" role="tabpanel">
+                  <form method="post">
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-group mb-4">
+                          <label><i class="fas fa-user"></i> Karyawan Pemohon</label>
+                          <input type="text" class="form-control form-control-ice" value="<?= h($userLogin['nama_lengkap']) ?>" readonly style="background: #f8fafc !important; font-weight: 600;">
+                        </div>
 
-            <div class="tab-content mt-3">
-              <!-- Form Input Kiri-Kanan -->
-              <div class="tab-pane fade show active" id="input" role="tabpanel">
-                <form method="post">
-                  <div class="row">
-                    <!-- Kolom Kiri -->
-                    <div class="col-md-6">
-                      <div class="form-group">
-                        <label><i class="fas fa-user"></i> Karyawan</label>
-                        <input type="text" class="form-control" value="<?= htmlspecialchars($userLogin['nama']) ?>" readonly>
+                        <div class="form-group mb-4">
+                          <label><i class="fas fa-calendar-day"></i> Tanggal Berlaku</label>
+                          <input type="date" name="tanggal" class="form-control form-control-ice" required>
+                          <small class="text-muted mt-2 d-inline-block">Pilih tanggal jadwal yang ingin digantikan.</small>
+                        </div>
+
+                        <div class="form-group mb-4">
+                          <label><i class="fas fa-hourglass-half"></i> Shift / Jam Kerja Baru</label>
+                          <select name="jam_kerja_id" class="form-control form-control-ice" required>
+                            <option value="">-- Pilih Shift Kerja --</option>
+                            <?php foreach($jamList as $id=>$jam): ?>
+                              <option value="<?= $id ?>"><?= $jam ?></option>
+                            <?php endforeach; ?>
+                          </select>
+                        </div>
                       </div>
 
-                      <div class="form-group">
-                        <label><i class="fas fa-calendar-alt"></i> Tanggal</label>
-                        <input type="date" name="tanggal" class="form-control" required>
-                      </div>
+                      <div class="col-md-6">
+                        <div class="form-group mb-4">
+                          <label><i class="fas fa-user-friends"></i> Karyawan Pengganti</label>
+                          <select name="pengganti_id" class="form-control form-control-ice" required>
+                            <option value="">-- Pilih Rekan Pengganti --</option>
+                            <?php
+                            mysqli_data_seek($delegasiList,0);
+                            while($d = mysqli_fetch_assoc($delegasiList)): ?>
+                              <option value="<?= $d['id'] ?>"><?= h($d['nama_lengkap']) ?></option>
+                            <?php endwhile; ?>
+                          </select>
+                          <small class="text-muted mt-2 d-inline-block">Rekan dalam satu unit kerja (<?= h($userLogin['unit_kerja']) ?>).</small>
+                        </div>
 
-                      <div class="form-group">
-                        <label><i class="fas fa-clock"></i> Jam Kerja</label>
-                        <select name="jam_kerja_id" class="form-control" required>
-                          <option value="">-- Pilih Jam --</option>
-                          <?php foreach($jamList as $id=>$jam): ?>
-                            <option value="<?= $id ?>"><?= $jam ?></option>
-                          <?php endforeach; ?>
-                        </select>
+                        <div class="form-group mb-4">
+                          <label><i class="fas fa-comment-dots"></i> Alasan Pertukaran</label>
+                          <textarea name="alasan" class="form-control form-control-ice" rows="4" placeholder="Contoh: Ada keperluan keluarga mendesak..." required style="min-height: 110px;"></textarea>
+                        </div>
+
+                        <div class="text-right">
+                          <button type="submit" name="simpan" class="btn btn-ice">
+                            <i class="fas fa-paper-plane mr-2"></i>AJUKAN JADWAL
+                          </button>
+                        </div>
                       </div>
                     </div>
-
-                    <!-- Kolom Kanan -->
-                    <div class="col-md-6">
-                      <div class="form-group">
-                        <label><i class="fas fa-user-check"></i> Pengganti</label>
-                        <select name="pengganti_id" class="form-control" required>
-                          <option value="">-- Pilih Pengganti --</option>
-                          <?php
-                          mysqli_data_seek($delegasiList,0);
-                          while($d = mysqli_fetch_assoc($delegasiList)): ?>
-                            <option value="<?= $d['id'] ?>"><?= htmlspecialchars($d['nama']) ?></option>
-                          <?php endwhile; ?>
-                        </select>
-                      </div>
-
-                      <div class="form-group">
-                        <label><i class="fas fa-pen-alt"></i> Alasan</label>
-                        <textarea name="alasan" class="form-control" required></textarea>
-                      </div>
-
-                      <button type="submit" name="simpan" class="btn btn-primary mt-2">
-                        <i class="fas fa-paper-plane"></i> Ajukan
-                      </button>
-                    </div>
-                  </div>
-                </form>
-              </div>
-
-              <!-- Tabel Data -->
-              <div class="tab-pane fade" id="data" role="tabpanel">
-                <div class="table-responsive">
-                  <table class="table table-striped table-bordered ganti-table">
-                    <thead>
-                      <tr>
-                        <th>No</th>
-                        <th>Karyawan</th>
-                        <th>Pengganti</th>
-                        <th>Tanggal</th>
-                        <th>Jam Kerja</th>
-                        <th>Alasan</th>
-                        <th>Status</th>
-                        <th>Aksi</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <?php $no=1; while($row = mysqli_fetch_assoc($dataPengajuan)): ?>
-                        <tr>
-                          <td><?= $no++ ?></td>
-                          <td><?= htmlspecialchars($row['nama_karyawan']) ?></td>
-                          <td><?= htmlspecialchars($row['nama_pengganti']) ?></td>
-                          <td><?= date('d-m-Y', strtotime($row['tanggal'])) ?></td>
-                          <td><?= htmlspecialchars($row['nama_jam']) ?></td>
-                          <td><?= htmlspecialchars($row['alasan']) ?></td>
-                          <td><?= htmlspecialchars($row['status']) ?></td>
-                          <td class="text-center">
-                            <a href="cetak_ganti_jadwal.php?id=<?= $row['id'] ?>" target="_blank" class="btn btn-info btn-sm">
-                              <i class="fas fa-print"></i>
-                            </a>
-                          </td>
-                        </tr>
-                      <?php endwhile; ?>
-                    </tbody>
-                  </table>
+                  </form>
                 </div>
-              </div>
 
+                <!-- Tabel Data -->
+                <div class="tab-pane fade" id="data" role="tabpanel">
+                  <div class="table-responsive">
+                    <table class="table table-hover ganti-table">
+                      <thead style="background: var(--ice-soft-bg);">
+                        <tr>
+                          <th width="50" class="text-center">NO</th>
+                          <th>PEMOHON</th>
+                          <th>PENGGANTI</th>
+                          <th>TANGGAL</th>
+                          <th>SHIFT</th>
+                          <th>STATUS</th>
+                          <th width="100" class="text-center">AKSI</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <?php $no=1; while($row = mysqli_fetch_assoc($dataPengajuan)): ?>
+                          <tr>
+                            <td class="text-center font-weight-bold"><?= $no++ ?></td>
+                            <td>
+                                <div class="font-weight-bold text-dark"><?= h($row['nama_karyawan']) ?></div>
+                                <?php if($row['karyawan_id'] == $user_id): ?>
+                                    <span class="badge badge-soft-primary" style="font-size: 9px; padding: 2px 6px;">OWNER</span>
+                                <?php endif; ?>
+                            </td>
+                            <td><div class="font-weight-600 text-muted"><?= h($row['nama_pengganti']) ?></div></td>
+                            <td><span class="text-primary font-weight-bold"><i class="far fa-calendar-alt mr-1"></i> <?= date('d M Y', strtotime($row['tanggal'])) ?></span></td>
+                            <td><span class="badge badge-light border text-dark" style="font-weight: 600;"><?= h($row['nama_jam']) ?></span></td>
+                            <td>
+                                <?php
+                                $status = $row['status'];
+                                $badge = 'badge-warning';
+                                if($status == 'Disetujui') $badge = 'badge-success';
+                                if(strpos($status, 'Ditolak') !== false) $badge = 'badge-danger';
+                                ?>
+                                <span class="badge <?= $badge ?> px-3" style="border-radius: 20px; text-transform: uppercase; font-size: 10px;"><?= $status ?></span>
+                            </td>
+                            <td class="text-center">
+                              <a href="cetak_ganti_jadwal.php?id=<?= $row['id'] ?>" target="_blank" class="btn btn-icon btn-info btn-sm rounded-circle shadow-sm" title="Cetak Surat">
+                                <i class="fas fa-print"></i>
+                              </a>
+                            </td>
+                          </tr>
+                        <?php endwhile; ?>
+                        <?php if(mysqli_num_rows($dataPengajuan) == 0): ?>
+                          <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <img src="../images/no-data.svg" alt="no data" style="width: 150px; opacity: 0.5;">
+                                <p class="text-muted mt-3 font-weight-600">Belum ada data pengajuan ganti jadwal.</p>
+                            </td>
+                          </tr>
+                        <?php endif; ?>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+              </div> <!-- End Tab Content -->
             </div>
           </div>
-        </div>
 
         </div>
       </section>
@@ -251,22 +248,8 @@ $dataPengajuan = mysqli_query($conn, "
 <script src="assets/modules/popper.js"></script>
 <script src="assets/modules/bootstrap/js/bootstrap.min.js"></script>
 <script src="assets/modules/nicescroll/jquery.nicescroll.min.js"></script>
-<script src="assets/modules/moment.min.js"></script>
 <script src="assets/js/stisla.js"></script>
 <script src="assets/js/scripts.js"></script>
-<script src="assets/js/custom.js"></script>
 
-<script>
-$(document).ready(function(){
-  setTimeout(function(){ $("#flashMsg").fadeOut("slow"); },3000);
-});
-</script>
 </body>
 </html>
-
-
-
-
-
-
-

@@ -194,6 +194,27 @@ mysqli_query($conn, "CREATE TABLE IF NOT EXISTS pengajuan_cuti_detail (
     tanggal DATE NOT NULL
 )");
 
+mysqli_query($conn, "CREATE TABLE IF NOT EXISTS pengajuan_ganti_jadwal (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    karyawan_id INT NOT NULL,
+    pengganti_id INT NOT NULL,
+    tanggal DATE NOT NULL,
+    jam_kerja_id INT NOT NULL,
+    alasan TEXT,
+    status VARCHAR(50) DEFAULT 'Menunggu',
+    status_pengganti VARCHAR(50) DEFAULT 'Menunggu',
+    status_atasan VARCHAR(50) DEFAULT 'Menunggu',
+    status_hrd VARCHAR(50) DEFAULT 'Menunggu',
+    acc_pengganti_by VARCHAR(100),
+    acc_pengganti_time DATETIME NULL,
+    acc_atasan_by VARCHAR(100),
+    acc_atasan_time DATETIME NULL,
+    acc_hrd_by VARCHAR(100),
+    acc_hrd_time DATETIME NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(100)
+)");
+
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS jabatan (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nama_jabatan VARCHAR(100) UNIQUE

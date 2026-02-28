@@ -119,7 +119,7 @@ $keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
   </style>
 </head>
 
-<body>
+<body class="ice-blue-theme">
 <div id="app">
   <div class="main-wrapper main-wrapper-1">
     <?php include 'navbar.php'; ?>
@@ -133,18 +133,17 @@ $keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
       ?>
       <section class="section">
         <div class="section-body">
-          <div class="card">
-            <div class="card-header">
-              <h4><i class="fas fa-tools text-warning mr-2"></i>Hardware Service Request</h4>
+          <div class="card card-ice">
+            <div class="card-header bg-white">
+              <h4 class="mb-0"><i class="fas fa-tools mr-2"></i>Hardware Service Request</h4>
             </div>
-
-            <div class="card-body">
-              <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <div class="card-body px-4">
+              <ul class="nav nav-tabs-ice" id="myTab" role="tablist">
                 <li class="nav-item">
-                  <a class="nav-link active" id="order-tab" data-toggle="tab" href="#order" role="tab">New Request</a>
+                  <a class="nav-link active" id="order-tab" data-toggle="tab" href="#order" role="tab"><i class="fas fa-plus-circle mr-2"></i>NEW REQUEST</a>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link" id="tiket-saya-tab" data-toggle="tab" href="#tiket-saya" role="tab">My Requests</a>
+                  <a class="nav-link" id="tiket-saya-tab" data-toggle="tab" href="#tiket-saya" role="tab"><i class="fas fa-list-ul mr-2"></i>MY REQUESTS</a>
                 </li>
               </ul>
 
@@ -157,33 +156,33 @@ $keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
                     <input type="hidden" name="simpan" value="1">
                     <div class="row">
                       <div class="form-group col-md-4">
-                        <label for="nik">NIK</label>
-                        <input type="text" name="nik" class="form-control" value="<?php echo h($nik_user); ?>" readonly style="background: #F8FAFC">
+                        <label for="nik" class="text-uppercase small font-weight-bold text-muted">NIK</label>
+                        <input type="text" name="nik" class="form-control form-control-ice" value="<?php echo h($nik_user); ?>" readonly style="background: var(--ice-5) !important;">
                       </div>
                       <div class="form-group col-md-4">
-                        <label for="nama">Nama</label>
-                        <input type="text" name="nama" class="form-control" value="<?php echo h($nama_user); ?>" readonly style="background: #F8FAFC">
+                        <label for="nama" class="text-uppercase small font-weight-bold text-muted">Nama</label>
+                        <input type="text" name="nama" class="form-control form-control-ice" value="<?php echo h($nama_user); ?>" readonly style="background: var(--ice-5) !important;">
                       </div>
                       <div class="form-group col-md-4">
-                        <label for="jabatan">Jabatan</label>
-                        <input type="text" name="jabatan" class="form-control" value="<?php echo h($jabatan_user); ?>" readonly style="background: #F8FAFC">
+                        <label for="jabatan" class="text-uppercase small font-weight-bold text-muted">Jabatan</label>
+                        <input type="text" name="jabatan" class="form-control form-control-ice" value="<?php echo h($jabatan_user); ?>" readonly style="background: var(--ice-5) !important;">
                       </div>
                       <div class="form-group col-md-4">
-                        <label for="unit_kerja">Unit Kerja</label>
-                        <select name="unit_kerja" id="unit_kerja" class="form-control" required>
+                        <label for="unit_kerja" class="text-uppercase small font-weight-bold text-muted">Unit Kerja</label>
+                        <select name="unit_kerja" id="unit_kerja" class="form-control form-control-ice" required>
                           <option value="">-- Pilih Unit Kerja --</option>
                           <?php
                           $unitResult = mysqli_query($conn, "SELECT nama_unit FROM unit_kerja ORDER BY nama_unit ASC");
                           while ($u = mysqli_fetch_assoc($unitResult)) {
-                            $selected = ($userData['unit_kerja'] == $u['nama_unit']) ? 'selected' : '';
+                            $selected = ($unit_user == $u['nama_unit']) ? 'selected' : '';
                             echo "<option value='{$u['nama_unit']}' $selected>{$u['nama_unit']}</option>";
                           }
                           ?>
                         </select>
                       </div>
                       <div class="form-group col-md-4">
-                        <label for="kategori">Kategori Hardware</label>
-                        <select class="form-control" name="kategori" required>
+                        <label for="kategori" class="text-uppercase small font-weight-bold text-muted">Kategori Hardware</label>
+                        <select class="form-control form-control-ice" name="kategori" required>
                           <option value="">-- Pilih Kategori --</option>
                           <?php
                           $kategoriResult = mysqli_query($conn, "SELECT nama_kategori FROM kategori_hardware");
@@ -198,8 +197,8 @@ $keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
                         </select>
                       </div>
                       <div class="form-group col-md-12">
-                        <label for="kendala">Kendala / Laporan</label>
-                        <textarea name="kendala" class="form-control" rows="3" required></textarea>
+                        <label for="kendala" class="text-uppercase small font-weight-bold text-muted">Kendala / Laporan</label>
+                        <textarea name="kendala" class="form-control form-control-ice" rows="4" required placeholder="Jelaskan detail kendala hardware Anda..."></textarea>
                       </div>
                     </div>
                     <button type="submit" name="simpan" class="btn-ice">Submit Request</button>
@@ -209,18 +208,18 @@ $keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
                 <!-- Tiket Saya Tab -->
                 <div class="tab-pane fade" id="tiket-saya" role="tabpanel">
                   <div class="table-responsive-custom">
-                    <table class="table table-striped table-bordered">
-                      <thead>
+                    <table class="table table-hover">
+                      <thead style="background: var(--ice-5);">
                         <tr>
-                          <th>No</th>
-                          <th>SR Number</th>
-                          <th>Date</th>
-                          <th>Category</th>
-                          <th>Issue</th>
-                          <th>IT Remarks</th>
-                          <th>Status</th>
-                          <th>Validation</th>
-                          <th>Print</th>
+                          <th class="text-center">NO</th>
+                          <th>SR NUMBER</th>
+                          <th>DATE</th>
+                          <th>CATEGORY</th>
+                          <th>ISSUE</th>
+                          <th>IT REMARKS</th>
+                          <th>STATUS</th>
+                          <th>VALIDATION</th>
+                          <th class="text-center">PRINT</th>
                         </tr>
                       </thead>
                       <tbody>

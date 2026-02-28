@@ -28,11 +28,19 @@ Berikut adalah daftar menu dan fitur yang telah dikerjakan/diperbaiki dalam sesi
 
 ---
 
-## 🟡 Module Umum & Security
-- [x] **Popup Standardization**: Interceptor global di `navbar.php` untuk merubah semua `confirm()` browser menjadi SweetAlert2 yang estetik.
-- [x] **Global Flash Bridge**: Notifikasi sukses/gagal otomatis menggunakan model popup animasi premium.
-- [x] **Branding**: Update logo favicon (`logo_final.png`) di semua halaman cuti.
-- [x] **Security Global**: Penarikan data `nama_lengkap`, `jabatan`, dan `photo` secara terpusat di `security.php`.
+## � Module Ganti Jadwal Dinas
+- [x] **Premium UI/UX**: Revamp `ganti_jadwal_dinas.php` dengan desain Premium & Layout seimbang.
+- [x] **Multi-Stage Approval**: Implementasi alur konfirmasi (Rekan Pengganti -> Atasan -> HRD).
+- [x] **Approval Pages**: Pembuatan halaman `data_ganti_jadwal_pengganti.php`, `atasan.php`, dan `hrd.php`.
+- [x] **Premium Cetak System**: Revamp `cetak_ganti_jadwal.php` menjadi format HTML (A4 Portrait) dengan TTE & QR Code.
+- [x] **Sidebar Integration**: Penambahan menu approval baru di sidebar.
+
+---
+
+## �🟡 Module Umum & Security
+- [x] **Global Soft Ice Blue Theme**: Implementasi tema premium "Soft Ice Blue" secara global (index.css & custom.css).
+- [x] **Premium Sidebar Active**: Refactor status menu aktif di sidebar menggunakan gradasi Ice Blue & Auto-Detection Script.
+- [x] **Standardization UI**: Sinkronisasi modul IT Software, IT Hardware, dan Sarpras ke tema Soft Ice Blue.
 - [ ] **WhatsApp Notification**: (Pending/Next Process) Integrasi notifikasi WA saat pengajuan atau approval.
 
 ---

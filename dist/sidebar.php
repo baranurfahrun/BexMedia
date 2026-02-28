@@ -232,7 +232,7 @@ function is_group_active($files) {
                 <?php if (in_array('pengajuan_cuti.php', $allowed_files)): ?><a href="pengajuan_cuti.php" class="dropdown-item">Pengajuan E-Cuti Online</a><?php endif; ?>
                 <?php if (in_array('izin_keluar.php', $allowed_files)): ?><a href="izin_keluar.php" class="dropdown-item">Izin Keluar Kantor</a><?php endif; ?>
                 <?php if (in_array('izin_pulang_cepat.php', $allowed_files)): ?><a href="izin_pulang_cepat.php" class="dropdown-item">Izin Pulang Cepat</a><?php endif; ?>
-                <?php if (in_array('ganti_jadwal_dinas.php', $allowed_files)): ?><a href="ganti_jadwal_dinas.php" class="dropdown-item">Ganti Jadwal Dinas</a><?php endif; ?>
+                <?php if (in_array('ganti_jadwal_dinas.php', $allowed_files)): ?><a href="ganti_jadwal_dinas.php" class="dropdown-item <?php echo ($current_page == 'ganti_jadwal_dinas.php') ? 'active' : ''; ?>">Ganti Jadwal Dinas</a><?php endif; ?>
                 <?php if (in_array('off_duty.php', $allowed_files)): ?><a href="off_duty.php" class="dropdown-item">Off-Duty Request</a><?php endif; ?>
                 <?php if (in_array('lembur.php', $allowed_files)): ?><a href="lembur.php" class="dropdown-item">Lembur Request</a><?php endif; ?>
                 <?php if (in_array('edit_data_simrs.php', $allowed_files)): ?><a href="edit_data_simrs.php" class="dropdown-item">Request Edit SIMRS</a><?php endif; ?>
@@ -242,7 +242,7 @@ function is_group_active($files) {
         </div>
 
         <!-- 3. COMMAND CENTER (APPROVAL) -->
-        <?php $approval_files = ['data_tiket_it_software.php', 'data_tiket_it_hardware.php', 'data_tiket_sarpras.php', 'data_off_duty.php', 'handling_time.php', 'data_cuti_atasan.php', 'data_cuti_hrd.php', 'data_cuti_delegasi.php', 'acc_keluar_atasan.php', 'acc_keluar_sdm.php', 'acc_lembur_atasan.php', 'acc_lembur_sdm.php', 'acc_edit_data.php', 'data_permintaan_edit_simrs.php', 'data_permintaan_hapus_simrs.php']; ?>
+        <?php $approval_files = ['data_tiket_it_software.php', 'data_tiket_it_hardware.php', 'data_tiket_sarpras.php', 'data_off_duty.php', 'handling_time.php', 'data_cuti_atasan.php', 'data_cuti_hrd.php', 'data_cuti_delegasi.php', 'data_ganti_jadwal_pengganti.php', 'data_ganti_jadwal_atasan.php', 'data_ganti_jadwal_hrd.php', 'acc_keluar_atasan.php', 'acc_keluar_sdm.php', 'acc_lembur_atasan.php', 'acc_lembur_sdm.php', 'acc_edit_data.php', 'data_permintaan_edit_simrs.php', 'data_permintaan_hapus_simrs.php']; ?>
         <div class="nav-dropdown <?php echo is_group_active($approval_files) ? 'open' : ''; ?>">
             <div class="nav-dropdown-trigger nav-item">
                 <span style="display: flex; align-items: center; gap: 12px;">
@@ -259,6 +259,9 @@ function is_group_active($files) {
                 <?php if (in_array('data_cuti_atasan.php', $allowed_files)): ?><a href="data_cuti_atasan.php" class="dropdown-item">ACC Cuti Atasan</a><?php endif; ?>
                 <?php if (in_array('data_cuti_hrd.php', $allowed_files)): ?><a href="data_cuti_hrd.php" class="dropdown-item">ACC Cuti HRD</a><?php endif; ?>
                 <?php if (in_array('data_cuti_delegasi.php', $allowed_files)): ?><a href="data_cuti_delegasi.php" class="dropdown-item">ACC Cuti Delegasi</a><?php endif; ?>
+                <?php if (in_array('data_ganti_jadwal_pengganti.php', $allowed_files)): ?><a href="data_ganti_jadwal_pengganti.php" class="dropdown-item">ACC Ganti Jadwal (Rekan)</a><?php endif; ?>
+                <?php if (in_array('data_ganti_jadwal_atasan.php', $allowed_files)): ?><a href="data_ganti_jadwal_atasan.php" class="dropdown-item">ACC Ganti Jadwal (Atasan)</a><?php endif; ?>
+                <?php if (in_array('data_ganti_jadwal_hrd.php', $allowed_files)): ?><a href="data_ganti_jadwal_hrd.php" class="dropdown-item">ACC Ganti Jadwal (HRD)</a><?php endif; ?>
                 <?php if (in_array('acc_keluar_atasan.php', $allowed_files)): ?><a href="acc_keluar_atasan.php" class="dropdown-item">ACC Izin Atasan</a><?php endif; ?>
                 <?php if (in_array('acc_keluar_sdm.php', $allowed_files)): ?><a href="acc_keluar_sdm.php" class="dropdown-item">ACC Izin SDM</a><?php endif; ?>
                 <?php if (in_array('acc_lembur_atasan.php', $allowed_files)): ?><a href="acc_lembur_atasan.php" class="dropdown-item">ACC Lembur Atasan</a><?php endif; ?>
@@ -423,6 +426,27 @@ function is_group_active($files) {
                     item.style.display = 'flex';
                 } else {
                     item.style.display = 'none';
+                }
+            }
+        });
+    });
+
+    // 🧊 AUTO-ACTIVE SIDEBAR MENU
+    // Mencari menu yang sesuai dengan halaman saat ini dan memberinya class .active
+    document.addEventListener("DOMContentLoaded", function() {
+        const currentPath = window.location.pathname.split('/').pop();
+        if (currentPath === "") return; // Abaikan jika di root tanpa nama file
+
+        const menuItems = document.querySelectorAll('.nav-item, .dropdown-item');
+        menuItems.forEach(item => {
+            const itemHref = item.getAttribute('href');
+            if (itemHref && itemHref.includes(currentPath)) {
+                item.classList.add('active');
+                
+                // Pastikan parent dropdown juga terbuka
+                const parentDropdown = item.closest('.nav-dropdown');
+                if (parentDropdown) {
+                    parentDropdown.classList.add('open');
                 }
             }
         });

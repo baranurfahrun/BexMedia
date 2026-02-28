@@ -1,67 +1,109 @@
 /**
- * BexMedia Premium Theme Custom Styles
+ * BexMedia Premium Theme Custom Styles - Soft Ice Blue Edition
  */
+
+:root {
+    --ice-primary: #0ea5e9;
+    --ice-primary-hover: #38bdf8;
+    --ice-primary-dark: #0284c7;
+    --ice-soft-bg: #f0f9ff;
+    --ice-border: #e0f2fe;
+    --ice-text-deep: #0c4a6e;
+    --ice-shadow: rgba(14, 165, 233, 0.2);
+}
+
+body.ice-blue-theme {
+    background: #f0f7ff !important;
+}
 
 /* 🧊 Ice Blue Premium Button System */
 .btn-ice {
-    background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+    background: linear-gradient(135deg, var(--ice-primary) 0%, var(--ice-primary-dark) 100%);
     color: #ffffff !important;
     border: none !important;
-    border-radius: 10px !important;
-    padding: 10px 24px !important;
-    font-weight: 700 !important;
-    font-size: 0.8rem;
-    letter-spacing: 0.3px;
+    border-radius: 12px !important;
+    padding: 12px 28px !important;
+    font-weight: 800 !important;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
     cursor: pointer;
-    box-shadow: 0 4px 14px 0 rgba(0, 118, 255, 0.25);
+    box-shadow: 0 4px 15px var(--ice-shadow);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     text-decoration: none !important;
-    white-space: nowrap;
-    outline: none !important;
 }
 
 .btn-ice:hover {
-    background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%);
+    background: linear-gradient(135deg, var(--ice-primary-hover) 0%, var(--ice-primary) 100%);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 118, 255, 0.35);
+    box-shadow: 0 8px 20px var(--ice-shadow);
     color: #ffffff !important;
 }
 
-.btn-ice:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 10px rgba(0, 118, 255, 0.2);
+/* Ice Blue Card */
+.card-ice {
+    border-radius: 20px !important;
+    border: none !important;
+    box-shadow: 0 10px 30px rgba(186, 230, 253, 0.2) !important;
+    overflow: hidden;
 }
 
-/* Icon animation within Ice Button */
-.btn-ice i {
-    font-size: 0.95rem;
-    transition: transform 0.3s ease;
+.card-ice .card-header {
+    background: white !important;
+    border-bottom: 2px solid var(--ice-soft-bg) !important;
 }
 
-.btn-ice:hover i {
-    transform: scale(1.15) rotate(5deg);
+.card-ice .card-header h4 {
+    color: var(--ice-text-deep) !important;
+    font-weight: 800 !important;
 }
 
-/* Ensure consistent card headers in Ice Blue theme */
-.card-header h4 i {
-    color: #3B82F6 !important;
+/* Ice Blue Form Control */
+.form-control-ice {
+    border-radius: 12px !important;
+    border: 1.5px solid var(--ice-border) !important;
+    padding: 10px 15px !important;
+    transition: all 0.3s !important;
+    background: #fff !important;
 }
 
-/* 🏷️ Smart Date Tags Control (Compact View) */
+.form-control-ice:focus {
+    border-color: #7dd3fc !important;
+    box-shadow: 0 0 0 4px rgba(125, 211, 252, 0.2) !important;
+    background: var(--ice-soft-bg) !important;
+}
+
+/* Ice Blue Tabs */
+.nav-tabs-ice {
+    border-bottom: 2px solid var(--ice-border) !important;
+}
+
+.nav-tabs-ice .nav-link {
+    font-weight: 700 !important;
+    color: #64748b !important;
+    border: none !important;
+    padding: 12px 20px !important;
+}
+
+.nav-tabs-ice .nav-link.active {
+    color: var(--ice-primary-dark) !important;
+    border-bottom: 3px solid var(--ice-primary) !important;
+    background: transparent !important;
+}
+
+/* 🏷️ Smart Date Tags Control */
 .date-tag-wrapper {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     padding: 15px;
-    background: #f8fbff;
-    border: 1px dashed #cbd5e1;
+    background: var(--ice-soft-bg);
+    border: 1px dashed #7dd3fc;
     border-radius: 12px;
-    min-height: 50px;
-    margin-bottom: 5px;
 }
 
 .date-chip {
@@ -69,33 +111,40 @@
     align-items: center;
     gap: 8px;
     background: #ffffff;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--ice-border);
     padding: 6px 12px;
     border-radius: 8px;
     font-size: 0.75rem;
     font-weight: 700;
-    color: #334155;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-    transition: all 0.2s;
+    color: var(--ice-text-deep);
 }
 
-.date-chip:hover {
-    border-color: #3B82F6;
-    background: #f0f7ff;
+/* 🧊 Sidebar Active State - Soft Ice Blue Premium */
+.dropdown-item.active,
+.nav-item.active {
+    background: linear-gradient(135deg, var(--ice-primary) 0%, var(--ice-primary-dark) 100%) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 15px var(--ice-shadow) !important;
+    border-radius: 12px !important;
+    position: relative;
+    border: none !important;
 }
 
-.date-chip .btn-remove-date {
-    cursor: pointer;
-    color: #94a3b8;
-    background: none;
-    border: none;
-    padding: 0;
-    font-size: 1rem;
-    line-height: 1;
-    display: flex;
-    align-items: center;
+/* Ensure Icons & Text in Active State are White */
+.dropdown-item.active,
+.nav-item.active,
+.dropdown-item.active i,
+.nav-item.active i,
+.dropdown-item.active svg,
+.nav-item.active svg {
+    color: #ffffff !important;
+    stroke: #ffffff !important;
 }
 
-.date-chip .btn-remove-date:hover {
-    color: #ef4444;
+/* Hover effect on dropdown items */
+.dropdown-item:hover {
+    background: rgba(14, 165, 233, 0.08) !important;
+    color: var(--ice-primary-dark) !important;
+    border-radius: 12px !important;
 }
